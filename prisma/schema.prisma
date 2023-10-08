@@ -1,0 +1,180 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  BLOCKED
+  REJECTED
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+model user {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  password           String
+  revokeTokensBefore DateTime  @default(now())
+  status             UserStatus
+  role               UserRole  @default(USER)
+  createdAt          DateTime  @default(now())
+  profile            userProfile?
+  passwordResetTokens passwordResetToken[] 
+  otp        String?    // Store hashed OTP for security.
+  otpExpiry  DateTime?  // OTP validity check.
+  payments   payment[]
+  orders     order[]
+}
+
+model passwordResetToken {
+  id       String   @id @default(uuid())
+  token    String   @unique
+  expiry   DateTime
+  userId   String
+  user     user    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model userProfile {
+  id                   String        @id @default(uuid())
+  userId               String        @unique
+  city                 String
+  fullAddress          String
+  fullName             String
+  lastName             String
+  firstName            String
+  phoneNumber          String
+  profilePhoto         String?
+  signature            String?
+  zip                  String?
+  user      user    @relation(fields: [userId], references: [id])
+  driverLicense        driverLicense?
+  permitDetails        permitDetails?
+}
+
+model driverLicense {
+  id                   String        @id @default(uuid())
+  driverLicenseBack    String?
+  driverLicenseExpiry  DateTime?
+  driverLicenseFront   String?
+  dateOfBirth          DateTime
+  bsnNumber            Int?
+  driverLicense        String?
+  userProfileId        String        @unique
+  userProfile          userProfile  @relation(fields: [userProfileId], references: [id])
+}
+
+model permitDetails {
+  id                   String        @id @default(uuid())
+  kiwaTaxiVergunningId String?
+  kvkDocumentId        String?
+  taxiPermitId         String?
+  taxiPermitExpiry     DateTime?
+  taxiPermitPicture    String?
+  userProfileId        String        @unique
+  userProfile          userProfile  @relation(fields: [userProfileId], references: [id])
+}
+
+model vehicle {
+  id               String   @id @default(uuid())
+  logo             String?
+  companyName      String?
+  model            String?
+  rentalDuration   String?
+  licensePlate     String?  @unique
+  category         String?
+  manufactureYear  String?
+  engineType       String?
+  seatingCapacity  String?
+  batteryCapacity  String?
+  uniqueFeature    String?
+  images           String[]
+  availability     String?
+  unavailabilityReason  String?
+  currency         String?  @default("EUR")
+  pricePerDay         Decimal? @db.Decimal(6, 2)
+  orders           order[]
+}
+
+enum PaymentProduct {
+  RENT
+  REGISTRATION
+}
+
+enum PaymentStatus {
+  PAID
+  REFUNDED
+  PENDING
+  FAILED
+}
+
+model payment {
+  id          String   @id @default(uuid())
+  userId      String
+  amount      Decimal  @db.Decimal(6, 2)
+  currency    String   @default("EUR")
+  paymentDate DateTime @default(now())
+  orderId     String   @unique
+  product     PaymentProduct @default(RENT)
+  status      PaymentStatus  @default(PAID)
+  user        user           @relation(fields: [userId], references: [id])
+  order       order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, paymentDate])
+}
+
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  COMPLETED
+  CANCELED
+}
+
+model order {
+  id              String        @id @default(uuid())
+  vehicleId       String
+  userId          String
+  status          OrderStatus   @default(PENDING)
+  totalAmount     Decimal       @db.Decimal(6, 2)
+  rentalStartDate DateTime
+  rentalEndDate   DateTime
+  paymentId       String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  note            String?       
+
+  vehicle         vehicle       @relation(fields: [vehicleId], references: [id])
+  user            user          @relation(fields: [userId], references: [id])
+  payment         payment?
+  rejection       orderRejection?
+  
+  @@unique([vehicleId, rentalStartDate, rentalEndDate])
+}
+
+
+model orderRejection {
+  id       String @id @default(uuid())
+  orderId  String @unique // Associated Order ID
+  reason   String // Text field explaining why the order was rejected
+  date     DateTime @default(now()) // The date when the order was rejected
+  
+  order    order @relation(fields: [orderId], references: [id])
+  
+  @@index([orderId], name: "idx_orderId")
+}
+
+
