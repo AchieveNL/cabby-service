@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "ts-node": {
+    "pretty": true,
+    "watch-files": ["src"]
+  },
+  "compilerOptions": {
+    "rootDir": "src"
+  }
+}
