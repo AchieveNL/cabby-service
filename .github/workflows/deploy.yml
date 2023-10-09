@@ -49,7 +49,7 @@ jobs:
       - name: Deploy to Cloud Run Staging
         uses: google-github-actions/deploy-cloudrun@v0
         with:
-          service: staging-${{ secrets.SERVICE }}
+          service: staging-${{ env.SERVICE }}
           region: ${{ secrets.REGION }}
           image: ${{ env.IMAGE_URL }}
 
@@ -69,6 +69,6 @@ jobs:
       - name: Deploy to Cloud Run Production
         uses: google-github-actions/deploy-cloudrun@v0
         with:
-          service: production-${{ secrets.SERVICE }}
+          service: production-${{ env.SERVICE }}
           region: ${{ secrets.REGION }}
           image: ${{ env.IMAGE_URL }}
