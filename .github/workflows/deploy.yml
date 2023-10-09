@@ -39,6 +39,11 @@ jobs:
     needs: build-and-check
     runs-on: ubuntu-latest
     steps:
+      - name: Google Auth
+        id: auth
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
       - name: Deploy to Cloud Run Staging
         uses: google-github-actions/deploy-cloudrun@v0
         with:
@@ -53,6 +58,11 @@ jobs:
     needs: build-and-check
     runs-on: ubuntu-latest
     steps:
+      - name: Google Auth
+          id: auth
+          uses: 'google-github-actions/auth@v0'
+          with:
+            credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
       - name: Deploy to Cloud Run Production
         uses: google-github-actions/deploy-cloudrun@v0
         with:
