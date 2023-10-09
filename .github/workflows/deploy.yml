@@ -38,6 +38,7 @@ jobs:
     if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize' || (github.event.action == 'closed' && !github.event.pull_request.merged))
     needs: build-and-check
     runs-on: ubuntu-latest
+    steps:
       - name: Google Auth
         uses: 'google-github-actions/auth@v0'
         with:
