@@ -27,7 +27,7 @@ export default class PermitService {
     const permit = await prisma.permitDetails.update({
       where: { userProfileId },
       data: {
-        taxiPermitExpiry: new Date(taxiPermitExpiry),
+        taxiPermitExpiry,
       },
     });
     return permit;

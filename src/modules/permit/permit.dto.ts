@@ -1,5 +1,5 @@
 // permit.dto.ts
-import { IsString, IsOptional, IsDate } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class CreatePermitDto {
   @IsString()
@@ -14,9 +14,9 @@ export class CreatePermitDto {
   @IsOptional()
   taxiPermitId?: string;
 
-  @IsDate()
+  @IsString()
   @IsOptional()
-  taxiPermitExpiry?: Date;
+  taxiPermitExpiry?: string;
 
   @IsString()
   @IsOptional()
@@ -36,9 +36,9 @@ export class UpdatePermitDto {
   @IsOptional()
   taxiPermitId?: string;
 
-  @IsDate()
+  @IsString()
   @IsOptional()
-  taxiPermitExpiry?: Date;
+  taxiPermitExpiry?: string;
 
   @IsString()
   @IsOptional()
