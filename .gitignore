@@ -41,5 +41,7 @@ node_modules/
 .env.stage
 .env.prod
 
+secrets.json
+
 # Test reports
 /test-reports
