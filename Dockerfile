@@ -10,7 +10,11 @@ COPY package*.json ./
 RUN npm ci
 
 # Copy the rest of the application
-COPY . .
+COPY . ./
+
+RUN rm -rf node_modules/
+
+RUN npm install
 
 # Build the app (Optional: Based on your build script)
 RUN npm run build
