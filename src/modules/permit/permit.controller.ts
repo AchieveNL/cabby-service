@@ -11,6 +11,16 @@ export default class PermitController extends Api {
   private readonly permitService = new PermitService();
   private readonly profileService = new ProfileService();
 
+  public getUserProfileId = async (res, userId: string) => {
+    const profile = await this.profileService.getByUserId(userId);
+    console.log(profile);
+    if (!profile) {
+      this.send(res, null, HttpStatusCode.NotFound, 'Not found');
+      return;
+    }
+    return profile.id;
+  };
+
   public createPermit = async (
     req: Request,
     res: Response,
@@ -18,7 +28,21 @@ export default class PermitController extends Api {
   ) => {
     try {
       const createPermitDto: CreatePermitDto = req.body;
-      const permit = await this.permitService.createPermit(createPermitDto);
+
+      const userProfileId = await this.getUserProfileId(
+        res,
+        req.user?.id as string
+      );
+
+      console.log(userProfileId);
+
+      const permit = await this.permitService.createPermit({
+        ...createPermitDto,
+        userProfileId,
+      });
+
+      console.log(permit);
+
       return this.send(
         res,
         permit,
@@ -38,13 +62,10 @@ export default class PermitController extends Api {
     try {
       const userId = req.user?.id;
       const updatePermitDto: UpdatePermitDto = req.body;
-      const profile = await this.profileService.getUserProfileByUserId(userId);
-      if (!profile) {
-        this.send(res, null, HttpStatusCode.NotFound, 'Not found');
-        return;
-      }
+      const userProfileId = await this.getUserProfileId(res, userId);
+
       const updatedPermit = await this.permitService.updatePermit(
-        userId,
+        userProfileId,
         updatePermitDto
       );
       return this.send(

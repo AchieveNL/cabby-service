@@ -1,4 +1,4 @@
-import { type users } from '@prisma/client';
+import { type user } from '@prisma/client';
 import { HttpStatusCode } from 'axios';
 import bcrypt from 'bcrypt';
 import { type Response, type NextFunction, type Request } from 'express';
@@ -17,12 +17,14 @@ import {
   generateToken,
 } from '@/middlewares/token-manager';
 
+const isSecure = process.env.NODE_ENV === 'production';
+
 export default class UserController extends Api {
   private readonly userService = new UserService();
 
   public signup = async (
     req: Request,
-    res: CustomResponse<users>,
+    res: CustomResponse<user>,
     next: NextFunction
   ) => {
     try {
@@ -40,10 +42,17 @@ export default class UserController extends Api {
       const refreshToken = generateRefreshToken(user);
 
       // Set cookies for tokens
-      res.cookie('token', token, { maxAge: 3600000, httpOnly: true }); // 1 hour
+      res.cookie('token', token, {
+        maxAge: 3600000,
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: 'none',
+      }); // 1 hour
       res.cookie('refreshToken', refreshToken, {
         maxAge: 86400000,
         httpOnly: true,
+        secure: isSecure,
+        sameSite: 'none',
       }); // 1 day
 
       // Return the created user along with the tokens
@@ -65,19 +74,29 @@ export default class UserController extends Api {
 
       if (!user) {
         // Handle login failure
-        return res.status(HttpStatusCode.Unauthorized).json({
-          message: 'Invalid email or password',
-        });
+        return this.send(
+          res,
+          null,
+          HttpStatusCode.Unauthorized,
+          'Invalid email or password'
+        );
       }
 
       const token = generateToken(user);
       const refreshToken = generateRefreshToken(user);
 
       // Set cookies for tokens
-      res.cookie('token', token, { maxAge: 3600000, httpOnly: true }); // 1 hour
+      res.cookie('token', token, {
+        maxAge: 3600000,
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: 'lax',
+      }); // 1 hour
       res.cookie('refreshToken', refreshToken, {
         maxAge: 86400000,
         httpOnly: true,
+        secure: isSecure,
+        sameSite: 'lax',
       }); // 1 day
 
       return res.status(HttpStatusCode.Ok).json({ user });
@@ -154,7 +173,7 @@ export default class UserController extends Api {
 
   public deleteAccount = async (
     req: Request,
-    res: CustomResponse<users>,
+    res: CustomResponse<user>,
     next: NextFunction
   ) => {
     try {
@@ -167,7 +186,7 @@ export default class UserController extends Api {
 
   public changeUserStatus = async (
     req: Request,
-    res: CustomResponse<users>,
+    res: CustomResponse<user>,
     next: NextFunction
   ) => {
     try {
@@ -185,7 +204,7 @@ export default class UserController extends Api {
 
   public fetchUsersByStatus = async (
     req: Request,
-    res: CustomResponse<users[]>,
+    res: CustomResponse<user[]>,
     next: NextFunction
   ) => {
     try {

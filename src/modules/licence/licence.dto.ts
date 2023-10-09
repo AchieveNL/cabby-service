@@ -1,23 +1,20 @@
-import { IsString, IsDate, IsOptional, IsInt } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class CreateDriverLicenseDto {
-  @IsString()
-  userId: string;
-
   @IsString()
   driverLicenseBack: string;
 
   @IsString()
   driverLicenseFront: string;
 
-  @IsDate()
-  driverLicenseExpiry: Date;
+  @IsString()
+  driverLicenseExpiry: string;
 
-  @IsDate()
-  dateOfBirth: Date;
+  @IsString()
+  dateOfBirth: string;
 
-  @IsInt()
-  bsnNumber: number;
+  @IsString()
+  bsnNumber: string;
 
   @IsString()
   driverLicense: string;
@@ -26,27 +23,23 @@ export class CreateDriverLicenseDto {
 export class UpdateDriverLicenseDto {
   @IsString()
   @IsOptional()
-  userId?: string;
-
-  @IsString()
-  @IsOptional()
   driverLicenseBack?: string;
 
   @IsString()
   @IsOptional()
   driverLicenseFront?: string;
 
-  @IsDate()
+  @IsString()
   @IsOptional()
-  driverLicenseExpiry?: Date;
+  driverLicenseExpiry?: string;
 
-  @IsDate()
+  @IsString()
   @IsOptional()
-  dateOfBirth?: Date;
+  dateOfBirth?: string;
 
-  @IsInt()
+  @IsString()
   @IsOptional()
-  bsnNumber?: number;
+  bsnNumber?: string;
 
   @IsString()
   @IsOptional()

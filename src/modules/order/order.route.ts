@@ -45,4 +45,11 @@ router.get(
   orderController.getOrderDetails
 );
 
+router.post(
+  '/rejection/:orderId',
+  verifyAuthToken,
+  requireAuth,
+  orderController.createOrderRejection
+);
+
 export default router;

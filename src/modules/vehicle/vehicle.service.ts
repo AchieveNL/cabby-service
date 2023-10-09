@@ -1,12 +1,12 @@
+import { type VehicleStatus } from './types';
 import {
   type FilterVehiclesDto,
-  type CreateVehicleDto,
   type UpdateVehicleStatusDto,
 } from './vehicle.dto';
 import prisma from '@/lib/prisma';
 
 export default class VehicleService {
-  public createVehicle = async (data: CreateVehicleDto) => {
+  public createVehicle = async (data) => {
     try {
       const vehicle = await prisma.vehicle.create({
         data,
@@ -18,7 +18,7 @@ export default class VehicleService {
     }
   };
 
-  public updateVehicle = async (id: string, data: CreateVehicleDto) => {
+  public updateVehicle = async (id: string, data) => {
     try {
       const vehicle = await prisma.vehicle.update({
         where: { id },
@@ -39,7 +39,7 @@ export default class VehicleService {
     }
   };
 
-  public getVehiclesByStatus = async (status: string) => {
+  public getVehiclesByStatus = async (status: VehicleStatus) => {
     try {
       const vehicles = await prisma.vehicle.findMany({
         where: { status },
@@ -98,7 +98,7 @@ export default class VehicleService {
     try {
       const updatedVehicle = await prisma.vehicle.update({
         where: { id: dto.id },
-        data: { status: dto.status },
+        data: { status: dto.status as VehicleStatus },
       });
       return updatedVehicle;
     } catch (error) {

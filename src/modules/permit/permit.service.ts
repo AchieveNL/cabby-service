@@ -11,10 +11,10 @@ export default class PermitService {
     }
   };
 
-  public updatePermit = async (userProfile, data: UpdatePermitDto) => {
+  public updatePermit = async (userProfileId, data: UpdatePermitDto) => {
     try {
       const permit = await prisma.permitDetails.update({
-        where: { userProfile },
+        where: { userProfileId },
         data,
       });
       return permit;

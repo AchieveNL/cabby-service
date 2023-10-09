@@ -4,6 +4,7 @@ import {
   ChangeUserStatusDto,
   CreateUserDto,
   FetchUsersByStatusDto,
+  LoginDto,
   PerformPasswordResetDto,
   RequestPasswordResetDto,
   ResetPasswordDto,
@@ -21,6 +22,8 @@ users.post(
   RequestValidator.validate(CreateUserDto),
   controller.signup
 );
+
+users.post('/login', RequestValidator.validate(LoginDto), controller.login);
 
 users.post(
   '/reset-password/initiate',

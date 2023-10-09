@@ -28,7 +28,7 @@ export default class ProfileService {
     });
   }
 
-  async getUserProfileByUserId(userId: string) {
+  async getByUserId(userId: string) {
     return await prisma.userProfile.findUnique({
       where: { userId },
     });

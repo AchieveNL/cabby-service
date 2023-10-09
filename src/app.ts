@@ -26,7 +26,6 @@ class App {
   }
 
   private setMiddlewares(): void {
-    this.express.use(cors());
     this.express.use(morgan('dev'));
     this.express.use(nocache());
     this.express.use(express.json());
@@ -34,6 +33,12 @@ class App {
     this.express.use(helmet());
     this.express.use(cookieParser());
     this.express.use(express.static('public'));
+    this.express.use(
+      cors({
+        origin: 'http://localhost:3000',
+        credentials: true,
+      })
+    );
   }
 
   private disableSettings(): void {
