@@ -9,10 +9,6 @@ import {
 export class CreateUserProfileDto {
   @IsString()
   @IsNotEmpty()
-  userId: string;
-
-  @IsString()
-  @IsNotEmpty()
   city: string;
 
   @IsString()
@@ -87,10 +83,6 @@ export class EditUserProfileDto {
 }
 
 export class UpdateExpiryDateDto {
-  @IsString()
-  @IsNotEmpty()
-  id: string;
-
   @IsDateString()
   @IsNotEmpty()
   driverLicenseExpiry: string;

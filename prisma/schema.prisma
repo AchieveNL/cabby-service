@@ -69,8 +69,8 @@ model driverLicense {
   driverLicenseBack    String?
   driverLicenseExpiry  DateTime?
   driverLicenseFront   String?
-  dateOfBirth          DateTime
-  bsnNumber            Int?
+  dateOfBirth          String
+  bsnNumber            String?
   driverLicense        String?
   userProfileId        String        @unique
   userProfile          userProfile  @relation(fields: [userProfileId], references: [id])
@@ -81,10 +81,17 @@ model permitDetails {
   kiwaTaxiVergunningId String?
   kvkDocumentId        String?
   taxiPermitId         String?
-  taxiPermitExpiry     DateTime?
+  taxiPermitExpiry     String?
   taxiPermitPicture    String?
   userProfileId        String        @unique
   userProfile          userProfile  @relation(fields: [userProfileId], references: [id])
+}
+
+enum VehicleStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  BLOCKED
 }
 
 model vehicle {
@@ -105,6 +112,8 @@ model vehicle {
   unavailabilityReason  String?
   currency         String?  @default("EUR")
   pricePerDay         Decimal? @db.Decimal(6, 2)
+  status           VehicleStatus @default(PENDING)
+
   orders           order[]
 }
 

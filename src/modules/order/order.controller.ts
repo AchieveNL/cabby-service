@@ -109,4 +109,20 @@ export default class OrderController extends Api {
       next(error);
     }
   };
+
+  public async createOrderRejection(req: Request, res: Response) {
+    const { orderId } = req.params;
+    const { reason } = req.body;
+
+    try {
+      const rejection = await this.orderService.createRejection({
+        orderId,
+        reason,
+      });
+      return res.status(201).json(rejection);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
 }

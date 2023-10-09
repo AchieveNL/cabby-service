@@ -1,4 +1,5 @@
 import { type Decimal } from '@prisma/client/runtime/library';
+import { differenceInHours } from 'date-fns';
 import PaymentService from '../payment/payment.service';
 import { type CreateOrderDto } from './order.dto';
 import { OrderStatus } from './types';
@@ -57,9 +58,18 @@ export default class OrderService {
 
     if (!order) throw new Error('Order not found');
 
+    const now = new Date();
+    const rentalStartDate = new Date(order.rentalStartDate); // Assuming order.rentalStartDate is stored as string
+
+    if (differenceInHours(rentalStartDate, now) <= 24) {
+      throw new Error(
+        'Cannot cancel order less than 24 hours before rental start date'
+      );
+    }
+
     await prisma.order.update({
       where: { id: orderId },
-      data: { status: OrderStatus.CANCELED },
+      data: { status: OrderStatus.CANCELED }, // Make sure to handle enum/string correctly
     });
   };
 
@@ -146,4 +156,15 @@ export default class OrderService {
       throw new Error('Error creating order in the database');
     }
   };
+
+  public async createRejection(data: { orderId: string; reason: string }) {
+    const { orderId, reason } = data;
+    const rejection = await prisma.orderRejection.create({
+      data: {
+        orderId,
+        reason,
+      },
+    });
+    return rejection;
+  }
 }

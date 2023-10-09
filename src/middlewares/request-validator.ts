@@ -20,6 +20,7 @@ export default class RequestValidator {
     return async (req: Request, _res: Response, next: NextFunction) => {
       const validationErrorText = 'Request validation failed!';
       try {
+        console.log(req.body, 'req.body');
         const convertedObject = plainToInstance(
           classInstance,
           type === 'body' ? req.body : req.query

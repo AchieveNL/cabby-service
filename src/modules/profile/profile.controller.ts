@@ -45,22 +45,28 @@ export default class ProfileController extends Api {
     next: NextFunction
   ) => {
     try {
-      const { id, driverLicenseExpiry, taxiPermitExpiry } =
+      const { driverLicenseExpiry, taxiPermitExpiry } =
         req.body as UpdateExpiryDateDto;
-      const user = await this.userProfileService.getById(id);
+      const user = await this.userProfileService.getByUserId(
+        req.user?.id as string
+      );
 
       if (!user) {
         this.send(res, null, HttpStatusCode.NotFound, 'Not found');
+        return;
       }
 
-      await this.driverLicenseService.updateExpiryDate(id, driverLicenseExpiry);
+      await this.driverLicenseService.updateExpiryDate(
+        user.id,
+        driverLicenseExpiry
+      );
 
-      await this.permitService.updateExpiryDate(id, taxiPermitExpiry);
+      await this.permitService.updateExpiryDate(user.id, taxiPermitExpiry);
 
       return this.send(
         res,
         null,
-        HttpStatusCode.NotFound,
+        HttpStatusCode.Ok,
         'Expiry dates updated successfully'
       );
     } catch (error) {
@@ -70,7 +76,7 @@ export default class ProfileController extends Api {
 
   public getCurrentProfile = async (req, res, next) => {
     try {
-      const userProfile = await this.userProfileService.getUserProfileByUserId(
+      const userProfile = await this.userProfileService.getByUserId(
         req.user.id
       );
       this.send(
@@ -118,9 +124,7 @@ export default class ProfileController extends Api {
     next: NextFunction
   ) => {
     try {
-      const profile = await this.userProfileService.getUserProfileByUserId(
-        req.user?.id
-      );
+      const profile = await this.userProfileService.getByUserId(req.user?.id);
       if (!profile) {
         this.send(res, null, HttpStatusCode.NotFound, 'Not found');
         return;

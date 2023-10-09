@@ -5,6 +5,7 @@ import {
   type FilterVehiclesDto,
   type UpdateVehicleStatusDto,
 } from './vehicle.dto';
+import { type VehicleStatus } from './types';
 import Api from '@/lib/api';
 import { bucketName, gStorage } from '@/utils/storage';
 
@@ -108,7 +109,7 @@ export default class VehicleController extends Api {
     next: NextFunction
   ) => {
     try {
-      const status = req.params.status;
+      const status = req.params.status as VehicleStatus;
       const vehicles = await this.vehicleService.getVehiclesByStatus(status);
       return this.send(
         res,
@@ -147,9 +148,8 @@ export default class VehicleController extends Api {
   ) => {
     try {
       const { category } = req.params;
-      const vehicles = await this.vehicleService.getVehiclesByCategory(
-        category
-      );
+      const vehicles =
+        await this.vehicleService.getVehiclesByCategory(category);
       return this.send(
         res,
         vehicles,
@@ -168,9 +168,8 @@ export default class VehicleController extends Api {
   ) => {
     try {
       const { licensePlate } = req.params;
-      const vehicle = await this.vehicleService.getVehicleByLicensePlate(
-        licensePlate
-      );
+      const vehicle =
+        await this.vehicleService.getVehicleByLicensePlate(licensePlate);
       return this.send(
         res,
         vehicle,

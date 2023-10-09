@@ -15,14 +15,37 @@ export default class DriverLicenseController extends Api {
   private readonly licenceService = new DriverLicenseService();
   private readonly profileService = new ProfileService();
 
+  private readonly getUserProfileId = async (res, userId: string) => {
+    console.log(userId);
+    const profile = await this.profileService.getByUserId(userId);
+
+    console.log(profile);
+    if (!profile) {
+      this.send(res, null, HttpStatusCode.NotFound, 'Not found');
+      return;
+    }
+    return profile.id;
+  };
+
   createDriverLicense = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      const dto: CreateDriverLicenseDto = { userId: req.user?.id, ...req.body };
+      const userProfileId = await this.getUserProfileId(res, req.user?.id);
+
+      console.log(userProfileId);
+
+      const dto: CreateDriverLicenseDto = {
+        userProfileId,
+        ...req.body,
+      };
+
       const driverLicense = await this.licenceService.createDriverLicense(dto);
+
+      console.log(driverLicense);
+
       return this.send(
         res,
         driverLicense,
@@ -40,16 +63,16 @@ export default class DriverLicenseController extends Api {
     next: NextFunction
   ) => {
     try {
-      const userId = req.user?.id;
-      const profile = await this.profileService.getUserProfileByUserId(userId);
-      if (!profile) {
-        this.send(res, null, HttpStatusCode.NotFound, 'Not found');
-        return;
-      }
+      const userProfileId = await this.getUserProfileId(res, req.user?.id);
+
+      console.log(userProfileId);
+
       const driverLicense = await this.licenceService.updateDriverLicense(
-        profile.id,
+        userProfileId,
         req.body as UpdateDriverLicenseDto
       );
+
+      console.log(driverLicense);
       return this.send(
         res,
         driverLicense,
@@ -135,7 +158,7 @@ export default class DriverLicenseController extends Api {
   ) => {
     try {
       const file = req.file;
-      const profile = await this.profileService.getUserProfileByUserId(
+      const profile = await this.profileService.getByUserId(
         req.user?.id as string
       );
 

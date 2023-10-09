@@ -1,33 +1,22 @@
-import {
-  type CreateDriverLicenseDto,
-  type UpdateDriverLicenseDto,
-} from './licence.dto';
+import { type UpdateDriverLicenseDto } from './licence.dto';
 import prisma from '@/lib/prisma';
 
 export default class DriverLicenseService {
-  async createDriverLicense(dto: CreateDriverLicenseDto) {
-    try {
-      const driverLicense = await prisma.driverLicense.create({ data: dto });
-      return driverLicense;
-    } catch (error) {
-      throw new Error('Error creating driver license');
-    }
+  async createDriverLicense(data) {
+    const driverLicense = await prisma.driverLicense.create({ data });
+    return driverLicense;
   }
 
-  async updateDriverLicense(userProfile: string, data: UpdateDriverLicenseDto) {
-    try {
-      const driverLicense = await prisma.driverLicense.update({
-        where: { userProfile },
-        data,
-      });
-      return driverLicense;
-    } catch (error) {
-      throw new Error('Error updating driver license');
-    }
+  async updateDriverLicense(userProfileId, data: UpdateDriverLicenseDto) {
+    const driverLicense = await prisma.driverLicense.update({
+      where: { userProfileId },
+      data,
+    });
+    return driverLicense;
   }
 
   async updateExpiryDate(userProfileId: string, driverLicenseExpiry) {
-    const permit = await prisma.permit.update({
+    const permit = await prisma.driverLicense.update({
       where: { userProfileId },
       data: {
         driverLicenseExpiry: new Date(driverLicenseExpiry),

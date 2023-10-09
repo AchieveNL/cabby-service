@@ -3,9 +3,6 @@ import { IsString, IsOptional, IsDate } from 'class-validator';
 
 export class CreatePermitDto {
   @IsString()
-  userId: string;
-
-  @IsString()
   @IsOptional()
   kiwaTaxiVergunningId?: string;
 
