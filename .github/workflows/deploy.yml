@@ -1,4 +1,4 @@
-name: Build and Deploy to Cloud Run
+name: Deploy to Cloud Run
 
 on:
   push:
@@ -9,9 +9,9 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GAR_LOCATION: ${{ secrets.GAR_LOCATION }}
   SERVICE: ${{ secrets.SERVICE_NAME }}
   REGION: ${{ secrets.REGION }}
+  IMAGE_URL: gcr.io/cabby-392012/cabby-service:latest
 
 jobs:
   build-and-check:
@@ -39,30 +39,12 @@ jobs:
     needs: build-and-check
     runs-on: ubuntu-latest
     steps:
-      - name: Google Auth
-        id: auth
-        uses: 'google-github-actions/auth@v0'
-        with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
-
-      - name: Docker Auth
-        uses: 'docker/login-action@v1'
-        with:
-          username: 'oauth2accesstoken'
-          password: '${{ steps.auth.outputs.access_token }}'
-          registry: '${{ secrets.GAR_LOCATION }}-docker.pkg.dev'
-
-      - name: Build and Push Container to Staging
-        run: |
-          docker build -t "${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/staging:${{ github.sha }}" ./
-          docker push "${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/staging:${{ github.sha }}"
-
       - name: Deploy to Cloud Run Staging
         uses: google-github-actions/deploy-cloudrun@v0
         with:
           service: staging-${{ secrets.SERVICE }}
           region: ${{ secrets.REGION }}
-          image: ${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/staging:${{ github.sha }}
+          image: ${{ env.IMAGE_URL }}
 
   deploy-production:
     environment:
@@ -71,27 +53,9 @@ jobs:
     needs: build-and-check
     runs-on: ubuntu-latest
     steps:
-      - name: Google Auth
-        id: auth
-        uses: 'google-github-actions/auth@v0'
-        with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
-
-      - name: Docker Auth
-        uses: 'docker/login-action@v1'
-        with:
-          username: 'oauth2accesstoken'
-          password: '${{ steps.auth.outputs.access_token }}'
-          registry: '${{ secrets.GAR_LOCATION }}-docker.pkg.dev'
-
-      - name: Build and Push Container to Production
-        run: |
-          docker build -t "${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/production:${{ github.sha }}" ./
-          docker push "${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/production:${{ github.sha }}"
-
       - name: Deploy to Cloud Run Production
         uses: google-github-actions/deploy-cloudrun@v0
         with:
           service: production-${{ secrets.SERVICE }}
           region: ${{ secrets.REGION }}
-          image: ${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/production:${{ github.sha }}
+          image: ${{ env.IMAGE_URL }}
