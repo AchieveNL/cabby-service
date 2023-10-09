@@ -1,4 +1,4 @@
-name: Deploy to Cloud Run
+name: Build and Deploy to Cloud Run
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GAR_LOCATION: ${{ secrets.GAR_LOCATION }}
   SERVICE: ${{ secrets.SERVICE_NAME }}
   REGION: ${{ secrets.REGION }}
   IMAGE_URL: gcr.io/cabby-392012/cabby-service:latest
@@ -44,7 +45,7 @@ jobs:
         uses: 'google-github-actions/auth@v0'
         with:
           credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
-          
+
       - name: Deploy to Cloud Run Staging
         uses: google-github-actions/deploy-cloudrun@v0
         with:
@@ -60,11 +61,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Google Auth
-          id: auth
-          uses: 'google-github-actions/auth@v0'
-          with:
-            credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
-            
+        id: auth
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
       - name: Deploy to Cloud Run Production
         uses: google-github-actions/deploy-cloudrun@v0
         with:
