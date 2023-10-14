@@ -1,7 +1,6 @@
 import { type Response } from 'express';
 
 const secure = process.env.NODE_ENV === 'production';
-const httpOnly = process.env.NODE_ENV === 'development';
 
 export const setAuthCookies = (
   res: Response,
@@ -11,7 +10,7 @@ export const setAuthCookies = (
   res.cookie('token', newToken, { maxAge: 3600000, httpOnly: true });
   res.cookie('refreshToken', newRefreshToken, {
     maxAge: 1209600000,
-    httpOnly,
+    httpOnly: true,
     secure,
     sameSite: 'lax',
   });
