@@ -2,6 +2,7 @@ import { type Request, type Response, type NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { UserRole } from '@prisma/client';
 import { generateRefreshToken, generateToken } from './token-manager';
+import { setAuthCookies } from './cookies';
 
 export const verifyAuthToken = async (
   req: Request,
@@ -69,12 +70,7 @@ const handleRefreshToken = (
       const newToken = generateToken(user);
       const newRefreshToken = generateRefreshToken(user);
 
-      // Set the new tokens in cookies
-      res.cookie('token', newToken, { maxAge: 3600000, httpOnly: true });
-      res.cookie('refreshToken', newRefreshToken, {
-        maxAge: 1209600000,
-        httpOnly: true,
-      });
+      setAuthCookies(res, newToken, newRefreshToken);
 
       // Continue
       req.user = user;
