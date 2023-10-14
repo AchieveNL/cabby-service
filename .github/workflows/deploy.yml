@@ -37,7 +37,6 @@ jobs:
   deploy-staging:
     environment:
       name: staging
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     needs: build-and-check
     runs-on: ubuntu-latest
     steps:
