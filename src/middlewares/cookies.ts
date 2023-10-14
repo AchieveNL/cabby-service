@@ -1,17 +1,25 @@
-import { type Response } from 'express';
-
-const secure = process.env.NODE_ENV === 'production';
+import { type CookieOptions, type Response } from 'express';
 
 export const setAuthCookies = (
   res: Response,
   newToken: string,
   newRefreshToken: string
 ) => {
-  res.cookie('token', newToken, { maxAge: 3600000, httpOnly: true });
-  res.cookie('refreshToken', newRefreshToken, {
-    maxAge: 1209600000,
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  const cookieOptions: CookieOptions = {
     httpOnly: true,
-    secure,
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+  };
+
+  res.cookie('token', newToken, {
+    ...cookieOptions,
+    maxAge: 3600000,
+  });
+
+  res.cookie('refreshToken', newRefreshToken, {
+    ...cookieOptions,
+    maxAge: 1209600000,
   });
 };

@@ -44,7 +44,7 @@ class App {
           if (
             !origin ||
             allowedOrigins.includes(origin) ||
-            /\.vercel\.app$/.test(origin)
+            origin.includes('vercel.app')
           ) {
             callback(null, true);
           } else {
