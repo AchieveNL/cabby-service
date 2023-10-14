@@ -145,4 +145,25 @@ export default class UserService {
       throw new Error('Error fetching users');
     }
   }
+
+  public async fetchUserById(id: string) {
+    const user = await prisma.user.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        email: true,
+        status: true,
+        createdAt: true,
+        profile: {
+          select: {
+            fullName: true,
+            profilePhoto: true,
+          },
+        },
+      },
+    });
+    return user;
+  }
 }

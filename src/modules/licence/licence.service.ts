@@ -19,7 +19,7 @@ export default class DriverLicenseService {
     const permit = await prisma.driverLicense.update({
       where: { userProfileId },
       data: {
-        driverLicenseExpiry: new Date(driverLicenseExpiry),
+        driverLicenseExpiry,
       },
     });
     return permit;

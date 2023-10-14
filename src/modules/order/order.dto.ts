@@ -8,10 +8,6 @@ export class CreateOrderDto {
 
   @IsNotEmpty()
   @IsString()
-  userId: string;
-
-  @IsNotEmpty()
-  @IsString()
   rentalStartDate: string;
 
   @IsNotEmpty()
@@ -39,7 +35,7 @@ export class CancelOrderDto {
   orderId: string;
 }
 
-export class ConfirmOrderDto {
+export class RejectConfirmOrderDto {
   @IsNotEmpty()
   @IsString()
   orderId: string;
