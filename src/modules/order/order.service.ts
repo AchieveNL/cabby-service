@@ -1,46 +1,53 @@
 import { type Decimal } from '@prisma/client/runtime/library';
 import { differenceInHours } from 'date-fns';
 import PaymentService from '../payment/payment.service';
-import { type CreateOrderDto } from './order.dto';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
 
 export default class OrderService {
   private readonly paymentService = new PaymentService();
 
-  public createOrder = async (dto: CreateOrderDto) => {
-    try {
-      const totalAmount = await this.calculateTotalAmount(
-        dto.vehicleId,
-        dto.rentalStartDate,
-        dto.rentalEndDate
-      );
+  public createOrder = async (dto) => {
+    const totalAmount = await this.calculateTotalAmount(
+      dto.vehicleId,
+      dto.rentalStartDate,
+      dto.rentalEndDate
+    );
 
-      const order = await this.createOrderInDb({
+    const order = await prisma.order.create({
+      data: {
         ...dto,
         totalAmount,
-        orderStatus: 'PENDING', // Assuming you want to set an initial status
-      });
+        status: OrderStatus.PENDING,
+      },
+    });
 
-      const payment = await this.paymentService.createRegistrationPayment({
-        userId: dto.userId,
-        amount: totalAmount,
-        orderId: order.id,
-      });
+    const payment = await this.paymentService.createRegistrationPayment({
+      userId: dto.userId,
+      amount: totalAmount,
+      orderId: order.id,
+    });
 
-      return { order, payment };
-    } catch (error) {
-      console.error(error);
-      throw new Error('Order creation failed');
-    }
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        paymentId: payment.payment,
+      },
+    });
+
+    return { order, payment };
   };
 
-  public rejectOrder = async (orderId: string, reason: string) => {
+  public rejectionReasonOrder = async (orderId: string, reason: string) => {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
 
     if (!order) throw new Error('Order not found');
 
     const rejectionData = { orderId, reason };
+
+    await prisma.orderRejection.create({
+      data: rejectionData,
+    });
 
     await prisma.$transaction([
       prisma.order.update({
@@ -53,13 +60,24 @@ export default class OrderService {
     ]);
   };
 
+  public rejectOrder = async (orderId: string) => {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+
+    if (!order) throw new Error('Order not found');
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'REJECTED' },
+    });
+  };
+
   public cancelOrder = async (orderId: string) => {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
 
     if (!order) throw new Error('Order not found');
 
     const now = new Date();
-    const rentalStartDate = new Date(order.rentalStartDate); // Assuming order.rentalStartDate is stored as string
+    const rentalStartDate = new Date(order.rentalStartDate);
 
     if (differenceInHours(rentalStartDate, now) <= 24) {
       throw new Error(
@@ -114,6 +132,7 @@ export default class OrderService {
           },
         },
         rejection: true,
+        vehicle: true,
       },
     });
   };
@@ -142,19 +161,6 @@ export default class OrderService {
     }
 
     return vehicle.pricePerDay as Decimal;
-  };
-
-  private readonly createOrderInDb = async (orderData: any) => {
-    try {
-      const createdOrder = await prisma.order.create({
-        data: orderData,
-      });
-
-      return createdOrder;
-    } catch (error) {
-      console.error(error);
-      throw new Error('Error creating order in the database');
-    }
   };
 
   public async createRejection(data: { orderId: string; reason: string }) {

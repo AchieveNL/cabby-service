@@ -80,4 +80,13 @@ users.get(
   controller.fetchUsersByStatus
 );
 
+users.get(
+  '/current',
+  verifyAuthToken,
+  requireAuth,
+  controller.fetchCurrentUser
+);
+
+users.get('/:id', verifyAuthToken, requireAuth, controller.fetchUserById);
+
 export default users;

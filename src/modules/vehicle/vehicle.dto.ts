@@ -2,86 +2,88 @@ import {
   IsNotEmpty,
   IsString,
   IsOptional,
-  IsInt,
-  Min,
   IsArray,
   IsEnum,
   IsUUID,
+  IsNumber,
 } from 'class-validator';
 
 enum VehicleStatus {
-  AVAILABLE = 'available',
-  UNAVAILABLE = 'unavailable',
-  // Add other statuses as needed
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  REJECTED = 'REJECTED',
+  BLOCKED = 'BLOCKED',
 }
 
 export class CreateVehicleDto {
+  @IsOptional()
+  @IsString()
+  logo?: string;
+
   @IsNotEmpty()
   @IsString()
   companyName: string;
 
   @IsNotEmpty()
   @IsString()
-  modelName: string;
+  model: string;
 
   @IsNotEmpty()
   @IsString()
-  rentalPeriod: string;
+  rentalDuration: string;
 
   @IsOptional()
   @IsString()
-  plateNumber?: string;
-
-  @IsNotEmpty()
-  @IsString()
-  type: string;
-
-  @IsNotEmpty()
-  @IsString()
-  year: string;
-
-  @IsNotEmpty()
-  @IsString()
-  engine: string;
-
-  @IsNotEmpty()
-  @IsString()
-  totalSeats: string;
-
-  @IsNotEmpty()
-  @IsString()
-  batteryCapacity: string;
+  licensePlate?: string;
 
   @IsOptional()
   @IsString()
-  specialFeature?: string;
+  category?: string;
+
+  @IsOptional()
+  @IsString()
+  manufactureYear?: string;
+
+  @IsOptional()
+  @IsString()
+  engineType?: string;
+
+  @IsOptional()
+  @IsString()
+  seatingCapacity?: string;
+
+  @IsOptional()
+  @IsString()
+  batteryCapacity?: string;
+
+  @IsOptional()
+  @IsString()
+  uniqueFeature?: string;
 
   @IsOptional()
   @IsArray()
-  @IsString({ each: true }) // each: true applies the string validation to each item in the array
-  carImages?: string[];
+  @IsString({ each: true })
+  images?: string[];
+
+  @IsOptional()
+  @IsString()
+  availability?: string;
+
+  @IsOptional()
+  @IsString()
+  unavailabilityReason?: string;
+
+  @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @IsOptional()
+  @IsNumber()
+  pricePerDay?: number;
 
   @IsOptional()
   @IsEnum(VehicleStatus)
   status?: VehicleStatus;
-
-  @IsOptional()
-  @IsString()
-  reason?: string;
-
-  @IsNotEmpty()
-  @IsString()
-  currency: string;
-
-  @IsNotEmpty()
-  @IsInt()
-  @Min(0)
-  priceRangeFrom: number;
-
-  @IsNotEmpty()
-  @IsInt()
-  @Min(0)
-  priceRangeTo: number;
 }
 
 export class UpdateVehicleStatusDto {

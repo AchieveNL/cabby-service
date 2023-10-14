@@ -19,20 +19,6 @@ export default class VehicleController extends Api {
   ) => {
     try {
       const vehicleData = req.body;
-      const images: Express.Multer.File[] = req.files as Express.Multer.File[];
-
-      const imageUrls: string[] = [];
-
-      for (const image of images) {
-        const remoteFileName = `vehicle-${Date.now()}`;
-        await gStorage.bucket(bucketName).upload(image.path, {
-          destination: remoteFileName,
-        });
-        const imageUrl = `https://storage.googleapis.com/${bucketName}/${remoteFileName}`;
-        imageUrls.push(imageUrl);
-      }
-
-      vehicleData.images = imageUrls;
 
       const vehicle = await this.vehicleService.createVehicle(vehicleData);
 
@@ -251,6 +237,33 @@ export default class VehicleController extends Api {
         deletedVehicle,
         HttpStatusCode.Ok,
         'Vehicle deleted successfully'
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public saveVehicleRejection = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { vehicleId, reason } = req.body;
+
+      const rejectionData = {
+        vehicleId,
+        reason,
+      };
+
+      const rejectionResponse =
+        await this.vehicleService.saveVehicleRejection(rejectionData);
+
+      return this.send(
+        res,
+        rejectionResponse,
+        HttpStatusCode.Created,
+        'Vehicle rejection saved successfully'
       );
     } catch (error) {
       next(error);

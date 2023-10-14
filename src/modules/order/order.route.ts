@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import OrderController from './order.controller';
-import { CancelOrderDto, ConfirmOrderDto, CreateOrderDto } from './order.dto';
+import {
+  CancelOrderDto,
+  CreateOrderDto,
+  RejectConfirmOrderDto,
+} from './order.dto';
 import RequestValidator from '@/middlewares/request-validator';
-import { requireAuth, verifyAuthToken } from '@/middlewares/auth';
+import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
 
 const router = Router();
 const orderController = new OrderController();
@@ -27,8 +31,25 @@ router.post(
   '/confirm',
   verifyAuthToken,
   requireAuth,
-  RequestValidator.validate(ConfirmOrderDto),
+  requireAdmin,
+  RequestValidator.validate(RejectConfirmOrderDto),
   orderController.confirmOrder
+);
+
+router.post(
+  '/reject',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  RequestValidator.validate(RejectConfirmOrderDto),
+  orderController.rejectOrder
+);
+
+router.post(
+  '/rejection/:orderId',
+  verifyAuthToken,
+  requireAuth,
+  orderController.createOrderRejection
 );
 
 router.get(
@@ -43,13 +64,6 @@ router.get(
   verifyAuthToken,
   requireAuth,
   orderController.getOrderDetails
-);
-
-router.post(
-  '/rejection/:orderId',
-  verifyAuthToken,
-  requireAuth,
-  orderController.createOrderRejection
 );
 
 export default router;

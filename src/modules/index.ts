@@ -6,6 +6,11 @@ import permit from './permit/permit.route';
 import payment from './payment/payment.route';
 import licence from './licence/licence.route';
 import orders from './order/order.route';
+import files from './file/file.route';
+import vehicles from './vehicle/vehicle.route';
+import overview from './overview/overview.route';
+import damageReports from './damage-reports/damage-reports.route';
+import messages from './message/message.route';
 
 const router: Router = Router();
 
@@ -15,5 +20,10 @@ router.use('/permit', permit);
 router.use('/payment', payment);
 router.use('/licence', licence);
 router.use('/orders', orders);
+router.use('/files', files);
+router.use('/vehicles', vehicles);
+router.use('/overview', overview);
+router.use('/damage-reports', damageReports);
+router.use('/messages', messages);
 
 export default router;
