@@ -44,7 +44,7 @@ class App {
           if (
             !origin ||
             allowedOrigins.includes(origin) ||
-            /[-\w]+-cabby-admin-portal\.vercel\.app$/.test(origin)
+            /\.vercel\.app$/.test(origin)
           ) {
             callback(null, true);
           } else {
