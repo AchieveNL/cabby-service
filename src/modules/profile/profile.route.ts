@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import multer from 'multer';
 import Controller from './profile.controller';
 import {
   CreateUserProfileDto,
@@ -11,13 +10,6 @@ import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
 
 const profile: Router = Router();
 const controller = new Controller();
-
-const upload = multer({
-  dest: './data/uploads/', // Change 'uploads/' to your desired upload directory
-  limits: {
-    fileSize: 10 * 1024 * 1024, // Set your desired file size limit in bytes (10MB in this case)
-  },
-});
 
 profile.post(
   '/create',
@@ -65,9 +57,24 @@ profile.patch(
   '/update-images',
   verifyAuthToken,
   requireAuth,
-  upload.single('file'),
   RequestValidator.validate(UpdateExpiryDateDto),
   controller.updateExpiryDate
+);
+
+profile.get('/drivers', verifyAuthToken, requireAuth, controller.getAllDrivers);
+
+profile.patch(
+  '/status/:id',
+  verifyAuthToken,
+  requireAuth,
+  controller.updateUserProfileStatus
+);
+
+profile.get(
+  '/status/:id',
+  verifyAuthToken,
+  requireAuth,
+  controller.getUserProfileByStatus
 );
 
 export default profile;

@@ -41,7 +41,7 @@ export default class PaymentService {
         },
       });
 
-      await prisma.payment.create({
+      const { id } = await prisma.payment.create({
         data: {
           userId: data.userId,
           amount: parseFloat(payment.amount.value),
@@ -52,7 +52,7 @@ export default class PaymentService {
         },
       });
 
-      return payment.getCheckoutUrl();
+      return { payment: id, checkoutUrl: payment.getCheckoutUrl() };
     } catch (error) {
       console.error(error);
       throw new Error('Payment creation failed');

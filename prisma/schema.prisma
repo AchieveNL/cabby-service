@@ -36,6 +36,9 @@ model user {
   otpExpiry  DateTime?  // OTP validity check.
   payments   payment[]
   orders     order[]
+  damageReports     damageReport[]
+  sentMessages     message[] @relation("MessageSender")
+  receivedMessages message[] @relation("MessageRecipient")
 }
 
 model passwordResetToken {
@@ -45,6 +48,15 @@ model passwordResetToken {
   userId   String
   user     user    @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+}
+
+enum UserProfileStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+  BLOCKED
+  APPROVED
+  REJECTED
 }
 
 model userProfile {
@@ -59,6 +71,7 @@ model userProfile {
   profilePhoto         String?
   signature            String?
   zip                  String?
+  status UserProfileStatus @default(PENDING)
   user      user    @relation(fields: [userId], references: [id])
   driverLicense        driverLicense?
   permitDetails        permitDetails?
@@ -67,7 +80,7 @@ model userProfile {
 model driverLicense {
   id                   String        @id @default(uuid())
   driverLicenseBack    String?
-  driverLicenseExpiry  DateTime?
+  driverLicenseExpiry  String?
   driverLicenseFront   String?
   dateOfBirth          String
   bsnNumber            String?
@@ -115,6 +128,8 @@ model vehicle {
   status           VehicleStatus @default(PENDING)
 
   orders           order[]
+  rejection        vehicleRejection?
+  damageReports    damageReport[]
 }
 
 enum PaymentProduct {
@@ -186,4 +201,44 @@ model orderRejection {
   @@index([orderId], name: "idx_orderId")
 }
 
+model vehicleRejection {
+  id         String @id @default(uuid())
+  vehicleId  String @unique // Associated Order ID
+  reason     String // Text field explaining why the order was rejected
+  date       DateTime @default(now()) // The date when the order was rejected
+  
+  vehicle    vehicle @relation(fields: [vehicleId], references: [id])
+  
+  @@index([vehicleId], name: "idx_vehicleId")
+}
 
+
+model damageReport {
+  id          Int      @id @default(autoincrement())
+  reportedAt  DateTime @default(now())
+  description String
+  status      ReportStatus @default(UNDERPAID)
+  amount      Float?
+  repairedAt  DateTime?
+  vehicleId   String 
+  userId      String
+  vehicle     vehicle  @relation(fields: [vehicleId], references: [id])
+  user        user          @relation(fields: [userId], references: [id])
+}
+
+enum ReportStatus {
+  UNDERPAID
+  REPAIRED
+}
+
+model message {
+  id           String    @id @default(uuid())
+  senderId     String
+  recipientId  String
+  content      String
+  createdAt    DateTime  @default(now())
+  
+  // Relations
+  sender       user      @relation("MessageSender", fields: [senderId], references: [id])
+  recipient    user      @relation("MessageRecipient", fields: [recipientId], references: [id])
+}

@@ -5,7 +5,7 @@ import {
   type RejectOrderDto,
   type CreateOrderDto,
   type CancelOrderDto,
-  type ConfirmOrderDto,
+  type RejectConfirmOrderDto,
 } from './order.dto';
 import { OrderStatus } from './types';
 import Api from '@/lib/api';
@@ -19,8 +19,11 @@ export default class OrderController extends Api {
     next: NextFunction
   ) => {
     try {
-      const dto: CreateOrderDto = req.body;
-      const order = await this.orderService.createOrder(dto);
+      const dto = req.body;
+      const order = await this.orderService.createOrder({
+        ...dto,
+        userId: req.user?.id,
+      } satisfies CreateOrderDto);
       return this.send(
         res,
         order,
@@ -38,9 +41,9 @@ export default class OrderController extends Api {
     next: NextFunction
   ) => {
     try {
-      const { orderId, reason } = req.body as RejectOrderDto;
-      await this.orderService.rejectOrder(orderId, reason);
-      return this.send(res, null, 204, 'Order rejected successfully');
+      const { orderId } = req.body as RejectOrderDto;
+      await this.orderService.rejectOrder(orderId);
+      return this.send(res, null, 200, 'Order rejected successfully');
     } catch (error) {
       next(error);
     }
@@ -66,9 +69,9 @@ export default class OrderController extends Api {
     next: NextFunction
   ) => {
     try {
-      const { orderId } = req.body as ConfirmOrderDto;
+      const { orderId } = req.body as RejectConfirmOrderDto;
       await this.orderService.confirmOrder(orderId);
-      return this.send(res, null, 204, 'Order confirmed successfully');
+      return this.send(res, null, 200, 'Order confirmed successfully');
     } catch (error) {
       next(error);
     }
@@ -110,7 +113,11 @@ export default class OrderController extends Api {
     }
   };
 
-  public async createOrderRejection(req: Request, res: Response) {
+  public createOrderRejection = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     const { orderId } = req.params;
     const { reason } = req.body;
 
@@ -119,10 +126,9 @@ export default class OrderController extends Api {
         orderId,
         reason,
       });
-      return res.status(201).json(rejection);
+      return this.send(res, rejection, 201, 'Rejection created successfully');
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: 'Internal Server Error' });
+      next(error);
     }
-  }
+  };
 }

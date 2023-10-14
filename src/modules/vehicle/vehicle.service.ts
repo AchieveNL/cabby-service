@@ -7,15 +7,11 @@ import prisma from '@/lib/prisma';
 
 export default class VehicleService {
   public createVehicle = async (data) => {
-    try {
-      const vehicle = await prisma.vehicle.create({
-        data,
-      });
+    const vehicle = await prisma.vehicle.create({
+      data,
+    });
 
-      return vehicle;
-    } catch (error) {
-      throw new Error('Failed to create vehicle');
-    }
+    return vehicle;
   };
 
   public updateVehicle = async (id: string, data) => {
@@ -126,5 +122,15 @@ export default class VehicleService {
     } catch (error) {
       throw new Error('Failed to delete vehicle');
     }
+  };
+
+  public saveVehicleRejection = async (data: {
+    vehicleId: string;
+    reason: string;
+  }) => {
+    const rejection = await prisma.vehicleRejection.create({
+      data,
+    });
+    return rejection;
   };
 }

@@ -1,11 +1,3 @@
-export enum UserProfileStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  BLOCKED = 'BLOCKED',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-}
-
 export interface UserProfileInput {
   city: string;
   driverLicenseBack?: string;
