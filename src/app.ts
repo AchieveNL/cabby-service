@@ -54,13 +54,6 @@ class App {
         credentials: true,
       })
     );
-
-    this.express.use(
-      cors({
-        origin: 'http://localhost:3000',
-        credentials: true,
-      })
-    );
   }
 
   private disableSettings(): void {
