@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import multer from 'multer';
 import PermitController from './vehicle.controller';
 import {
   CreateVehicleDto,
@@ -12,19 +11,11 @@ import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
 const router: Router = Router();
 const controller = new PermitController();
 
-const upload = multer({
-  dest: './data/uploads/',
-  limits: {
-    fileSize: 10 * 1024 * 1024,
-  },
-});
-
 router.post(
   '/create',
   verifyAuthToken,
   requireAuth,
   requireAdmin,
-  upload.array('images', 5),
   RequestValidator.validate(CreateVehicleDto),
   controller.createVehicle
 );
@@ -34,7 +25,6 @@ router.put(
   verifyAuthToken,
   requireAuth,
   requireAdmin,
-  upload.array('images', 5),
   RequestValidator.validate(CreateVehicleDto),
   controller.updateVehicle
 );
@@ -92,6 +82,14 @@ router.get(
   '/filter',
   RequestValidator.validateQuery(FilterVehiclesDto),
   controller.getFilteredVehicles
+);
+
+router.post(
+  '/rejection',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  controller.saveVehicleRejection
 );
 
 export default router;

@@ -16,8 +16,7 @@ import {
   generateRefreshToken,
   generateToken,
 } from '@/middlewares/token-manager';
-
-const isSecure = process.env.NODE_ENV === 'production';
+import { setAuthCookies } from '@/middlewares/cookies';
 
 export default class UserController extends Api {
   private readonly userService = new UserService();
@@ -41,21 +40,8 @@ export default class UserController extends Api {
       const token = generateToken(user);
       const refreshToken = generateRefreshToken(user);
 
-      // Set cookies for tokens
-      res.cookie('token', token, {
-        maxAge: 3600000,
-        httpOnly: true,
-        secure: isSecure,
-        sameSite: 'none',
-      }); // 1 hour
-      res.cookie('refreshToken', refreshToken, {
-        maxAge: 86400000,
-        httpOnly: true,
-        secure: isSecure,
-        sameSite: 'none',
-      }); // 1 day
+      setAuthCookies(res, token, refreshToken);
 
-      // Return the created user along with the tokens
       this.send(res, { user, token }, HttpStatusCode.Created, 'signup');
     } catch (e) {
       console.log(e);
@@ -85,19 +71,7 @@ export default class UserController extends Api {
       const token = generateToken(user);
       const refreshToken = generateRefreshToken(user);
 
-      // Set cookies for tokens
-      res.cookie('token', token, {
-        maxAge: 3600000,
-        httpOnly: true,
-        secure: isSecure,
-        sameSite: 'lax',
-      }); // 1 hour
-      res.cookie('refreshToken', refreshToken, {
-        maxAge: 86400000,
-        httpOnly: true,
-        secure: isSecure,
-        sameSite: 'lax',
-      }); // 1 day
+      setAuthCookies(res, token, refreshToken);
 
       return res.status(HttpStatusCode.Ok).json({ user });
     } catch (e) {
@@ -217,6 +191,32 @@ export default class UserController extends Api {
         HttpStatusCode.Ok,
         `${users.length} users fetched successfully`
       );
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  public fetchCurrentUser = async (
+    req: Request,
+    res: CustomResponse<user>,
+    next: NextFunction
+  ) => {
+    try {
+      const user = await this.userService.fetchUserById(req.user?.id);
+      this.send(res, user, HttpStatusCode.Ok, `user fetched successfully`);
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  public fetchUserById = async (
+    req: Request,
+    res: CustomResponse<user>,
+    next: NextFunction
+  ) => {
+    try {
+      const users = await this.userService.fetchUserById(req.params.id);
+      this.send(res, users, HttpStatusCode.Ok, `user fetched successfully`);
     } catch (e) {
       next(e);
     }

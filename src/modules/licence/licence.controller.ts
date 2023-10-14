@@ -44,8 +44,6 @@ export default class DriverLicenseController extends Api {
 
       const driverLicense = await this.licenceService.createDriverLicense(dto);
 
-      console.log(driverLicense);
-
       return this.send(
         res,
         driverLicense,

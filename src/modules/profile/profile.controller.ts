@@ -8,6 +8,7 @@ import PermitService from '../permit/permit.service';
 import ProfileService from './profile.service';
 
 import { type UpdateExpiryDateDto } from './profile.dto';
+import { type UserProfileStatus } from './types';
 import Api from '@/lib/api';
 import { type CustomResponse } from '@/types/common.type';
 import 'multer';
@@ -200,6 +201,47 @@ export default class ProfileController extends Api {
       );
     } catch (error) {
       next(error);
+    }
+  };
+
+  public getAllDrivers = async (req, res, next) => {
+    try {
+      const drivers = await this.userProfileService.getAllDrivers();
+      this.send(
+        res,
+        drivers,
+        HttpStatusCode.Ok,
+        'Drivers fetched successfully'
+      );
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  public updateUserProfileStatus = async (req, res, next) => {
+    try {
+      const { status } = req.body;
+      const { id } = req.params;
+      await this.userProfileService.updateUserProfileStatus(id, status);
+      this.send(res, null, HttpStatusCode.Ok, 'Status updated successfully');
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  public getUserProfileByStatus = async (req, res, next) => {
+    try {
+      const status = req.params.status as UserProfileStatus;
+      const response =
+        await this.userProfileService.getUserProfileByStatus(status);
+      this.send(
+        res,
+        response,
+        HttpStatusCode.Ok,
+        'Drivers fetched successfully'
+      );
+    } catch (e) {
+      next(e);
     }
   };
 }
