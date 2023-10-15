@@ -13,11 +13,6 @@ import errorHandler from '@/middlewares/error-handler';
 import routes from '@/modules/index';
 import prismaClient from '@/lib/prisma';
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://cabby-admin-portal.vercel.app',
-];
-
 class App {
   public express: express.Application;
 
@@ -41,13 +36,21 @@ class App {
     this.express.use(
       cors({
         origin: (origin, callback) => {
+          console.log('Origin:', origin);
+
+          const allowedOrigins = [
+            'http://localhost:3000',
+            'https://cabby-admin-portal.vercel.app',
+          ];
+
           if (
             !origin ||
             allowedOrigins.includes(origin) ||
-            origin.includes('vercel.app')
+            origin.endsWith('.vercel.app')
           ) {
             callback(null, true);
           } else {
+            console.error('CORS Rejected:', origin);
             callback(new Error('Not allowed by CORS'));
           }
         },
