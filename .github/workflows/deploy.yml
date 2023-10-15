@@ -54,7 +54,6 @@ jobs:
           env_vars: |
             NODE_ENV=staging
             ENVIRONMENT=staging
-            PORT=8080
             APP_BASE_URL=https://cabby-service-staging-jtj2mdm6ta-ez.a.run.app
             SECRET_KEY=${{ secrets.SECRET_KEY_STAGING }}
             DATABASE_URL=${{ secrets.DATABASE_URL_STAGING }}
@@ -85,7 +84,6 @@ jobs:
           env_vars: |
             NODE_ENV=production
             ENVIRONMENT=production
-            PORT=8080
             APP_BASE_URL=https://cabby-service-production-jtj2mdm6ta-ez.a.run.app
             SECRET_KEY=${{ secrets.SECRET_KEY_PRODUCTION }}
             DATABASE_URL=${{ secrets.DATABASE_URL_PRODUCTION }}
