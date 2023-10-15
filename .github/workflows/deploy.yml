@@ -19,6 +19,8 @@ jobs:
   build-and-check:
     runs-on: ubuntu-latest
     steps:
+      - name: List directory contents
+        run: ls -al
       - name: Checkout
         uses: actions/checkout@v2
 
