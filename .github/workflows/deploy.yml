@@ -48,8 +48,6 @@ jobs:
       - name: Build and Push Docker image
         uses: docker/build-push-action@v2
         with:
-          context: .
-          file: ./Dockerfile
           push: true
           tags: ${{ env.IMAGE_URL }}
           build-args: |
@@ -97,8 +95,6 @@ jobs:
       - name: Build and Push Docker image
         uses: docker/build-push-action@v2
         with:
-          context: .
-          file: ./Dockerfile
           push: true
           tags: ${{ env.IMAGE_URL }}
           build-args: |
