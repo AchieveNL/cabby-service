@@ -36,27 +36,19 @@ class App {
     this.express.use(
       cors({
         origin: (origin, callback) => {
-          console.log('Origin:', origin);
-
-          const allowedOrigins = [
-            'http://localhost:3000',
-            'https://cabby-admin-portal.vercel.app',
-          ];
-
-          if (
-            !origin ||
-            allowedOrigins.includes(origin) ||
-            origin.endsWith('.vercel.app')
-          ) {
-            callback(null, true);
-          } else {
-            console.error('CORS Rejected:', origin);
-            callback(new Error('Not allowed by CORS'));
-          }
+          callback(null, true);
         },
         credentials: true,
       })
     );
+    this.express.use(function (req, res, next) {
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept'
+      );
+      next();
+    });
   }
 
   private disableSettings(): void {
