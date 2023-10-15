@@ -37,7 +37,6 @@ jobs:
   deploy-staging:
     environment:
       name: staging
-    if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main') || github.event_name == 'workflow_dispatch' 
     needs: build-and-check
     runs-on: ubuntu-latest
     steps:
@@ -52,6 +51,17 @@ jobs:
           service: ${{ env.SERVICE }}
           region: ${{ secrets.REGION }}
           image: ${{ env.IMAGE_URL }}
+          env_vars: |
+            NODE_ENV=staging
+            ENVIRONMENT=staging
+            PORT=8080
+            APP_BASE_URL=https://cabby-service-staging-jtj2mdm6ta-ez.a.run.app
+            SECRET_KEY=${{ secrets.SECRET_KEY_STAGING }}
+            DATABASE_URL=${{ secrets.DATABASE_URL_STAGING }}
+            SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY_STAGING }}
+            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY_STAGING }}
+            JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY_STAGING }}
+            MOLLIE_API_KEY=${{ secrets.MOLLIE_API_KEY_STAGING }}
 
   deploy-production:
     environment:
