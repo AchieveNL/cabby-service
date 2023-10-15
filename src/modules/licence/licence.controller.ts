@@ -16,10 +16,8 @@ export default class DriverLicenseController extends Api {
   private readonly profileService = new ProfileService();
 
   private readonly getUserProfileId = async (res, userId: string) => {
-    console.log(userId);
     const profile = await this.profileService.getByUserId(userId);
 
-    console.log(profile);
     if (!profile) {
       this.send(res, null, HttpStatusCode.NotFound, 'Not found');
       return;
@@ -34,8 +32,6 @@ export default class DriverLicenseController extends Api {
   ) => {
     try {
       const userProfileId = await this.getUserProfileId(res, req.user?.id);
-
-      console.log(userProfileId);
 
       const dto: CreateDriverLicenseDto = {
         userProfileId,
@@ -63,14 +59,11 @@ export default class DriverLicenseController extends Api {
     try {
       const userProfileId = await this.getUserProfileId(res, req.user?.id);
 
-      console.log(userProfileId);
-
       const driverLicense = await this.licenceService.updateDriverLicense(
         userProfileId,
         req.body as UpdateDriverLicenseDto
       );
 
-      console.log(driverLicense);
       return this.send(
         res,
         driverLicense,
@@ -112,8 +105,6 @@ export default class DriverLicenseController extends Api {
       );
 
       if (!apiResponse?.document) return;
-
-      console.log(apiResponse.document);
 
       const extractFieldContent = (fieldName) =>
         apiResponse.document.extras?.[fieldName];
