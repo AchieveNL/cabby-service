@@ -46,9 +46,13 @@ class App {
     this.express.use(helmet());
     this.express.use(cookieParser());
     this.express.use(express.static('public'));
+
+    const corsOrigin = determineCorsOrigin();
+    console.log(`CORS Origin set to: ${corsOrigin}`);
+
     this.express.use(
       cors({
-        origin: determineCorsOrigin(),
+        origin: corsOrigin,
         credentials: true,
       })
     );
