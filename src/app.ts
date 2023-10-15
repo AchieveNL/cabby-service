@@ -52,14 +52,6 @@ class App {
         credentials: true,
       })
     );
-    this.express.use((req, res, next) => {
-      res.header('Access-Control-Allow-Credentials', 'true');
-      res.header(
-        'Access-Control-Allow-Headers',
-        'Origin, X-Requested-With, Content-Type, Accept'
-      );
-      next();
-    });
   }
 
   private disableSettings(): void {
