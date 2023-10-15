@@ -13,7 +13,7 @@ export default class PermitController extends Api {
 
   public getUserProfileId = async (res, userId: string) => {
     const profile = await this.profileService.getByUserId(userId);
-    console.log(profile);
+
     if (!profile) {
       this.send(res, null, HttpStatusCode.NotFound, 'Not found');
       return;
@@ -34,14 +34,10 @@ export default class PermitController extends Api {
         req.user?.id as string
       );
 
-      console.log(userProfileId);
-
       const permit = await this.permitService.createPermit({
         ...createPermitDto,
         userProfileId,
       });
-
-      console.log(permit);
 
       return this.send(
         res,
