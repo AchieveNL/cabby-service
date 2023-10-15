@@ -50,18 +50,7 @@ jobs:
         with:
           push: true
           tags: ${{ env.IMAGE_URL }}
-          build-args: |
-            NODE_ENV=staging
-            ENVIRONMENT=staging
-            PORT=8080
-            APP_BASE_URL=https://cabby-service-staging-jtj2mdm6ta-ez.a.run.app
-            SECRET_KEY=${{ secrets.SECRET_KEY_STAGING }}
-            DATABASE_URL=${{ secrets.DATABASE_URL_STAGING }}
-            SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY_STAGING }}
-            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY_STAGING }}
-            JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY_STAGING }}
-            MOLLIE_API_KEY=${{ secrets.MOLLIE_API_KEY_STAGING }}
-
+ 
       - name: Deploy to Cloud Run Staging
         uses: google-github-actions/deploy-cloudrun@v0
         with:
@@ -97,17 +86,6 @@ jobs:
         with:
           push: true
           tags: ${{ env.IMAGE_URL }}
-          build-args: |
-            NODE_ENV=production
-            ENVIRONMENT=production
-            PORT=8080
-            APP_BASE_URL=https://cabby-service-production-jtj2mdm6ta-ez.a.run.app
-            SECRET_KEY=${{ secrets.SECRET_KEY_PRODUCTION }}
-            DATABASE_URL=${{ secrets.DATABASE_URL_PRODUCTION }}
-            SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY_PRODUCTION }}
-            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY_PRODUCTION }}
-            JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY_PRODUCTION }}
-            MOLLIE_API_KEY=${{ secrets.MOLLIE_API_KEY_PRODUCTION }}
 
       - name: Deploy to Cloud Run Production
         uses: google-github-actions/deploy-cloudrun@v0
