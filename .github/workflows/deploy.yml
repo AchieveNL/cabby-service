@@ -13,7 +13,7 @@ env:
   GAR_LOCATION: ${{ secrets.GAR_LOCATION }}
   SERVICE: ${{ secrets.SERVICE_NAME }}
   REGION: ${{ secrets.REGION }}
-  IMAGE_URL: gcr.io/cabby-392012/cabby-service:latest
+  IMAGE_URL: gcr.io/cabby-392012/cabby-service
 
 jobs:
   build-and-check:
