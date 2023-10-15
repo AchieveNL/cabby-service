@@ -5,12 +5,14 @@ export const setAuthCookies = (
   newToken: string,
   newRefreshToken: string
 ) => {
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProductionOrStag = ['production', 'staging'].includes(
+    process.env.NODE_ENV
+  );
 
   const cookieOptions: CookieOptions = {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    secure: isProductionOrStag,
+    sameSite: isProductionOrStag ? 'none' : 'lax',
   };
 
   res.cookie('token', newToken, {

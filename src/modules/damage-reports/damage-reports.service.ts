@@ -3,7 +3,6 @@ import prisma from '@/lib/prisma';
 
 export default class DamageReportsService {
   public createDamageReport = async (data: any) => {
-    console.log(data);
     return await prisma.damageReport.create({
       data,
     });
