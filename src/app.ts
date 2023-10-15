@@ -13,6 +13,19 @@ import errorHandler from '@/middlewares/error-handler';
 import routes from '@/modules/index';
 import prismaClient from '@/lib/prisma';
 
+const determineCorsOrigin = () => {
+  switch (process.env.NODE_ENV) {
+    case 'production':
+      return 'https://cabby-admin-production-jtj2mdm6ta-ez.a.run.app';
+    case 'staging':
+      return 'https://cabby-admin-staging-jtj2mdm6ta-ez.a.run.app';
+    case 'development':
+      return 'http://localhost:3000';
+    default:
+      return '*';
+  }
+};
+
 class App {
   public express: express.Application;
 
@@ -35,13 +48,11 @@ class App {
     this.express.use(express.static('public'));
     this.express.use(
       cors({
-        origin: (origin, callback) => {
-          callback(null, true);
-        },
+        origin: determineCorsOrigin(),
         credentials: true,
       })
     );
-    this.express.use(function (req, res, next) {
+    this.express.use((req, res, next) => {
       res.header('Access-Control-Allow-Credentials', 'true');
       res.header(
         'Access-Control-Allow-Headers',
