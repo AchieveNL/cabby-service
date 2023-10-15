@@ -13,7 +13,7 @@ import errorHandler from '@/middlewares/error-handler';
 import routes from '@/modules/index';
 import prismaClient from '@/lib/prisma';
 
-const determineCorsOrigin = () => {
+export const determineCorsOrigin = () => {
   switch (process.env.NODE_ENV) {
     case 'production':
       return 'https://cabby-admin-production-jtj2mdm6ta-ez.a.run.app';
