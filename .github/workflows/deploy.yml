@@ -5,66 +5,70 @@ on:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened, closed]
   workflow_dispatch:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GAR_LOCATION: ${{ secrets.GAR_LOCATION }}
-  SERVICE: ${{ secrets.SERVICE_NAME }}
-  REGION: ${{ secrets.REGION }}
   IMAGE_URL: gcr.io/cabby-392012/cabby-service
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  build-and-check:
+  run-ci:
+    name: Run CI Checks
     runs-on: ubuntu-latest
     steps:
-      - name: List directory contents
-        run: ls -al
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Install dependencies
+        run: npm install 
 
-      - name: Check Types
+      - name: Check types
         run: npm run check:types
 
-      - name: Prettier Check
+      - name: Check linting
+        run: npm run lint
+
+      - name: Check formatting
         run: npm run format:check
+
+  build-and-deploy-staging:
+    environment:
+      name: staging
+    name: Build and Deploy to Cloud Run (Staging)
+    needs: run-ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: npm install 
 
       - name: Build
         run: npm run build
 
-  deploy-staging:
-    environment:
-      name: staging
-    needs: build-and-check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Google Auth
-        id: auth
-        uses: 'google-github-actions/auth@v0'
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
         with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_CREDENTIALS }}
+          export_default_credentials: true
 
       - name: Build and push Docker image to GCR
         env:
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
           echo "$GCP_CREDENTIALS" | docker login -u _json_key --password-stdin https://gcr.io
-          docker build -t ${{ env.IMAGE_URL }}:${{ github.sha }} .
-          docker push ${{ env.IMAGE_URL }}:${{ github.sha }}
+          docker build -t ${{ env.IMAGE_URL }}:staging-${{ github.sha }} .
+          docker push ${{ env.IMAGE_URL }}:staging-${{ github.sha }}
 
-      - name: Deploy to Cloud Run Staging
+      - name: Deploy to Cloud Run (Staging)
         uses: google-github-actions/deploy-cloudrun@v0
         with:
-          service: ${{ env.SERVICE }}
+          service: ${{ secrets.SERVICE_NAME }}
           region: ${{ secrets.REGION }}
-          image: ${{ env.IMAGE_URL }}
+          image: ${{ env.IMAGE_URL }}:staging-${{ github.sha }}
           env_vars: |
             NODE_ENV=staging
             ENVIRONMENT=staging
@@ -76,36 +80,44 @@ jobs:
             JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY_STAGING }}
             MOLLIE_API_KEY=${{ secrets.MOLLIE_API_KEY_STAGING }}
 
-  deploy-production:
+  build-and-deploy-production:
     environment:
       name: production
+    name: Build and Deploy to Cloud Run (Production)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-    needs: build-and-check
+    needs: run-ci
     runs-on: ubuntu-latest
     steps:
-      - name: Google Auth
-        id: auth
-        uses: 'google-github-actions/auth@v0'
-        with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+      - name: Install dependencies
+        run: npm install 
+
+      - name: Build
+        run: npm run build
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_CREDENTIALS }}
+          export_default_credentials: true
 
       - name: Build and push Docker image to GCR
         env:
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
           echo "$GCP_CREDENTIALS" | docker login -u _json_key --password-stdin https://gcr.io
-          docker build -t ${{ env.IMAGE_URL }}:${{ github.sha }} .
-          docker push ${{ env.IMAGE_URL }}:${{ github.sha }}
+          docker build -t ${{ env.IMAGE_URL }}:production-${{ github.sha }} .
+          docker push ${{ env.IMAGE_URL }}:production-${{ github.sha }}
 
-      - name: Deploy to Cloud Run Production
+      - name: Deploy to Cloud Run (Production)
         uses: google-github-actions/deploy-cloudrun@v0
         with:
-          service: ${{ env.SERVICE }}
+          service: ${{ secrets.SERVICE_NAME }}
           region: ${{ secrets.REGION }}
-          image: ${{ env.IMAGE_URL }}
+          image: ${{ env.IMAGE_URL }}:production-${{ github.sha }}
           env_vars: |
             NODE_ENV=production
             ENVIRONMENT=production
