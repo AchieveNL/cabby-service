@@ -1,4 +1,4 @@
-import { type user } from '@prisma/client';
+import { UserRole, type user } from '@prisma/client';
 import { HttpStatusCode } from 'axios';
 import bcrypt from 'bcrypt';
 import { type Response, type NextFunction, type Request } from 'express';
@@ -20,6 +20,21 @@ import { setAuthCookies } from '@/middlewares/cookies';
 
 export default class UserController extends Api {
   private readonly userService = new UserService();
+
+  public emailExists = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const emailExists = await this.userService.emailExists(
+        req.query.email as string
+      );
+      this.send(res, { emailExists }, HttpStatusCode.Ok, 'Email exists');
+    } catch (e) {
+      next(e);
+    }
+  };
 
   public signup = async (
     req: Request,
@@ -59,11 +74,10 @@ export default class UserController extends Api {
       );
 
       if (!user) {
-        // Handle login failure
         return this.send(
           res,
           null,
-          HttpStatusCode.Unauthorized,
+          HttpStatusCode.BadRequest,
           'Invalid email or password'
         );
       }
@@ -74,6 +88,75 @@ export default class UserController extends Api {
       setAuthCookies(res, token, refreshToken);
 
       return res.status(HttpStatusCode.Ok).json({ user });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  public mobileLogin = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { email, password } = req.body as LoginDto;
+
+      const user = await this.userService.validateUserCredentials(
+        email,
+        password
+      );
+
+      if (!user) {
+        return this.send(
+          res,
+          null,
+          HttpStatusCode.BadRequest,
+          'Invalid email or password'
+        );
+      }
+
+      if (user.role !== UserRole.USER) {
+        return this.send(
+          res,
+          null,
+          HttpStatusCode.BadRequest,
+          'Invalid email or password'
+        );
+      }
+
+      if (user.status === UserStatus.PENDING) {
+        return this.send(
+          res,
+          null,
+          HttpStatusCode.Ok,
+          'Your account is still pending approval'
+        );
+      }
+
+      if (user.status === UserStatus.BLOCKED) {
+        return this.send(
+          res,
+          null,
+          HttpStatusCode.Ok,
+          'Your account has been blocked. Please contact the admin for more details.'
+        );
+      }
+
+      if (user.status === UserStatus.REJECTED) {
+        return this.send(
+          res,
+          null,
+          HttpStatusCode.Ok,
+          'Your account has been rejected. Please contact the admin for more details.'
+        );
+      }
+
+      const token = generateToken(user);
+      const refreshToken = generateRefreshToken(user);
+
+      setAuthCookies(res, token, refreshToken);
+
+      return this.send(res, user, HttpStatusCode.Ok, 'Login successful');
     } catch (e) {
       next(e);
     }

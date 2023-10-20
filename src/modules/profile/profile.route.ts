@@ -1,6 +1,9 @@
+import path from 'path';
 import { Router } from 'express';
+import multer from 'multer';
 import Controller from './profile.controller';
 import {
+  CreateRentalAgreementDto,
   CreateUserProfileDto,
   EditUserProfileDto,
   UpdateExpiryDateDto,
@@ -10,6 +13,23 @@ import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
 
 const profile: Router = Router();
 const controller = new Controller();
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(
+      null,
+      file.fieldname +
+        '-' +
+        Date.now().toString() +
+        path.extname(file.originalname)
+    );
+  },
+});
+
+const upload = multer({ storage });
 
 profile.post(
   '/create',
@@ -27,12 +47,26 @@ profile.patch(
   controller.updateExpiryDate
 );
 
-// Fetch current user's profile
 profile.get(
   '/current',
   verifyAuthToken,
   requireAuth,
   controller.getCurrentProfile
+);
+
+profile.patch(
+  '/edit',
+  verifyAuthToken,
+  requireAuth,
+  RequestValidator.validate(EditUserProfileDto),
+  controller.editUserProfile
+);
+
+profile.post(
+  '/rental-agreement',
+  upload.single('signature'),
+  RequestValidator.validate(CreateRentalAgreementDto),
+  controller.createRentalAgreement
 );
 
 // Fetch any user's profile by id (Admin only)
@@ -42,23 +76,6 @@ profile.get(
   requireAuth,
   requireAdmin,
   controller.getUserProfileById
-);
-
-// Edit user's profile
-profile.patch(
-  '/edit/:id',
-  verifyAuthToken,
-  requireAuth,
-  RequestValidator.validate(EditUserProfileDto),
-  controller.editUserProfile
-);
-
-profile.patch(
-  '/update-images',
-  verifyAuthToken,
-  requireAuth,
-  RequestValidator.validate(UpdateExpiryDateDto),
-  controller.updateExpiryDate
 );
 
 profile.get('/drivers', verifyAuthToken, requireAuth, controller.getAllDrivers);
