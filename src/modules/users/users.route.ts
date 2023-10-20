@@ -26,6 +26,14 @@ users.post(
 users.post('/login', RequestValidator.validate(LoginDto), controller.login);
 
 users.post(
+  '/mobile-login',
+  RequestValidator.validate(LoginDto),
+  controller.mobileLogin
+);
+
+users.get('/email-exists', controller.emailExists);
+
+users.post(
   '/reset-password/initiate',
   RequestValidator.validate(ResetPasswordInitiateDto),
   controller.initiateResetPassword

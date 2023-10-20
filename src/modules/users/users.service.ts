@@ -7,6 +7,13 @@ import prisma from '@/lib/prisma';
 import { mailService } from '@/utils/mail';
 
 export default class UserService {
+  public async emailExists(email: string): Promise<boolean> {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+    return !!user;
+  }
+
   public async createUser(data: any) {
     try {
       const user = await prisma.user.create({

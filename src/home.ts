@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { Router, type Request, type Response } from 'express';
+import express, { Router, type Request, type Response } from 'express';
 import { determineCorsOrigin } from './app';
 
 const home: Router = Router();
@@ -25,5 +25,7 @@ home.get('/origin', (_req: Request, res: Response) => {
     });
   }
 });
+
+home.use('/assets', express.static('../public/assets'));
 
 export default home;

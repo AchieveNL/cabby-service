@@ -44,6 +44,10 @@ export class CreateUserProfileDto {
   signature?: string;
 }
 
+export class CreateRentalAgreementDto {
+  signature: Express.Multer.File;
+}
+
 export class EditUserProfileDto {
   @IsString()
   @IsOptional()

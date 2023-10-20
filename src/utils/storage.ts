@@ -1,10 +1,8 @@
-import path from 'path';
 import { Storage } from '@google-cloud/storage';
 
-const credentialsPath = path.join(__dirname, '../../secrets.json');
 export const bucketName = 'cabby-bucket';
 
 export const gStorage = new Storage({
-  keyFilename: credentialsPath,
+  credentials: JSON.parse(process.env.GCP_CREDENTIALS as string),
   projectId: 'cabby-392012',
 });
