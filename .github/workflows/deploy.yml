@@ -79,7 +79,6 @@ jobs:
             JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY_STAGING }}
             JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY_STAGING }}
             MOLLIE_API_KEY=${{ secrets.MOLLIE_API_KEY_STAGING }}
-            GC_CREDENTIALS_JSON=${{ secrets.GC_CREDENTIALS_JSON }}
 
   build-and-deploy-production:
     environment:
@@ -129,4 +128,3 @@ jobs:
             JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY_PRODUCTION }}
             JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY_PRODUCTION }}
             MOLLIE_API_KEY=${{ secrets.MOLLIE_API_KEY_PRODUCTION }}
-            GC_CREDENTIALS_JSON=${{ secrets.GC_CREDENTIALS_JSON }}
