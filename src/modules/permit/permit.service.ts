@@ -3,24 +3,16 @@ import prisma from '@/lib/prisma';
 
 export default class PermitService {
   public createPermit = async (data) => {
-    try {
-      const permit = await prisma.permitDetails.create({ data });
-      return permit;
-    } catch (error) {
-      throw new Error('Failed to create permit');
-    }
+    const permit = await prisma.permitDetails.create({ data });
+    return permit;
   };
 
   public updatePermit = async (userProfileId, data: UpdatePermitDto) => {
-    try {
-      const permit = await prisma.permitDetails.update({
-        where: { userProfileId },
-        data,
-      });
-      return permit;
-    } catch (error) {
-      throw new Error('Failed to update permit');
-    }
+    const permit = await prisma.permitDetails.update({
+      where: { userProfileId },
+      data,
+    });
+    return permit;
   };
 
   async updateExpiryDate(userProfileId: string, taxiPermitExpiry) {

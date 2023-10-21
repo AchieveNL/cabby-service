@@ -2,21 +2,23 @@ import { IsString, IsOptional } from 'class-validator';
 
 export class CreateDriverLicenseDto {
   @IsString()
+  @IsOptional()
   driverLicenseBack: string;
 
   @IsString()
+  @IsOptional()
   driverLicenseFront: string;
 
   @IsString()
+  @IsOptional()
   driverLicenseExpiry: string;
 
   @IsString()
-  dateOfBirth: string;
-
-  @IsString()
+  @IsOptional()
   bsnNumber: string;
 
   @IsString()
+  @IsOptional()
   driverLicense: string;
 }
 

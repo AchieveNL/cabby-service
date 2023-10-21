@@ -104,4 +104,22 @@ export default class ProfileService {
       },
     });
   }
+
+  async getUserProfileStatusByUserId(userId: string) {
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { userId },
+      select: { status: true },
+    });
+
+    return userProfile?.status;
+  }
+
+  async getUserProfileIdByUserId(userId: string) {
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    return userProfile?.id;
+  }
 }

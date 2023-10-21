@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "userProfile" ALTER COLUMN "status" SET DEFAULT 'REQUIRE_REGISTRATION_FEE';

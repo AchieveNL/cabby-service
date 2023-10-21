@@ -5,6 +5,12 @@ CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'PENDING', 'BLOCKED', 'REJECTED');
 CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'USER');
 
 -- CreateEnum
+CREATE TYPE "UserProfileStatus" AS ENUM ('PENDING', 'ACTIVE', 'INACTIVE', 'BLOCKED', 'APPROVED', 'REJECTED', 'REQUIRE_REGISTRATION_FEE');
+
+-- CreateEnum
+CREATE TYPE "VehicleStatus" AS ENUM ('PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED');
+
+-- CreateEnum
 CREATE TYPE "PaymentProduct" AS ENUM ('RENT', 'REGISTRATION');
 
 -- CreateEnum
@@ -13,13 +19,16 @@ CREATE TYPE "PaymentStatus" AS ENUM ('PAID', 'REFUNDED', 'PENDING', 'FAILED');
 -- CreateEnum
 CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'CONFIRMED', 'REJECTED', 'COMPLETED', 'CANCELED');
 
+-- CreateEnum
+CREATE TYPE "ReportStatus" AS ENUM ('UNDERPAID', 'REPAIRED');
+
 -- CreateTable
 CREATE TABLE "user" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "revokeTokensBefore" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "status" "UserStatus" NOT NULL,
+    "status" "UserStatus",
     "role" "UserRole" NOT NULL DEFAULT 'USER',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "otp" TEXT,
@@ -52,6 +61,7 @@ CREATE TABLE "userProfile" (
     "profilePhoto" TEXT,
     "signature" TEXT,
     "zip" TEXT,
+    "status" "UserProfileStatus" NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "userProfile_pkey" PRIMARY KEY ("id")
 );
@@ -60,10 +70,10 @@ CREATE TABLE "userProfile" (
 CREATE TABLE "driverLicense" (
     "id" TEXT NOT NULL,
     "driverLicenseBack" TEXT,
-    "driverLicenseExpiry" TIMESTAMP(3),
+    "driverLicenseExpiry" TEXT,
     "driverLicenseFront" TEXT,
-    "dateOfBirth" TIMESTAMP(3) NOT NULL,
-    "bsnNumber" INTEGER,
+    "dateOfBirth" TEXT NOT NULL,
+    "bsnNumber" TEXT,
     "driverLicense" TEXT,
     "userProfileId" TEXT NOT NULL,
 
@@ -76,7 +86,7 @@ CREATE TABLE "permitDetails" (
     "kiwaTaxiVergunningId" TEXT,
     "kvkDocumentId" TEXT,
     "taxiPermitId" TEXT,
-    "taxiPermitExpiry" TIMESTAMP(3),
+    "taxiPermitExpiry" TEXT,
     "taxiPermitPicture" TEXT,
     "userProfileId" TEXT NOT NULL,
 
@@ -101,8 +111,8 @@ CREATE TABLE "vehicle" (
     "availability" TEXT,
     "unavailabilityReason" TEXT,
     "currency" TEXT DEFAULT 'EUR',
-    "minPrice" DECIMAL(6,2),
-    "maxPrice" DECIMAL(6,2),
+    "pricePerDay" DECIMAL(6,2),
+    "status" "VehicleStatus" NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "vehicle_pkey" PRIMARY KEY ("id")
 );
@@ -148,6 +158,41 @@ CREATE TABLE "orderRejection" (
     CONSTRAINT "orderRejection_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "vehicleRejection" (
+    "id" TEXT NOT NULL,
+    "vehicleId" TEXT NOT NULL,
+    "reason" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "vehicleRejection_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "damageReport" (
+    "id" SERIAL NOT NULL,
+    "reportedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "description" TEXT NOT NULL,
+    "status" "ReportStatus" NOT NULL DEFAULT 'UNDERPAID',
+    "amount" DOUBLE PRECISION,
+    "repairedAt" TIMESTAMP(3),
+    "vehicleId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+
+    CONSTRAINT "damageReport_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "message" (
+    "id" TEXT NOT NULL,
+    "senderId" TEXT NOT NULL,
+    "recipientId" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "message_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
 
@@ -184,6 +229,12 @@ CREATE UNIQUE INDEX "orderRejection_orderId_key" ON "orderRejection"("orderId");
 -- CreateIndex
 CREATE INDEX "idx_orderId" ON "orderRejection"("orderId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "vehicleRejection_vehicleId_key" ON "vehicleRejection"("vehicleId");
+
+-- CreateIndex
+CREATE INDEX "idx_vehicleId" ON "vehicleRejection"("vehicleId");
+
 -- AddForeignKey
 ALTER TABLE "passwordResetToken" ADD CONSTRAINT "passwordResetToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -210,3 +261,18 @@ ALTER TABLE "order" ADD CONSTRAINT "order_userId_fkey" FOREIGN KEY ("userId") RE
 
 -- AddForeignKey
 ALTER TABLE "orderRejection" ADD CONSTRAINT "orderRejection_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "vehicleRejection" ADD CONSTRAINT "vehicleRejection_vehicleId_fkey" FOREIGN KEY ("vehicleId") REFERENCES "vehicle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "damageReport" ADD CONSTRAINT "damageReport_vehicleId_fkey" FOREIGN KEY ("vehicleId") REFERENCES "vehicle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "damageReport" ADD CONSTRAINT "damageReport_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "message" ADD CONSTRAINT "message_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "message" ADD CONSTRAINT "message_recipientId_fkey" FOREIGN KEY ("recipientId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

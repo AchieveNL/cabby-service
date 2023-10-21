@@ -4,6 +4,7 @@ export enum UserProfileStatus {
   BLOCKED = 'BLOCKED',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
+  REQUIRE_REGISTRATION_FEE = 'REQUIRE_REGISTRATION_FEE',
 }
 
 export interface UserProfileInput {
