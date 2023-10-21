@@ -31,17 +31,16 @@ export default class PaymentService {
     return payment;
   };
 
-  public createRegistrationPayment = async (data) => {
+  public createRegistrationPayment = async (userId) => {
     // Create a registration order
     const registrationOrder = await prisma.registrationOrder.create({
       data: {
-        userId: data.userId as string,
+        userId: userId as string,
         status: RegistrationOrderStatus.PENDING,
         totalAmount: parseFloat(REGISTRATION_FEE),
       },
     });
 
-    // Make a payment using Mollie
     const payment = await this.mollie.payments.create({
       amount: {
         currency: 'EUR',
@@ -51,17 +50,16 @@ export default class PaymentService {
       redirectUrl: 'cabby://registration-payment-completed',
       webhookUrl: `https://cabby-service-staging-jtj2mdm6ta-ez.a.run.app/api/v1/staging/payment/registration/webhook`,
       metadata: {
-        registrationOrderId: registrationOrder.id, // Using registrationOrderId instead of orderId
+        registrationOrderId: registrationOrder.id,
       },
     });
 
-    // Store the payment in the database
     const { id } = await prisma.payment.create({
       data: {
-        userId: data.userId,
+        userId,
         amount: parseFloat(payment.amount.value),
         currency: payment.amount.currency,
-        registrationOrderId: registrationOrder.id, // Linking to registrationOrder
+        registrationOrderId: registrationOrder.id,
         product: PaymentProduct.REGISTRATION,
         status: PaymentStatus.PENDING,
       },

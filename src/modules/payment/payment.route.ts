@@ -25,7 +25,6 @@ router.post(
   '/registration',
   verifyAuthToken,
   requireAuth,
-  RequestValidator.validate(CreatePaymentDto),
   controller.createRegistrationPayment
 );
 

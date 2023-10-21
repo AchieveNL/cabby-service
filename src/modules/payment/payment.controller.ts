@@ -1,6 +1,5 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import { HttpStatusCode } from 'axios';
-import { v4 as uuidv4 } from 'uuid';
 import PaymentService from './payment.service';
 import Api from '@/lib/api';
 
@@ -68,13 +67,9 @@ export default class PaymentController extends Api {
     next: NextFunction
   ) => {
     try {
-      const orderId = uuidv4(); // Generate a unique identifier for the payment
-
-      const checkoutUrl = await this.paymentService.createRegistrationPayment({
-        ...req.body,
-        userId: req.user?.id,
-        orderId,
-      });
+      const checkoutUrl = await this.paymentService.createRegistrationPayment(
+        req.user?.id
+      );
 
       return this.send(
         res,
