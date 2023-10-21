@@ -2,6 +2,7 @@ import { UserRole, type user } from '@prisma/client';
 import { HttpStatusCode } from 'axios';
 import bcrypt from 'bcrypt';
 import { type Response, type NextFunction, type Request } from 'express';
+import ProfileService from '../profile/profile.service';
 import {
   type LoginDto,
   type CreateUserDto,
@@ -20,6 +21,7 @@ import { setAuthCookies } from '@/middlewares/cookies';
 
 export default class UserController extends Api {
   private readonly userService = new UserService();
+  private readonly userProfileService = new ProfileService();
 
   public emailExists = async (
     req: Request,
@@ -124,39 +126,64 @@ export default class UserController extends Api {
         );
       }
 
-      if (user.status === UserStatus.PENDING) {
+      const minimalUser = {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+      };
+
+      const status = await this.userProfileService.getUserProfileStatusByUserId(
+        user.id
+      );
+
+      if (status) {
+        if (status === 'PENDING') {
+          return this.send(
+            res,
+            minimalUser,
+            HttpStatusCode.Ok,
+            'Your account is still pending approval'
+          );
+        }
+
+        if (status === 'BLOCKED') {
+          return this.send(
+            res,
+            minimalUser,
+            HttpStatusCode.Ok,
+            'Your account has been blocked. Please contact the admin for more details.'
+          );
+        }
+
+        if (user.status === 'REJECTED') {
+          return this.send(
+            res,
+            minimalUser,
+            HttpStatusCode.Ok,
+            'Your account has been rejected. Please contact the admin for more details.'
+          );
+        }
+
+        const token = generateToken(minimalUser);
+        const refreshToken = generateRefreshToken(minimalUser);
+
+        setAuthCookies(res, token, refreshToken);
+
         return this.send(
           res,
-          null,
+          minimalUser,
           HttpStatusCode.Ok,
-          'Your account is still pending approval'
+          'Login successful'
         );
       }
 
-      if (user.status === UserStatus.BLOCKED) {
-        return this.send(
-          res,
-          null,
-          HttpStatusCode.Ok,
-          'Your account has been blocked. Please contact the admin for more details.'
-        );
-      }
-
-      if (user.status === UserStatus.REJECTED) {
-        return this.send(
-          res,
-          null,
-          HttpStatusCode.Ok,
-          'Your account has been rejected. Please contact the admin for more details.'
-        );
-      }
-
-      const token = generateToken(user);
-      const refreshToken = generateRefreshToken(user);
-
-      setAuthCookies(res, token, refreshToken);
-
-      return this.send(res, user, HttpStatusCode.Ok, 'Login successful');
+      return this.send(
+        res,
+        null,
+        HttpStatusCode.BadRequest,
+        'You are not registered'
+      );
     } catch (e) {
       next(e);
     }

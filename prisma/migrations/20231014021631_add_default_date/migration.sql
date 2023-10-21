@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "damageReport" ALTER COLUMN "reportedAt" SET DEFAULT CURRENT_TIMESTAMP;

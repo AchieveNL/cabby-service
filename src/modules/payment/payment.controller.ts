@@ -72,7 +72,8 @@ export default class PaymentController extends Api {
 
       const checkoutUrl = await this.paymentService.createRegistrationPayment({
         ...req.body,
-        orderId, // This assumes that orderId is in your DTO, and you wish to save it
+        userId: req.user?.id,
+        orderId,
       });
 
       return this.send(
@@ -117,7 +118,7 @@ export default class PaymentController extends Api {
         );
       }
 
-      await this.paymentService.updatePaymentStatus(paymentId);
+      await this.paymentService.updateRegistrationPaymentStatus(paymentId);
       return this.send(
         res,
         null,

@@ -11,16 +11,6 @@ export default class PermitController extends Api {
   private readonly permitService = new PermitService();
   private readonly profileService = new ProfileService();
 
-  public getUserProfileId = async (res, userId: string) => {
-    const profile = await this.profileService.getByUserId(userId);
-
-    if (!profile) {
-      this.send(res, null, HttpStatusCode.NotFound, 'Not found');
-      return;
-    }
-    return profile.id;
-  };
-
   public createPermit = async (
     req: Request,
     res: Response,
@@ -29,10 +19,18 @@ export default class PermitController extends Api {
     try {
       const createPermitDto: CreatePermitDto = req.body;
 
-      const userProfileId = await this.getUserProfileId(
-        res,
-        req.user?.id as string
+      const userProfileId = await this.profileService.getUserProfileIdByUserId(
+        req.user?.id
       );
+
+      if (!userProfileId) {
+        return this.send(
+          res,
+          null,
+          HttpStatusCode.NotFound,
+          'Error while creating driver license'
+        );
+      }
 
       const permit = await this.permitService.createPermit({
         ...createPermitDto,
@@ -56,9 +54,19 @@ export default class PermitController extends Api {
     next: NextFunction
   ) => {
     try {
-      const userId = req.user?.id;
       const updatePermitDto: UpdatePermitDto = req.body;
-      const userProfileId = await this.getUserProfileId(res, userId);
+      const userProfileId = await this.profileService.getUserProfileIdByUserId(
+        req.user?.id
+      );
+
+      if (!userProfileId) {
+        return this.send(
+          res,
+          null,
+          HttpStatusCode.NotFound,
+          'Error while creating driver license'
+        );
+      }
 
       const updatedPermit = await this.permitService.updatePermit(
         userProfileId,

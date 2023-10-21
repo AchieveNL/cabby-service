@@ -48,7 +48,6 @@ class App {
     this.express.use(express.static('public'));
 
     const corsOrigin = determineCorsOrigin();
-    console.log(`CORS Origin set to: ${corsOrigin}`);
 
     this.express.use(
       cors({

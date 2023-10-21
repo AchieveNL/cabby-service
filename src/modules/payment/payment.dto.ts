@@ -1,19 +1,20 @@
 // payment.dto.ts
-
 import {
   IsNotEmpty,
   IsOptional,
-  IsString,
   IsEnum,
   IsDate,
   IsNumber,
 } from 'class-validator';
 
-export class CreatePaymentDto {
-  @IsNotEmpty()
-  @IsString()
-  userId: string;
+export enum PaymentStatus {
+  PAID = 'PAID',
+  REFUNDED = 'REFUNDED',
+  PENDING = 'PENDING',
+  FAILED = 'FAILED',
+}
 
+export class CreatePaymentDto {
   @IsNotEmpty()
   @IsNumber()
   amount: number;
@@ -23,7 +24,7 @@ export class CreatePaymentDto {
   product: 'RENT' | 'REGISTRATION';
 
   @IsNotEmpty()
-  @IsEnum(['PAID', 'REFUNDED' /* other statuses */])
+  @IsEnum(PaymentStatus)
   status: string;
 
   @IsOptional()

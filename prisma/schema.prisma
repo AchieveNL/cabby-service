@@ -27,7 +27,7 @@ model user {
   email              String    @unique
   password           String
   revokeTokensBefore DateTime  @default(now())
-  status             UserStatus
+  status             UserStatus?
   role               UserRole  @default(USER)
   createdAt          DateTime  @default(now())
   profile            userProfile?
@@ -39,6 +39,7 @@ model user {
   damageReports     damageReport[]
   sentMessages     message[] @relation("MessageSender")
   receivedMessages message[] @relation("MessageRecipient")
+  registrationOrder registrationOrder?
 }
 
 model passwordResetToken {
@@ -57,6 +58,7 @@ enum UserProfileStatus {
   BLOCKED
   APPROVED
   REJECTED
+  REQUIRE_REGISTRATION_FEE
 }
 
 model userProfile {
@@ -71,7 +73,7 @@ model userProfile {
   profilePhoto         String?
   signature            String?
   zip                  String?
-  status UserProfileStatus @default(PENDING)
+  status UserProfileStatus @default(REQUIRE_REGISTRATION_FEE)
   user      user    @relation(fields: [userId], references: [id])
   driverLicense        driverLicense?
   permitDetails        permitDetails?
@@ -82,7 +84,6 @@ model driverLicense {
   driverLicenseBack    String?
   driverLicenseExpiry  String?
   driverLicenseFront   String?
-  dateOfBirth          String
   bsnNumber            String?
   driverLicense        String?
   userProfileId        String        @unique
@@ -91,8 +92,8 @@ model driverLicense {
 
 model permitDetails {
   id                   String        @id @default(uuid())
-  kiwaTaxiVergunningId String?
-  kvkDocumentId        String?
+  kiwaDocument         String?
+  kvkDocument          String?
   taxiPermitId         String?
   taxiPermitExpiry     String?
   taxiPermitPicture    String?
@@ -150,15 +151,41 @@ model payment {
   amount      Decimal  @db.Decimal(6, 2)
   currency    String   @default("EUR")
   paymentDate DateTime @default(now())
-  orderId     String   @unique
+  orderId            String?  @unique
+  registrationOrderId String?  @unique
   product     PaymentProduct @default(RENT)
   status      PaymentStatus  @default(PAID)
   user        user           @relation(fields: [userId], references: [id])
-  order       order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order              order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  registrationOrder  registrationOrder? @relation(fields: [registrationOrderId], references: [id], onDelete: Cascade)
   
   @@unique([userId, paymentDate])
+  @@index([registrationOrderId], name: "idx_registrationOrderId")
 }
 
+enum RegistrationOrderStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  COMPLETED
+  CANCELED
+}
+
+model registrationOrder {
+  id              String                 @id @default(uuid())
+  userId          String                 @unique
+  status          RegistrationOrderStatus @default(PENDING)
+  totalAmount     Decimal                @db.Decimal(6, 2) // The fixed registration fee
+  paymentId       String?                @unique
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  note            String?                // Any additional notes
+
+  user            user                   @relation(fields: [userId], references: [id])
+  payment         payment?
+
+  @@index([userId], name: "idx_registrationOrder_userId")
+}
 
 enum OrderStatus {
   PENDING
@@ -166,6 +193,11 @@ enum OrderStatus {
   REJECTED
   COMPLETED
   CANCELED
+}
+
+enum OrderType {
+  REGISTRATION
+  VEHICLE_RENTAL
 }
 
 model order {
@@ -180,6 +212,7 @@ model order {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   note            String?       
+  orderType       OrderType @default(VEHICLE_RENTAL)
 
   vehicle         vehicle       @relation(fields: [vehicleId], references: [id])
   user            user          @relation(fields: [userId], references: [id])

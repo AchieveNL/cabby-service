@@ -15,23 +15,24 @@ export default class DriverLicenseController extends Api {
   private readonly licenceService = new DriverLicenseService();
   private readonly profileService = new ProfileService();
 
-  private readonly getUserProfileId = async (res, userId: string) => {
-    const profile = await this.profileService.getByUserId(userId);
-
-    if (!profile) {
-      this.send(res, null, HttpStatusCode.NotFound, 'Not found');
-      return;
-    }
-    return profile.id;
-  };
-
   createDriverLicense = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      const userProfileId = await this.getUserProfileId(res, req.user?.id);
+      const userProfileId = await this.profileService.getUserProfileIdByUserId(
+        req.user?.id
+      );
+
+      if (!userProfileId) {
+        return this.send(
+          res,
+          null,
+          HttpStatusCode.NotFound,
+          'Error while creating driver license'
+        );
+      }
 
       const dto: CreateDriverLicenseDto = {
         userProfileId,
@@ -57,7 +58,9 @@ export default class DriverLicenseController extends Api {
     next: NextFunction
   ) => {
     try {
-      const userProfileId = await this.getUserProfileId(res, req.user?.id);
+      const userProfileId = await this.profileService.getUserProfileIdByUserId(
+        req.user?.id
+      );
 
       const driverLicense = await this.licenceService.updateDriverLicense(
         userProfileId,

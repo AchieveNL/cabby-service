@@ -1,5 +1,10 @@
 import * as mollieClient from '@mollie/api-client';
-import { type PaymentStatus } from '@prisma/client';
+import {
+  RegistrationOrderStatus,
+  PaymentStatus,
+  PaymentProduct,
+} from '@prisma/client';
+import { UserStatus } from '../users/types';
 import prisma from '@/lib/prisma';
 import { REGISTRATION_FEE } from '@/utils/constants';
 
@@ -27,36 +32,42 @@ export default class PaymentService {
   };
 
   public createRegistrationPayment = async (data) => {
-    try {
-      const payment = await this.mollie.payments.create({
-        amount: {
-          currency: 'EUR',
-          value: REGISTRATION_FEE,
-        },
-        description: `Order #${data.orderId as string}`,
-        redirectUrl: 'your-app://payment-return',
-        webhookUrl: 'https://your-api-domain.com/api/payments/webhook',
-        metadata: {
-          order_id: data.orderId,
-        },
-      });
+    // Create a registration order
+    const registrationOrder = await prisma.registrationOrder.create({
+      data: {
+        userId: data.userId as string,
+        status: RegistrationOrderStatus.PENDING,
+        totalAmount: parseFloat(REGISTRATION_FEE),
+      },
+    });
 
-      const { id } = await prisma.payment.create({
-        data: {
-          userId: data.userId,
-          amount: parseFloat(payment.amount.value),
-          currency: payment.amount.currency,
-          orderId: payment.metadata.order_id,
-          product: 'REGISTRATION',
-          status: 'PENDING',
-        },
-      });
+    // Make a payment using Mollie
+    const payment = await this.mollie.payments.create({
+      amount: {
+        currency: 'EUR',
+        value: REGISTRATION_FEE,
+      },
+      description: `Registration Order #${registrationOrder.id}`,
+      redirectUrl: 'cabby://registration-payment-completed',
+      webhookUrl: `https://cabby-service-staging-jtj2mdm6ta-ez.a.run.app/api/v1/staging/payment/registration/webhook`,
+      metadata: {
+        registrationOrderId: registrationOrder.id, // Using registrationOrderId instead of orderId
+      },
+    });
 
-      return { payment: id, checkoutUrl: payment.getCheckoutUrl() };
-    } catch (error) {
-      console.error(error);
-      throw new Error('Payment creation failed');
-    }
+    // Store the payment in the database
+    const { id } = await prisma.payment.create({
+      data: {
+        userId: data.userId,
+        amount: parseFloat(payment.amount.value),
+        currency: payment.amount.currency,
+        registrationOrderId: registrationOrder.id, // Linking to registrationOrder
+        product: PaymentProduct.REGISTRATION,
+        status: PaymentStatus.PENDING,
+      },
+    });
+
+    return { payment: id, checkoutUrl: payment.getCheckoutUrl() };
   };
 
   public refundPayment = async (paymentId: string) => {
@@ -65,7 +76,7 @@ export default class PaymentService {
         paymentId,
         amount: {
           currency: 'EUR',
-          value: REGISTRATION_FEE, // This should be a string, in a '##.##' format
+          value: REGISTRATION_FEE,
         },
       });
     } catch (error) {
@@ -74,17 +85,21 @@ export default class PaymentService {
     }
   };
 
-  public updatePaymentStatus = async (paymentId: string) => {
-    try {
-      const payment = await this.mollie.payments.get(paymentId);
+  public updateRegistrationPaymentStatus = async (paymentId: string) => {
+    const payment = await this.mollie.payments.get(paymentId);
 
-      await prisma.payment.update({
-        where: { orderId: payment.metadata.order_id },
-        data: { status: payment.status.toUpperCase() as PaymentStatus },
+    const updatedPayment = await prisma.payment.update({
+      where: { registrationOrderId: payment.metadata.registrationOrderId },
+      data: { status: payment.status.toUpperCase() as PaymentStatus },
+    });
+
+    if (updatedPayment.status === PaymentStatus.PAID) {
+      await prisma.userProfile.update({
+        where: { userId: updatedPayment.userId },
+        data: { status: UserStatus.PENDING },
       });
-    } catch (error) {
-      console.error(error);
-      throw new Error('Failed to update payment status');
     }
+
+    return true;
   };
 }

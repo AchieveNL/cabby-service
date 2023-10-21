@@ -4,11 +4,11 @@ import { IsString, IsOptional } from 'class-validator';
 export class CreatePermitDto {
   @IsString()
   @IsOptional()
-  kiwaTaxiVergunningId?: string;
+  kiwaDocument?: string;
 
   @IsString()
   @IsOptional()
-  kvkDocumentId?: string;
+  kvkDocument?: string;
 
   @IsString()
   @IsOptional()
