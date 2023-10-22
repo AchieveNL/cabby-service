@@ -40,21 +40,6 @@ export class LoginDto {
   password: string;
 }
 
-export class ResetPasswordInitiateDto {
-  @IsEmail()
-  email: string;
-}
-
-export class PerformPasswordResetDto {
-  @IsNotEmpty()
-  token: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(8)
-  password: string;
-}
-
 export class RequestPasswordResetDto {
   @IsEmail()
   email: string;
