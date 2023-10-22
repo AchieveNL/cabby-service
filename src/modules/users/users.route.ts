@@ -33,6 +33,8 @@ users.post(
 
 users.get('/email-exists', controller.emailExists);
 
+users.get('/status', verifyAuthToken, requireAuth, controller.userStatus);
+
 users.post(
   '/reset-password/initiate',
   RequestValidator.validate(ResetPasswordInitiateDto),

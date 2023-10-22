@@ -38,6 +38,21 @@ export default class UserController extends Api {
     }
   };
 
+  public userStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const status = await this.userProfileService.getUserProfileStatusByUserId(
+        req.user?.id
+      );
+      this.send(res, status, HttpStatusCode.Ok, 'User status');
+    } catch (e) {
+      next(e);
+    }
+  };
+
   public signup = async (
     req: Request,
     res: CustomResponse<user>,

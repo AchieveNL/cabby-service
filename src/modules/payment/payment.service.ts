@@ -32,7 +32,25 @@ export default class PaymentService {
   };
 
   public createRegistrationPayment = async (userId) => {
-    // Create a registration order
+    const paymentsToDelete = await prisma.payment.findMany({
+      where: {
+        userId: userId as string,
+        product: PaymentProduct.REGISTRATION,
+      },
+    });
+
+    for (const payment of paymentsToDelete) {
+      await prisma.payment.delete({
+        where: { id: payment.id },
+      });
+    }
+
+    await prisma.registrationOrder.delete({
+      where: {
+        userId: userId as string,
+      },
+    });
+
     const registrationOrder = await prisma.registrationOrder.create({
       data: {
         userId: userId as string,
@@ -48,7 +66,7 @@ export default class PaymentService {
       },
       description: `Registration Order #${registrationOrder.id}`,
       redirectUrl: 'cabby://registration-payment-completed',
-      webhookUrl: `https://cabby-service-staging-jtj2mdm6ta-ez.a.run.app/api/v1/staging/payment/registration/webhook`,
+      webhookUrl: `${process.env.APP_BASE_URL}/api/v1/${process.env.NODE_ENV}/payment/registration/webhook`,
       metadata: {
         registrationOrderId: registrationOrder.id,
       },
@@ -89,6 +107,15 @@ export default class PaymentService {
     const updatedPayment = await prisma.payment.update({
       where: { registrationOrderId: payment.metadata.registrationOrderId },
       data: { status: payment.status.toUpperCase() as PaymentStatus },
+    });
+
+    await prisma.registrationOrder.update({
+      where: {
+        id: payment.metadata.registrationOrderId,
+      },
+      data: {
+        status: payment.status.toUpperCase() as PaymentStatus,
+      },
     });
 
     if (updatedPayment.status === PaymentStatus.PAID) {
