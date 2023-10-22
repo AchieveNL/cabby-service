@@ -32,24 +32,32 @@ export default class PaymentService {
   };
 
   public createRegistrationPayment = async (userId) => {
-    const paymentsToDelete = await prisma.payment.findMany({
+    const existingRegistrationOrder = await prisma.registrationOrder.findFirst({
       where: {
         userId: userId as string,
-        product: PaymentProduct.REGISTRATION,
       },
     });
 
-    for (const payment of paymentsToDelete) {
-      await prisma.payment.delete({
-        where: { id: payment.id },
-      });
+    if (
+      existingRegistrationOrder &&
+      existingRegistrationOrder.status === RegistrationOrderStatus.PAID
+    ) {
+      return { message: 'Registration order already exists and is PAID.' };
     }
 
-    await prisma.registrationOrder.delete({
-      where: {
-        userId: userId as string,
-      },
-    });
+    if (existingRegistrationOrder) {
+      await prisma.payment.delete({
+        where: {
+          registrationOrderId: existingRegistrationOrder.id,
+        },
+      });
+
+      await prisma.registrationOrder.delete({
+        where: {
+          userId: userId as string,
+        },
+      });
+    }
 
     const registrationOrder = await prisma.registrationOrder.create({
       data: {
@@ -66,7 +74,10 @@ export default class PaymentService {
       },
       description: `Registration Order #${registrationOrder.id}`,
       redirectUrl: 'cabby://registration-payment-completed',
-      webhookUrl: `${process.env.APP_BASE_URL}/api/v1/${process.env.NODE_ENV}/payment/registration/webhook`,
+      webhookUrl:
+        process.env.NODE_ENV === 'development'
+          ? 'https://cabby-service-staging-jtj2mdm6ta-ez.a.run.app/api/v1/staging/payment/registration/webhook'
+          : `${process.env.APP_BASE_URL}/api/v1/${process.env.NODE_ENV}/payment/registration/webhook`,
       metadata: {
         registrationOrderId: registrationOrder.id,
       },
