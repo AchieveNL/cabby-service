@@ -164,11 +164,10 @@ model payment {
 }
 
 enum RegistrationOrderStatus {
+  PAID
+  REFUNDED
   PENDING
-  CONFIRMED
-  REJECTED
-  COMPLETED
-  CANCELED
+  FAILED
 }
 
 model registrationOrder {
