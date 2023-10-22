@@ -49,10 +49,6 @@ export default class ProfileService {
     return await prisma.userProfile.findUnique({
       where: {
         userId,
-        NOT: {
-          driverLicense: null,
-          permitDetails: null,
-        },
       },
       include: {
         user: {
