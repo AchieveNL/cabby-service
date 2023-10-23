@@ -12,7 +12,7 @@ export class FileService {
     fileType: 'IMAGE' | 'PDF' | 'VIDEO'
   ): Promise<string> {
     const folder = this.getFolderByFileType(fileType);
-    const newFileName = `image-${Date.now()}.${
+    const newFileName = `${fileType.toLowerCase()}-${Date.now()}.${
       fileName.split('.').pop() as string
     }`;
     const filePath = `${folder}/${newFileName}`;

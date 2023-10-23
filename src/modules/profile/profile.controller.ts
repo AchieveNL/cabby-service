@@ -269,16 +269,19 @@ export default class ProfileController extends Api {
       const currentDate = new Date().toISOString().slice(0, 10);
       const pdfDoc = await PDFDocument.load(
         this.readFile(
-          path.join(__dirname, '../../../public/assets/rental-agreement.pdf')
+          path.join(
+            __dirname,
+            '../../../public/assets/cabby_huurovereenkomst.pdf'
+          )
         )
       );
       const pngImage = await this.embedPngToPdf(pdfDoc, signatureFile.path);
 
       const lastPage = pdfDoc.getPages()[pdfDoc.getPageCount() - 1];
-      const xPosition = 75;
-      const yPosition = 420;
+      const xPosition = 40;
+      const yPosition = 390;
 
-      lastPage.drawText(`Versie – ${currentDate}`, {
+      lastPage.drawText(`Date - ${currentDate}`, {
         x: xPosition,
         y: yPosition,
         size: 10,
@@ -287,15 +290,15 @@ export default class ProfileController extends Api {
 
       lastPage.drawImage(pngImage, {
         x: xPosition,
-        y: yPosition - 60,
+        y: yPosition - 120,
+        height: 100,
         width: 100,
-        height: 50,
       });
 
       const pdfBytes = await pdfDoc.save();
       const outputFilePath = path.join(
         __dirname,
-        `../../../public/assets/uploads/rental-agreement-${new Date().getTime()}.pdf`
+        `../../../public/assets/uploads/cabby_huurovereenkomst-${new Date().getTime()}.pdf`
       );
       fs.writeFileSync(outputFilePath, pdfBytes);
 
