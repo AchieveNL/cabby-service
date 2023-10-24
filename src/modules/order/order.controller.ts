@@ -20,17 +20,18 @@ export default class OrderController extends Api {
   ) => {
     try {
       const dto = req.body;
-      const order = await this.orderService.createOrder({
+      const response = await this.orderService.createOrder({
         ...dto,
         userId: req.user?.id,
       } satisfies CreateOrderDto);
       return this.send(
         res,
-        order,
+        response,
         HttpStatusCode.Created,
         'Order created successfully'
       );
     } catch (error) {
+      console.log(error);
       next();
     }
   };

@@ -19,11 +19,13 @@ export default class OrderService {
       data: {
         ...dto,
         totalAmount,
-        status: OrderStatus.PENDING,
+        status: OrderStatus.UNPAID,
       },
     });
 
-    const payment = await this.paymentService.createRegistrationPayment({
+    console.log(order);
+
+    const paymentResponse = await this.paymentService.createOrderPayment({
       userId: dto.userId,
       amount: totalAmount,
       orderId: order.id,
@@ -32,11 +34,11 @@ export default class OrderService {
     await prisma.order.update({
       where: { id: order.id },
       data: {
-        paymentId: payment.payment,
+        paymentId: paymentResponse.payment,
       },
     });
 
-    return { order, payment };
+    return { order, checkoutUrl: paymentResponse.checkoutUrl };
   };
 
   public rejectionReasonOrder = async (orderId: string, reason: string) => {
@@ -103,7 +105,7 @@ export default class OrderService {
     });
   };
 
-  public getOrdersByStatus = async (status: OrderStatus) => {
+  public getOrdersByStatus = async (status) => {
     const orders = await prisma.order.findMany({
       where: { status },
       include: {
@@ -154,7 +156,7 @@ export default class OrderService {
 
   private readonly retrieveVehiclePricePerDay = async (vehicleId: string) => {
     const vehicle = await prisma.vehicle.findUnique({
-      where: { id: vehicleId }, // Assume the vehicle model has a pricePerDay field
+      where: { id: vehicleId },
     });
 
     if (!vehicle) {

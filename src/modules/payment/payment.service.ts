@@ -5,6 +5,7 @@ import {
   PaymentProduct,
 } from '@prisma/client';
 import { UserStatus } from '../users/types';
+import { OrderStatus } from '../order/types';
 import prisma from '@/lib/prisma';
 import { REGISTRATION_FEE } from '@/utils/constants';
 
@@ -18,18 +19,61 @@ export default class PaymentService {
     return payment;
   };
 
-  public createPayment = async (data: any) => {
-    const payment = await prisma.payment.create({ data });
-    return payment;
-  };
+  public async createOrderPayment({ userId, amount, orderId }) {
+    console.log({ userId, amount, orderId });
+    const parameters = this.generateOrderPaymentParameters(amount, orderId);
+    const payment = await this.mollie.payments.create(parameters);
 
-  public updatePayment = async (id: string, data) => {
-    const payment = await prisma.payment.update({
-      where: { id },
-      data,
+    const { id } = await prisma.payment.create({
+      data: {
+        userId,
+        amount: parseFloat(payment.amount.value),
+        currency: payment.amount.currency,
+        orderId, // Note: Assuming there's a field called `orderId` in the Payment model
+        product: PaymentProduct.RENT,
+        status: PaymentStatus.PENDING,
+      },
     });
-    return payment;
-  };
+
+    return { payment: id, checkoutUrl: payment.getCheckoutUrl() };
+  }
+
+  public async updateOrderPaymentStatus(paymentId: string) {
+    const payment = await this.mollie.payments.get(paymentId);
+
+    if (payment.status === 'paid') {
+      await prisma.order.update({
+        where: { id: payment.metadata.orderId },
+        data: {
+          status: OrderStatus.PENDING,
+        },
+      });
+    }
+
+    await prisma.payment.update({
+      where: { id: paymentId },
+      data: { status: payment.status.toUpperCase() as PaymentStatus },
+    });
+  }
+
+  public async createCheckoutUrlForOrder(orderId: string) {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order || order.status !== OrderStatus.UNPAID) {
+      throw new Error('Order not found or already paid.');
+    }
+
+    const parameters = this.generateOrderPaymentParameters(
+      Number(order.totalAmount),
+      orderId
+    );
+
+    const payment = await this.mollie.payments.create(parameters);
+
+    return payment.getCheckoutUrl();
+  }
 
   public createRegistrationPayment = async (userId) => {
     const existingRegistrationOrder = await prisma.registrationOrder.findFirst({
@@ -97,21 +141,6 @@ export default class PaymentService {
     return { payment: id, checkoutUrl: payment.getCheckoutUrl() };
   };
 
-  public refundPayment = async (paymentId: string) => {
-    try {
-      await this.mollie.payments_refunds.create({
-        paymentId,
-        amount: {
-          currency: 'EUR',
-          value: REGISTRATION_FEE,
-        },
-      });
-    } catch (error) {
-      console.error(error);
-      throw new Error('Refund failed');
-    }
-  };
-
   public updateRegistrationPaymentStatus = async (paymentId: string) => {
     const payment = await this.mollie.payments.get(paymentId);
 
@@ -137,5 +166,26 @@ export default class PaymentService {
     }
 
     return true;
+  };
+
+  private readonly generateOrderPaymentParameters = (
+    totalAmount: number,
+    orderId: string
+  ) => {
+    return {
+      amount: {
+        currency: 'EUR',
+        value: totalAmount.toFixed(2),
+      },
+      description: `Payment for Order #${orderId}`,
+      redirectUrl: 'cabby://registration-payment-completed',
+      webhookUrl:
+        process.env.NODE_ENV === 'development'
+          ? 'https://cabby-service-staging-jtj2mdm6ta-ez.a.run.app/api/v1/staging/payment/order/webhook'
+          : `${process.env.APP_BASE_URL}/api/v1/${process.env.NODE_ENV}/payment/order/webhook`,
+      metadata: {
+        registrationOrderId: orderId,
+      },
+    };
   };
 }
