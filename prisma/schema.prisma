@@ -187,6 +187,7 @@ model registrationOrder {
 }
 
 enum OrderStatus {
+  UNPAID
   PENDING
   CONFIRMED
   REJECTED
@@ -194,16 +195,11 @@ enum OrderStatus {
   CANCELED
 }
 
-enum OrderType {
-  REGISTRATION
-  VEHICLE_RENTAL
-}
-
 model order {
   id              String        @id @default(uuid())
   vehicleId       String
   userId          String
-  status          OrderStatus   @default(PENDING)
+  status          OrderStatus   @default(UNPAID)
   totalAmount     Decimal       @db.Decimal(6, 2)
   rentalStartDate DateTime
   rentalEndDate   DateTime
@@ -211,7 +207,6 @@ model order {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   note            String?       
-  orderType       OrderType @default(VEHICLE_RENTAL)
 
   vehicle         vehicle       @relation(fields: [vehicleId], references: [id])
   user            user          @relation(fields: [userId], references: [id])
