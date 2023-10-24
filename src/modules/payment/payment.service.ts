@@ -44,7 +44,7 @@ export default class PaymentService {
       console.log({ payment });
 
       const updatedPayment = await prisma.payment.update({
-        where: { id: paymentId },
+        where: { orderId: payment.metadata.orderId },
         data: { status: payment.status.toUpperCase() as PaymentStatus },
       });
 
@@ -191,7 +191,7 @@ export default class PaymentService {
           ? 'https://cabby-service-staging-jtj2mdm6ta-ez.a.run.app/api/v1/staging/payment/order/webhook'
           : `${process.env.APP_BASE_URL}/api/v1/${process.env.NODE_ENV}/payment/order/webhook`,
       metadata: {
-        registrationOrderId: orderId,
+        orderId,
       },
     };
   };
