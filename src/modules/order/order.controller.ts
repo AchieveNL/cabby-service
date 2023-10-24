@@ -205,7 +205,17 @@ export default class OrderController extends Api {
         new Date(rentEnds as string)
       );
 
-      return this.send(res, { isAvailable });
+      if (!isAvailable) {
+        return this.send(res, { isAvailable, totalRentPrice: null });
+      }
+
+      const totalRentPrice = await this.orderService.calculateTotalRentPrice(
+        vehicleId,
+        new Date(rentStarts as string),
+        new Date(rentEnds as string)
+      );
+
+      return this.send(res, { isAvailable, totalRentPrice });
     } catch (error) {
       next(error);
     }
