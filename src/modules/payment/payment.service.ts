@@ -41,7 +41,11 @@ export default class PaymentService {
   public async updateOrderPaymentStatus(paymentId: string) {
     const payment = await this.mollie.payments.get(paymentId);
 
-    if (payment.status === 'paid') {
+    const updatedPayment = await prisma.payment.update({
+      where: { id: paymentId },
+      data: { status: payment.status.toUpperCase() as PaymentStatus },
+    });
+    if (updatedPayment.status === PaymentStatus.PAID) {
       await prisma.order.update({
         where: { id: payment.metadata.orderId },
         data: {
@@ -49,11 +53,6 @@ export default class PaymentService {
         },
       });
     }
-
-    await prisma.payment.update({
-      where: { id: paymentId },
-      data: { status: payment.status.toUpperCase() as PaymentStatus },
-    });
   }
 
   public async createCheckoutUrlForOrder(orderId: string) {
