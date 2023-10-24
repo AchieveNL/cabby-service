@@ -1,6 +1,7 @@
 import { type Decimal } from '@prisma/client/runtime/library';
 import { differenceInHours } from 'date-fns';
 import PaymentService from '../payment/payment.service';
+import { VehicleStatus } from '../vehicle/types';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
 
@@ -173,4 +174,54 @@ export default class OrderService {
     });
     return rejection;
   }
+
+  public getVehicleOrdersForNext30Days = async (vehicleId: string) => {
+    const today = new Date();
+    const thirtyDaysLater = new Date(today);
+    thirtyDaysLater.setDate(today.getDate() + 30);
+
+    return await prisma.order.findMany({
+      where: {
+        vehicleId,
+        rentalStartDate: {
+          gte: today,
+          lte: thirtyDaysLater,
+        },
+        status: {
+          not: OrderStatus.CANCELED,
+        },
+      },
+      orderBy: {
+        rentalStartDate: 'asc',
+      },
+    });
+  };
+
+  public isVehicleAvailableForTimeslot = async (
+    vehicleId: string,
+    rentStarts: Date,
+    rentEnds: Date
+  ) => {
+    const overlappingOrders = await prisma.order.count({
+      where: {
+        vehicleId,
+        rentalStartDate: {
+          lte: rentEnds,
+        },
+        rentalEndDate: {
+          gte: rentStarts,
+        },
+        status: {
+          not: OrderStatus.CANCELED,
+        },
+      },
+    });
+
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { id: vehicleId },
+    });
+    if (!vehicle || vehicle.status !== VehicleStatus.ACTIVE) return false;
+
+    return overlappingOrders === 0;
+  };
 }
