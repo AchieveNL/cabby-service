@@ -39,19 +39,27 @@ export default class PaymentService {
   }
 
   public async updateOrderPaymentStatus(paymentId: string) {
-    const payment = await this.mollie.payments.get(paymentId);
+    try {
+      const payment = await this.mollie.payments.get(paymentId);
+      console.log({ payment });
 
-    const updatedPayment = await prisma.payment.update({
-      where: { id: paymentId },
-      data: { status: payment.status.toUpperCase() as PaymentStatus },
-    });
-    if (updatedPayment.status === PaymentStatus.PAID) {
-      await prisma.order.update({
-        where: { id: payment.metadata.orderId },
-        data: {
-          status: OrderStatus.PENDING,
-        },
+      const updatedPayment = await prisma.payment.update({
+        where: { id: paymentId },
+        data: { status: payment.status.toUpperCase() as PaymentStatus },
       });
+
+      console.log({ updatedPayment });
+      if (updatedPayment.status === PaymentStatus.PAID) {
+        const updatedOrders = await prisma.order.update({
+          where: { id: payment.metadata.orderId },
+          data: {
+            status: OrderStatus.PENDING,
+          },
+        });
+        console.log({ updatedOrders });
+      }
+    } catch (error) {
+      console.log({ error });
     }
   }
 
