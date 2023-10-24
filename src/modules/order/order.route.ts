@@ -66,4 +66,18 @@ router.get(
   orderController.getOrderDetails
 );
 
+router.get(
+  '/vehicle/:vehicleId/availability',
+  verifyAuthToken,
+  requireAuth,
+  orderController.getVehicleAvailability
+);
+
+router.get(
+  '/vehicle/:vehicleId/check-availability',
+  verifyAuthToken,
+  requireAuth,
+  orderController.checkVehicleAvailabilityForTimeslot
+);
+
 export default router;
