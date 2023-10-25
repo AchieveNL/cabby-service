@@ -166,6 +166,25 @@ export default class OrderService {
     });
   }
 
+  public getUserOrdersByStatus = async (
+    userId: string,
+    status?: OrderStatus
+  ) => {
+    if (status) {
+      return await prisma.order.findMany({
+        where: { userId, status },
+        include: { vehicle: true, payment: true },
+        orderBy: { createdAt: 'desc' },
+      });
+    } else {
+      return await prisma.order.findMany({
+        where: { userId },
+        include: { vehicle: true, payment: true },
+        orderBy: { createdAt: 'desc' },
+      });
+    }
+  };
+
   public rejectionReasonOrder = async (orderId: string, reason: string) => {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
 
