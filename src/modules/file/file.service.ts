@@ -1,5 +1,8 @@
 import { Readable } from 'stream';
+import { PDFDocument } from 'pdfkit';
+import getStream from 'get-stream';
 import { bucketName, gStorage } from '@/utils/storage';
+import prisma from '@/lib/prisma';
 
 export class FileService {
   private readonly storage = gStorage;
@@ -58,6 +61,77 @@ export class FileService {
       default:
         throw new Error('Invalid file type');
     }
+  }
+
+  public async generateAndSaveInvoice(
+    paymentId: string,
+    paymentDetails: any
+  ): Promise<string> {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: paymentDetails.userId,
+      },
+      include: {
+        profile: true,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User not found.');
+    }
+
+    const doc = new PDFDocument();
+
+    doc.fontSize(20).text('Invoice', { align: 'center' }).moveDown();
+
+    doc
+      .fontSize(14)
+      .text('User Information:')
+      .moveDown(0.5)
+      .fontSize(12)
+      .text(`Name: ${String(user.profile?.fullName ?? '')}`)
+      .text(`Email: ${String(user.email ?? '')}`)
+      .text(`Phone Number: ${String(user.profile?.phoneNumber ?? '')}`)
+      .moveDown();
+
+    doc
+      .fontSize(14)
+      .text('Order Details:')
+      .moveDown(0.5)
+      .fontSize(12)
+      .text(`Order ID: ${String(paymentDetails?.orderId ?? '')}`)
+      .text(`Order Date: ${String(paymentDetails?.orderDate ?? '')}`)
+      .text(
+        `Total Amount: ${String(paymentDetails?.amount ?? '')} ${String(
+          paymentDetails?.currency ?? ''
+        )}`
+      )
+      .text(`Payment Status: ${String(paymentDetails?.status ?? '')}`)
+      .moveDown();
+
+    const pdfBuffer = await getStream.buffer(doc.end());
+
+    const mimeType = 'application/pdf';
+    const fileName = `invoice-${String(paymentDetails.orderId)}.pdf`;
+    const fileType = 'PDF';
+
+    const invoiceUrl = await this.uploadFile(
+      pdfBuffer,
+      fileName,
+      mimeType,
+      fileType
+    );
+
+    await prisma.payment.update({
+      where: {
+        id: paymentId,
+      },
+      data: {
+        invoiceUrl,
+      },
+    });
+
+    return invoiceUrl;
   }
 }
 

@@ -20,6 +20,13 @@ router.post(
 );
 
 router.get(
+  '/:orderId/details',
+  verifyAuthToken,
+  requireAuth,
+  orderController.getOrderDetailsWithStatus
+);
+
+router.get(
   '/details/:orderId',
   verifyAuthToken,
   requireAuth,

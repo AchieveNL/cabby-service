@@ -17,7 +17,10 @@ CREATE TYPE "PaymentProduct" AS ENUM ('RENT', 'REGISTRATION');
 CREATE TYPE "PaymentStatus" AS ENUM ('PAID', 'REFUNDED', 'PENDING', 'FAILED');
 
 -- CreateEnum
-CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'CONFIRMED', 'REJECTED', 'COMPLETED', 'CANCELED');
+CREATE TYPE "RegistrationOrderStatus" AS ENUM ('PAID', 'REFUNDED', 'PENDING', 'FAILED');
+
+-- CreateEnum
+CREATE TYPE "OrderStatus" AS ENUM ('UNPAID', 'PENDING', 'CONFIRMED', 'REJECTED', 'COMPLETED', 'CANCELED');
 
 -- CreateEnum
 CREATE TYPE "ReportStatus" AS ENUM ('UNDERPAID', 'REPAIRED');
@@ -61,7 +64,7 @@ CREATE TABLE "userProfile" (
     "profilePhoto" TEXT,
     "signature" TEXT,
     "zip" TEXT,
-    "status" "UserProfileStatus" NOT NULL DEFAULT 'PENDING',
+    "status" "UserProfileStatus" NOT NULL DEFAULT 'REQUIRE_REGISTRATION_FEE',
 
     CONSTRAINT "userProfile_pkey" PRIMARY KEY ("id")
 );
@@ -72,7 +75,6 @@ CREATE TABLE "driverLicense" (
     "driverLicenseBack" TEXT,
     "driverLicenseExpiry" TEXT,
     "driverLicenseFront" TEXT,
-    "dateOfBirth" TEXT NOT NULL,
     "bsnNumber" TEXT,
     "driverLicense" TEXT,
     "userProfileId" TEXT NOT NULL,
@@ -83,8 +85,8 @@ CREATE TABLE "driverLicense" (
 -- CreateTable
 CREATE TABLE "permitDetails" (
     "id" TEXT NOT NULL,
-    "kiwaTaxiVergunningId" TEXT,
-    "kvkDocumentId" TEXT,
+    "kiwaDocument" TEXT,
+    "kvkDocument" TEXT,
     "taxiPermitId" TEXT,
     "taxiPermitExpiry" TEXT,
     "taxiPermitPicture" TEXT,
@@ -124,11 +126,27 @@ CREATE TABLE "payment" (
     "amount" DECIMAL(6,2) NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'EUR',
     "paymentDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "orderId" TEXT NOT NULL,
+    "orderId" TEXT,
+    "registrationOrderId" TEXT,
     "product" "PaymentProduct" NOT NULL DEFAULT 'RENT',
     "status" "PaymentStatus" NOT NULL DEFAULT 'PAID',
+    "invoiceUrl" TEXT,
 
     CONSTRAINT "payment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "registrationOrder" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "status" "RegistrationOrderStatus" NOT NULL DEFAULT 'PENDING',
+    "totalAmount" DECIMAL(6,2) NOT NULL,
+    "paymentId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "note" TEXT,
+
+    CONSTRAINT "registrationOrder_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -136,7 +154,7 @@ CREATE TABLE "order" (
     "id" TEXT NOT NULL,
     "vehicleId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "status" "OrderStatus" NOT NULL DEFAULT 'PENDING',
+    "status" "OrderStatus" NOT NULL DEFAULT 'UNPAID',
     "totalAmount" DECIMAL(6,2) NOT NULL,
     "rentalStartDate" TIMESTAMP(3) NOT NULL,
     "rentalEndDate" TIMESTAMP(3) NOT NULL,
@@ -215,7 +233,22 @@ CREATE UNIQUE INDEX "vehicle_licensePlate_key" ON "vehicle"("licensePlate");
 CREATE UNIQUE INDEX "payment_orderId_key" ON "payment"("orderId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "payment_registrationOrderId_key" ON "payment"("registrationOrderId");
+
+-- CreateIndex
+CREATE INDEX "idx_registrationOrderId" ON "payment"("registrationOrderId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "payment_userId_paymentDate_key" ON "payment"("userId", "paymentDate");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "registrationOrder_userId_key" ON "registrationOrder"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "registrationOrder_paymentId_key" ON "registrationOrder"("paymentId");
+
+-- CreateIndex
+CREATE INDEX "idx_registrationOrder_userId" ON "registrationOrder"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "order_paymentId_key" ON "order"("paymentId");
@@ -252,6 +285,12 @@ ALTER TABLE "payment" ADD CONSTRAINT "payment_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "payment" ADD CONSTRAINT "payment_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "payment" ADD CONSTRAINT "payment_registrationOrderId_fkey" FOREIGN KEY ("registrationOrderId") REFERENCES "registrationOrder"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "registrationOrder" ADD CONSTRAINT "registrationOrder_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "order" ADD CONSTRAINT "order_vehicleId_fkey" FOREIGN KEY ("vehicleId") REFERENCES "vehicle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
