@@ -9,6 +9,20 @@ export default class OrderService {
   private readonly paymentService = new PaymentService();
 
   public createOrder = async (dto) => {
+    const activeOrPendingOrdersCount = await prisma.order.count({
+      where: {
+        userId: dto.userId,
+        OR: [
+          { status: OrderStatus.CONFIRMED },
+          { status: OrderStatus.PENDING },
+        ],
+      },
+    });
+
+    if (activeOrPendingOrdersCount >= 2) {
+      throw new Error('You can have only 2 active or pending orders at max.');
+    }
+
     const totalAmount = await this.calculateTotalAmount(
       dto.vehicleId,
       dto.rentalStartDate,
@@ -52,14 +66,9 @@ export default class OrderService {
     }
 
     const currentDate = new Date();
-    const startCountdown = Math.max(
-      0,
-      (order.rentalStartDate.getTime() - currentDate.getTime()) / 1000
-    ); // in seconds
-    const endCountdown = Math.max(
-      0,
-      (order.rentalEndDate.getTime() - currentDate.getTime()) / 1000
-    ); // in seconds
+    const startCountdown =
+      order.rentalStartDate.getTime() - currentDate.getTime(); // in milliseconds
+    const endCountdown = order.rentalEndDate.getTime() - currentDate.getTime(); // in milliseconds
 
     let statusMessage = 'Processing...';
     switch (order.status) {
@@ -83,33 +92,79 @@ export default class OrderService {
         break;
     }
 
-    const oneDayInMilliseconds = 86400000; // 24 hours * 60 minutes * 60 seconds * 1000 milliseconds
+    const toDurationString = (ms: number) => {
+      const totalSeconds = ms / 1000;
+      const days = Math.floor(totalSeconds / (3600 * 24));
+      const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+      if (days > 0) return `${days} day(s)`;
+      if (hours > 0) return `${hours} hour(s)`;
+      return `${minutes} minute(s)`;
+    };
+
     let orderMessage = '';
+    let readyToUse = false;
 
     if (
-      startCountdown <= oneDayInMilliseconds &&
+      startCountdown > 0 &&
       order.status !== 'CANCELED' &&
       order.status !== 'COMPLETED'
     ) {
-      orderMessage = 'Your rental starts soon! Please be prepared.';
+      orderMessage = `Your rental starts in ${toDurationString(
+        startCountdown
+      )}. Prepare!`;
     } else if (
-      endCountdown <= oneDayInMilliseconds &&
+      startCountdown <= 0 &&
+      endCountdown > 0 &&
       order.status !== 'CANCELED' &&
       order.status !== 'COMPLETED'
     ) {
-      orderMessage =
-        'Your rental is about to end. Please ensure you return the vehicle on time.';
+      orderMessage = `Your rental has started. Vehicle is ready to use for the next ${toDurationString(
+        endCountdown
+      )}.`;
+      readyToUse = true;
+    } else if (
+      endCountdown <= 0 &&
+      order.status !== 'CANCELED' &&
+      order.status !== 'COMPLETED'
+    ) {
+      orderMessage = 'Your rental has ended. Thank you for renting with us!';
     }
 
     return {
       order,
       vehicle: order.vehicle,
-      startCountdown,
-      endCountdown,
+      startCountdown: startCountdown / 1000, // Convert to seconds for consistency
+      endCountdown: endCountdown / 1000, // Convert to seconds for consistency
       statusMessage,
       orderMessage,
+      readyToUse,
     };
   };
+
+  async completeOrder(orderId: string, userId: string) {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new Error('Order not found.');
+    }
+
+    if (order.status !== 'CONFIRMED') {
+      throw new Error('Order is not in CONFIRMED status.');
+    }
+
+    if (order.userId !== userId) {
+      throw new Error('Not authorized to complete this order.');
+    }
+
+    return await prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'COMPLETED' },
+    });
+  }
 
   public rejectionReasonOrder = async (orderId: string, reason: string) => {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
