@@ -6,10 +6,12 @@ import {
 } from '@prisma/client';
 import { UserStatus } from '../users/types';
 import { OrderStatus } from '../order/types';
+import FileService from '../file/file.service';
 import prisma from '@/lib/prisma';
 import { REGISTRATION_FEE } from '@/utils/constants';
 
 export default class PaymentService {
+  readonly fileService = new FileService();
   readonly mollie = mollieClient.createMollieClient({
     apiKey: process.env.MOLLIE_API_KEY as string,
   });
@@ -20,7 +22,6 @@ export default class PaymentService {
   };
 
   public async createOrderPayment({ userId, amount, orderId }) {
-    console.log({ userId, amount, orderId });
     const parameters = this.generateOrderPaymentParameters(amount, orderId);
     const payment = await this.mollie.payments.create(parameters);
 
@@ -29,9 +30,24 @@ export default class PaymentService {
         userId,
         amount: parseFloat(payment.amount.value),
         currency: payment.amount.currency,
-        orderId, // Note: Assuming there's a field called `orderId` in the Payment model
+        orderId,
         product: PaymentProduct.RENT,
         status: PaymentStatus.PENDING,
+      },
+    });
+
+    const invoiceUrl = await this.fileService.generateAndSaveInvoice(
+      orderId,
+      userId,
+      id
+    );
+
+    await prisma.payment.update({
+      where: {
+        id,
+      },
+      data: {
+        invoiceUrl,
       },
     });
 
