@@ -158,6 +158,7 @@ model payment {
   user        user           @relation(fields: [userId], references: [id])
   order              order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   registrationOrder  registrationOrder? @relation(fields: [registrationOrderId], references: [id], onDelete: Cascade)
+  invoiceUrl  String?
   
   @@unique([userId, paymentDate])
   @@index([registrationOrderId], name: "idx_registrationOrderId")

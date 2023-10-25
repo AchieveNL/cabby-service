@@ -41,6 +41,76 @@ export default class OrderService {
     return { order, checkoutUrl: paymentResponse.checkoutUrl };
   };
 
+  public getOrderDetailsWithStatus = async (orderId: string) => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { vehicle: true },
+    });
+
+    if (!order) {
+      throw new Error('Order not found.');
+    }
+
+    const currentDate = new Date();
+    const startCountdown = Math.max(
+      0,
+      (order.rentalStartDate.getTime() - currentDate.getTime()) / 1000
+    ); // in seconds
+    const endCountdown = Math.max(
+      0,
+      (order.rentalEndDate.getTime() - currentDate.getTime()) / 1000
+    ); // in seconds
+
+    let statusMessage = 'Processing...';
+    switch (order.status) {
+      case 'UNPAID':
+        statusMessage = 'Please complete the payment.';
+        break;
+      case 'PENDING':
+        statusMessage = 'Order is pending approval.';
+        break;
+      case 'CONFIRMED':
+        statusMessage = 'Order confirmed! Prepare for your trip.';
+        break;
+      case 'REJECTED':
+        statusMessage = 'Order was rejected. Please contact support.';
+        break;
+      case 'COMPLETED':
+        statusMessage = 'Order completed. Thank you for renting with us!';
+        break;
+      case 'CANCELED':
+        statusMessage = 'Order was canceled.';
+        break;
+    }
+
+    const oneDayInMilliseconds = 86400000; // 24 hours * 60 minutes * 60 seconds * 1000 milliseconds
+    let orderMessage = '';
+
+    if (
+      startCountdown <= oneDayInMilliseconds &&
+      order.status !== 'CANCELED' &&
+      order.status !== 'COMPLETED'
+    ) {
+      orderMessage = 'Your rental starts soon! Please be prepared.';
+    } else if (
+      endCountdown <= oneDayInMilliseconds &&
+      order.status !== 'CANCELED' &&
+      order.status !== 'COMPLETED'
+    ) {
+      orderMessage =
+        'Your rental is about to end. Please ensure you return the vehicle on time.';
+    }
+
+    return {
+      order,
+      vehicle: order.vehicle,
+      startCountdown,
+      endCountdown,
+      statusMessage,
+      orderMessage,
+    };
+  };
+
   public rejectionReasonOrder = async (orderId: string, reason: string) => {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
 

@@ -36,6 +36,27 @@ export default class OrderController extends Api {
     }
   };
 
+  public getOrderDetailsWithStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { orderId } = req.params;
+      const details =
+        await this.orderService.getOrderDetailsWithStatus(orderId);
+      return this.send(
+        res,
+        details,
+        HttpStatusCode.Ok,
+        'Order details fetched successfully'
+      );
+    } catch (error) {
+      console.log(error);
+      next();
+    }
+  };
+
   public rejectOrder = async (
     req: Request,
     res: Response,
