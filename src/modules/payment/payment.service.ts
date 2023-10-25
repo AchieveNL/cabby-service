@@ -185,7 +185,7 @@ export default class PaymentService {
         value: totalAmount.toFixed(2),
       },
       description: `Payment for Order #${orderId}`,
-      redirectUrl: 'cabby://registration-payment-completed',
+      redirectUrl: 'cabby://order-payment-completed',
       webhookUrl:
         process.env.NODE_ENV === 'development'
           ? 'https://cabby-service-staging-jtj2mdm6ta-ez.a.run.app/api/v1/staging/payment/order/webhook'
