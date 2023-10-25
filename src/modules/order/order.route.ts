@@ -26,6 +26,13 @@ router.get(
   orderController.getOrderDetailsWithStatus
 );
 
+router.patch(
+  '/orders/:orderId/complete',
+  verifyAuthToken,
+  requireAuth,
+  orderController.completeOrder
+);
+
 router.get(
   '/details/:orderId',
   verifyAuthToken,

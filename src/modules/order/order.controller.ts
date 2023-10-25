@@ -57,6 +57,36 @@ export default class OrderController extends Api {
     }
   };
 
+  public completeOrder = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const orderId = req.params.orderId;
+    const userId = req.user?.id;
+
+    try {
+      const details = await this.orderService.completeOrder(orderId, userId);
+      return this.send(
+        res,
+        details,
+        HttpStatusCode.Ok,
+        'Order marked as completed successfully'
+      );
+    } catch (error) {
+      if (error.message === 'Not authorized to complete this order.') {
+        res.status(403).json({ error: error.message });
+      } else if (error.message === 'Order not found.') {
+        res.status(404).json({ error: error.message });
+      } else if (error.message === 'Order is not in CONFIRMED status.') {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Internal Server Error.' });
+      }
+      next();
+    }
+  };
+
   public rejectOrder = async (
     req: Request,
     res: Response,
