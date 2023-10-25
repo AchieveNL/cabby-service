@@ -87,6 +87,31 @@ export default class OrderController extends Api {
     }
   };
 
+  public getUserOrdersByStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const userId = req.user?.id;
+    const status: OrderStatus | undefined = req.query.status as OrderStatus;
+
+    try {
+      const orders = await this.orderService.getUserOrdersByStatus(
+        userId,
+        status
+      );
+      return this.send(
+        res,
+        orders,
+        HttpStatusCode.Ok,
+        'Orders fetched successfully'
+      );
+    } catch (error) {
+      console.log(error);
+      next();
+    }
+  };
+
   public rejectOrder = async (
     req: Request,
     res: Response,
