@@ -64,21 +64,29 @@ export class FileService {
   }
 
   public async generateAndSaveInvoice(
-    paymentId: string,
-    paymentDetails: any
+    orderId: string,
+    userId: string,
+    paymentId: string
   ): Promise<string> {
-    const user = await prisma.user.findUnique({
+    const order = await prisma.order.findUnique({
       where: {
-        id: paymentDetails.userId,
+        id: orderId,
       },
       include: {
-        profile: true,
+        user: {
+          include: {
+            profile: true,
+          },
+        },
+        payment: true,
       },
     });
 
-    if (!user) {
+    if (!order?.user) {
       throw new Error('User not found.');
     }
+
+    const user = order.user;
 
     const doc = new PDFDocument();
 
@@ -99,20 +107,18 @@ export class FileService {
       .text('Order Details:')
       .moveDown(0.5)
       .fontSize(12)
-      .text(`Order ID: ${String(paymentDetails?.orderId ?? '')}`)
-      .text(`Order Date: ${String(paymentDetails?.orderDate ?? '')}`)
+      .text(`Order ID: ${String(order?.id ?? '')}`)
+      .text(`Order Date: ${String(order?.createdAt ?? '')}`)
       .text(
-        `Total Amount: ${String(paymentDetails?.amount ?? '')} ${String(
-          paymentDetails?.currency ?? ''
-        )}`
+        `Total Amount: ${String(order?.totalAmount ?? '')} ${String('EUR')}`
       )
-      .text(`Payment Status: ${String(paymentDetails?.status ?? '')}`)
+      .text(`Payment Status: ${String(order?.payment?.status ?? '')}`)
       .moveDown();
 
     const pdfBuffer = await getStream.buffer(doc.end());
 
     const mimeType = 'application/pdf';
-    const fileName = `invoice-${String(paymentDetails.orderId)}.pdf`;
+    const fileName = `invoice-${String(order.id)}.pdf`;
     const fileType = 'PDF';
 
     const invoiceUrl = await this.uploadFile(
@@ -121,16 +127,6 @@ export class FileService {
       mimeType,
       fileType
     );
-
-    await prisma.payment.update({
-      where: {
-        id: paymentId,
-      },
-      data: {
-        invoiceUrl,
-      },
-    });
-
     return invoiceUrl;
   }
 }
