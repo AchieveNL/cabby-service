@@ -37,8 +37,6 @@ export default class OrderService {
       },
     });
 
-    console.log(order);
-
     const paymentResponse = await this.paymentService.createOrderPayment({
       userId: dto.userId,
       amount: totalAmount,

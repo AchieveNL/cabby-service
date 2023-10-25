@@ -1,5 +1,5 @@
 import { Readable } from 'stream';
-import { PDFDocument } from 'pdfkit';
+import PDFDocument from 'pdfkit';
 import getStream from 'get-stream';
 import { bucketName, gStorage } from '@/utils/storage';
 import prisma from '@/lib/prisma';
@@ -112,10 +112,10 @@ export class FileService {
       .text(
         `Total Amount: ${String(order?.totalAmount ?? '')} ${String('EUR')}`
       )
-      .text(`Payment Status: ${String(order?.payment?.status ?? '')}`)
       .moveDown();
 
-    const pdfBuffer = await getStream.buffer(doc.end());
+    doc.end();
+    const pdfBuffer = await getStream.buffer(doc);
 
     const mimeType = 'application/pdf';
     const fileName = `invoice-${String(order.id)}.pdf`;
