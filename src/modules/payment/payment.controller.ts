@@ -24,43 +24,6 @@ export default class PaymentController extends Api {
     }
   };
 
-  public createPayment = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const payment = await this.paymentService.createPayment(req.body);
-      return this.send(
-        res,
-        payment,
-        HttpStatusCode.Created,
-        'Payment created successfully'
-      );
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public updatePayment = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const { id } = req.params;
-      const payment = await this.paymentService.updatePayment(id, req.body);
-      return this.send(
-        res,
-        payment,
-        HttpStatusCode.Ok,
-        'Payment updated successfully'
-      );
-    } catch (error) {
-      next(error);
-    }
-  };
-
   public createRegistrationPayment = async (
     req: Request,
     res: Response,
@@ -82,21 +45,7 @@ export default class PaymentController extends Api {
     }
   };
 
-  public refundPayment = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const { paymentId } = req.params;
-      await this.paymentService.refundPayment(paymentId);
-      return this.send(res, null, HttpStatusCode.NoContent, 'Refund initiated');
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public handleMollieWebhook = async (
+  public registrationPaymentWebhook = async (
     req: Request,
     res: Response,
     next: NextFunction
@@ -119,6 +68,55 @@ export default class PaymentController extends Api {
         null,
         HttpStatusCode.Ok,
         'Payment status updated successfully'
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public orderPaymentWebhook = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const paymentId = req.body.id;
+
+      if (!paymentId) {
+        return this.send(
+          res,
+          null,
+          HttpStatusCode.BadRequest,
+          'Payment ID is missing.'
+        );
+      }
+
+      await this.paymentService.updateOrderPaymentStatus(paymentId);
+      return this.send(
+        res,
+        null,
+        HttpStatusCode.Ok,
+        'Order payment status updated successfully'
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public generateCheckoutUrlForOrder = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { orderId } = req.params;
+      const checkoutUrl =
+        await this.paymentService.createCheckoutUrlForOrder(orderId);
+      return this.send(
+        res,
+        { checkoutUrl },
+        HttpStatusCode.Ok,
+        'Checkout URL generated successfully'
       );
     } catch (error) {
       next(error);

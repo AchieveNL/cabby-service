@@ -5,10 +5,8 @@ import {
   CreateUserDto,
   FetchUsersByStatusDto,
   LoginDto,
-  PerformPasswordResetDto,
   RequestPasswordResetDto,
   ResetPasswordDto,
-  ResetPasswordInitiateDto,
   VerifyOtpDto,
 } from '@/modules/users/user.dto';
 import RequestValidator from '@/middlewares/request-validator';
@@ -33,17 +31,7 @@ users.post(
 
 users.get('/email-exists', controller.emailExists);
 
-users.post(
-  '/reset-password/initiate',
-  RequestValidator.validate(ResetPasswordInitiateDto),
-  controller.initiateResetPassword
-);
-
-users.post(
-  '/reset-password/perform',
-  RequestValidator.validate(PerformPasswordResetDto),
-  controller.performPasswordReset
-);
+users.get('/status', verifyAuthToken, requireAuth, controller.userStatus);
 
 users.post(
   '/request-password-reset',

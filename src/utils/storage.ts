@@ -1,6 +1,7 @@
 import { Storage } from '@google-cloud/storage';
 
-const bucketName = 'cabby-bucket';
+const bucketName =
+  process.env.NODE_ENV === 'production' ? 'cabby-bucket-prod' : 'cabby-bucket';
 
 const gStorage =
   process.env.NODE_ENV === 'development'

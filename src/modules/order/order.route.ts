@@ -12,11 +12,53 @@ const router = Router();
 const orderController = new OrderController();
 
 router.post(
-  '/',
+  '/create',
   verifyAuthToken,
   requireAuth,
   RequestValidator.validate(CreateOrderDto),
   orderController.createOrder
+);
+
+router.get(
+  '/:orderId/details',
+  verifyAuthToken,
+  requireAuth,
+  orderController.getOrderDetailsWithStatus
+);
+
+router.get(
+  '/user-orders',
+  verifyAuthToken,
+  requireAuth,
+  orderController.getUserOrdersByStatus
+);
+
+router.patch(
+  '/orders/:orderId/complete',
+  verifyAuthToken,
+  requireAuth,
+  orderController.completeOrder
+);
+
+router.get(
+  '/details/:orderId',
+  verifyAuthToken,
+  requireAuth,
+  orderController.getOrderDetails
+);
+
+router.get(
+  '/vehicle/:vehicleId/availability',
+  verifyAuthToken,
+  requireAuth,
+  orderController.getVehicleAvailability
+);
+
+router.get(
+  '/vehicle/:vehicleId/check-availability',
+  verifyAuthToken,
+  requireAuth,
+  orderController.checkVehicleAvailabilityForTimeslot
 );
 
 router.post(
@@ -57,13 +99,6 @@ router.get(
   verifyAuthToken,
   requireAuth,
   orderController.getOrdersByStatus
-);
-
-router.get(
-  '/details/:orderId',
-  verifyAuthToken,
-  requireAuth,
-  orderController.getOrderDetails
 );
 
 export default router;

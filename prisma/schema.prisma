@@ -158,17 +158,17 @@ model payment {
   user        user           @relation(fields: [userId], references: [id])
   order              order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   registrationOrder  registrationOrder? @relation(fields: [registrationOrderId], references: [id], onDelete: Cascade)
+  invoiceUrl  String?
   
   @@unique([userId, paymentDate])
   @@index([registrationOrderId], name: "idx_registrationOrderId")
 }
 
 enum RegistrationOrderStatus {
+  PAID
+  REFUNDED
   PENDING
-  CONFIRMED
-  REJECTED
-  COMPLETED
-  CANCELED
+  FAILED
 }
 
 model registrationOrder {
@@ -188,6 +188,7 @@ model registrationOrder {
 }
 
 enum OrderStatus {
+  UNPAID
   PENDING
   CONFIRMED
   REJECTED
@@ -195,16 +196,11 @@ enum OrderStatus {
   CANCELED
 }
 
-enum OrderType {
-  REGISTRATION
-  VEHICLE_RENTAL
-}
-
 model order {
   id              String        @id @default(uuid())
   vehicleId       String
   userId          String
-  status          OrderStatus   @default(PENDING)
+  status          OrderStatus   @default(UNPAID)
   totalAmount     Decimal       @db.Decimal(6, 2)
   rentalStartDate DateTime
   rentalEndDate   DateTime
@@ -212,7 +208,6 @@ model order {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   note            String?       
-  orderType       OrderType @default(VEHICLE_RENTAL)
 
   vehicle         vehicle       @relation(fields: [vehicleId], references: [id])
   user            user          @relation(fields: [userId], references: [id])

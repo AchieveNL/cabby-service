@@ -3,12 +3,7 @@ import { HttpStatusCode } from 'axios';
 import bcrypt from 'bcrypt';
 import { type Response, type NextFunction, type Request } from 'express';
 import ProfileService from '../profile/profile.service';
-import {
-  type LoginDto,
-  type CreateUserDto,
-  type ResetPasswordInitiateDto,
-  type PerformPasswordResetDto,
-} from './user.dto';
+import { type LoginDto, type CreateUserDto } from './user.dto';
 import UserService from './users.service';
 import { UserStatus } from './types';
 import { type CustomResponse } from '@/types/common.type';
@@ -33,6 +28,21 @@ export default class UserController extends Api {
         req.query.email as string
       );
       this.send(res, { emailExists }, HttpStatusCode.Ok, 'Email exists');
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  public userStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const status = await this.userProfileService.getUserProfileStatusByUserId(
+        req.user?.id
+      );
+      this.send(res, status, HttpStatusCode.Ok, 'User status');
     } catch (e) {
       next(e);
     }
@@ -126,16 +136,16 @@ export default class UserController extends Api {
         );
       }
 
+      const status = await this.userProfileService.getUserProfileStatusByUserId(
+        user.id
+      );
+
       const minimalUser = {
         id: user.id,
         email: user.email,
         role: user.role,
-        status: user.status,
+        status,
       };
-
-      const status = await this.userProfileService.getUserProfileStatusByUserId(
-        user.id
-      );
 
       if (status) {
         if (status === 'PENDING') {
@@ -184,34 +194,6 @@ export default class UserController extends Api {
         HttpStatusCode.BadRequest,
         'You are not registered'
       );
-    } catch (e) {
-      next(e);
-    }
-  };
-
-  public initiateResetPassword = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const { email } = req.body as ResetPasswordInitiateDto;
-      await this.userService.initiatePasswordReset(email);
-      res.status(200).json({ message: 'Password reset email sent' });
-    } catch (e) {
-      next(e);
-    }
-  };
-
-  public performPasswordReset = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const { token, password } = req.body as PerformPasswordResetDto;
-      await this.userService.performPasswordReset(token, password);
-      res.status(200).json({ message: 'Password reset successful' });
     } catch (e) {
       next(e);
     }

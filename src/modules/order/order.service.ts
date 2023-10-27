@@ -1,6 +1,7 @@
 import { type Decimal } from '@prisma/client/runtime/library';
 import { differenceInHours } from 'date-fns';
 import PaymentService from '../payment/payment.service';
+import { VehicleStatus } from '../vehicle/types';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
 
@@ -8,6 +9,20 @@ export default class OrderService {
   private readonly paymentService = new PaymentService();
 
   public createOrder = async (dto) => {
+    const activeOrPendingOrdersCount = await prisma.order.count({
+      where: {
+        userId: dto.userId,
+        OR: [
+          { status: OrderStatus.CONFIRMED },
+          { status: OrderStatus.PENDING },
+        ],
+      },
+    });
+
+    if (activeOrPendingOrdersCount >= 2) {
+      throw new Error('You can have only 2 active or pending orders at max.');
+    }
+
     const totalAmount = await this.calculateTotalAmount(
       dto.vehicleId,
       dto.rentalStartDate,
@@ -18,11 +33,11 @@ export default class OrderService {
       data: {
         ...dto,
         totalAmount,
-        status: OrderStatus.PENDING,
+        status: OrderStatus.UNPAID,
       },
     });
 
-    const payment = await this.paymentService.createRegistrationPayment({
+    const paymentResponse = await this.paymentService.createOrderPayment({
       userId: dto.userId,
       amount: totalAmount,
       orderId: order.id,
@@ -31,11 +46,141 @@ export default class OrderService {
     await prisma.order.update({
       where: { id: order.id },
       data: {
-        paymentId: payment.payment,
+        paymentId: paymentResponse.payment,
       },
     });
 
-    return { order, payment };
+    return { order, checkoutUrl: paymentResponse.checkoutUrl };
+  };
+
+  public getOrderDetailsWithStatus = async (orderId: string) => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { vehicle: true },
+    });
+
+    if (!order) {
+      throw new Error('Order not found.');
+    }
+
+    const currentDate = new Date();
+    const startCountdown =
+      order.rentalStartDate.getTime() - currentDate.getTime(); // in milliseconds
+    const endCountdown = order.rentalEndDate.getTime() - currentDate.getTime(); // in milliseconds
+
+    let statusMessage = 'Processing...';
+    switch (order.status) {
+      case 'UNPAID':
+        statusMessage = 'Please complete the payment.';
+        break;
+      case 'PENDING':
+        statusMessage = 'Order is pending approval.';
+        break;
+      case 'CONFIRMED':
+        statusMessage = 'Order confirmed! Prepare for your trip.';
+        break;
+      case 'REJECTED':
+        statusMessage = 'Order was rejected. Please contact support.';
+        break;
+      case 'COMPLETED':
+        statusMessage = 'Order completed. Thank you for renting with us!';
+        break;
+      case 'CANCELED':
+        statusMessage = 'Order was canceled.';
+        break;
+    }
+
+    const toDurationString = (ms: number) => {
+      const totalSeconds = ms / 1000;
+      const days = Math.floor(totalSeconds / (3600 * 24));
+      const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+      if (days > 0) return `${days} day(s)`;
+      if (hours > 0) return `${hours} hour(s)`;
+      return `${minutes} minute(s)`;
+    };
+
+    let orderMessage = '';
+    let readyToUse = false;
+
+    if (
+      startCountdown > 0 &&
+      order.status !== 'CANCELED' &&
+      order.status !== 'COMPLETED'
+    ) {
+      orderMessage = `Your rental starts in ${toDurationString(
+        startCountdown
+      )}. Prepare!`;
+    } else if (
+      startCountdown <= 0 &&
+      endCountdown > 0 &&
+      order.status !== 'CANCELED' &&
+      order.status !== 'COMPLETED'
+    ) {
+      orderMessage = `Your rental has started. Vehicle is ready to use for the next ${toDurationString(
+        endCountdown
+      )}.`;
+      readyToUse = true;
+    } else if (
+      endCountdown <= 0 &&
+      order.status !== 'CANCELED' &&
+      order.status !== 'COMPLETED'
+    ) {
+      orderMessage = 'Your rental has ended. Thank you for renting with us!';
+    }
+
+    return {
+      order,
+      vehicle: order.vehicle,
+      startCountdown: startCountdown / 1000, // Convert to seconds for consistency
+      endCountdown: endCountdown / 1000, // Convert to seconds for consistency
+      statusMessage,
+      orderMessage,
+      readyToUse,
+    };
+  };
+
+  async completeOrder(orderId: string, userId: string) {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new Error('Order not found.');
+    }
+
+    if (order.status !== 'CONFIRMED') {
+      throw new Error('Order is not in CONFIRMED status.');
+    }
+
+    if (order.userId !== userId) {
+      throw new Error('Not authorized to complete this order.');
+    }
+
+    return await prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'COMPLETED' },
+    });
+  }
+
+  public getUserOrdersByStatus = async (
+    userId: string,
+    status?: OrderStatus
+  ) => {
+    if (status) {
+      return await prisma.order.findMany({
+        where: { userId, status },
+        include: { vehicle: true, payment: true },
+        orderBy: { createdAt: 'desc' },
+      });
+    } else {
+      return await prisma.order.findMany({
+        where: { userId },
+        include: { vehicle: true, payment: true },
+        orderBy: { createdAt: 'desc' },
+      });
+    }
   };
 
   public rejectionReasonOrder = async (orderId: string, reason: string) => {
@@ -102,7 +247,7 @@ export default class OrderService {
     });
   };
 
-  public getOrdersByStatus = async (status: OrderStatus) => {
+  public getOrdersByStatus = async (status) => {
     const orders = await prisma.order.findMany({
       where: { status },
       include: {
@@ -153,7 +298,7 @@ export default class OrderService {
 
   private readonly retrieveVehiclePricePerDay = async (vehicleId: string) => {
     const vehicle = await prisma.vehicle.findUnique({
-      where: { id: vehicleId }, // Assume the vehicle model has a pricePerDay field
+      where: { id: vehicleId },
     });
 
     if (!vehicle) {
@@ -173,4 +318,73 @@ export default class OrderService {
     });
     return rejection;
   }
+
+  public getVehicleOrdersForNext30Days = async (vehicleId: string) => {
+    const today = new Date();
+    const thirtyDaysLater = new Date(today);
+    thirtyDaysLater.setDate(today.getDate() + 30);
+
+    return await prisma.order.findMany({
+      where: {
+        vehicleId,
+        rentalStartDate: {
+          gte: today,
+          lte: thirtyDaysLater,
+        },
+        status: {
+          not: OrderStatus.CANCELED,
+        },
+      },
+      orderBy: {
+        rentalStartDate: 'asc',
+      },
+    });
+  };
+
+  public calculateTotalRentPrice = async (
+    vehicleId: string,
+    rentStarts: Date,
+    rentEnds: Date
+  ) => {
+    const oneDayMilliseconds = 24 * 60 * 60 * 1000;
+    const numberOfDays =
+      Math.round(
+        (rentEnds.getTime() - rentStarts.getTime()) / oneDayMilliseconds
+      ) + 1;
+
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { id: vehicleId },
+    });
+    if (!vehicle) throw new Error('Vehicle not found.');
+
+    return numberOfDays * (Number(vehicle.pricePerDay) ?? 0);
+  };
+
+  public isVehicleAvailableForTimeslot = async (
+    vehicleId: string,
+    rentStarts: Date,
+    rentEnds: Date
+  ) => {
+    const overlappingOrders = await prisma.order.count({
+      where: {
+        vehicleId,
+        rentalStartDate: {
+          lte: rentEnds,
+        },
+        rentalEndDate: {
+          gte: rentStarts,
+        },
+        status: {
+          not: OrderStatus.CANCELED,
+        },
+      },
+    });
+
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { id: vehicleId },
+    });
+    if (!vehicle || vehicle.status !== VehicleStatus.ACTIVE) return false;
+
+    return overlappingOrders === 0;
+  };
 }
