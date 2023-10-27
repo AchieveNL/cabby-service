@@ -1,4 +1,3 @@
-// order.dto.ts
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateOrderDto {
@@ -13,10 +12,6 @@ export class CreateOrderDto {
   @IsNotEmpty()
   @IsString()
   rentalEndDate: string;
-
-  @IsString()
-  @IsNotEmpty()
-  note?: string;
 }
 
 export class RejectOrderDto {
