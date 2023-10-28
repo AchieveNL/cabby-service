@@ -4,8 +4,10 @@ import { type user, type UserStatus } from '@prisma/client';
 import { type ChangeUserStatusDto } from './user.dto';
 import prisma from '@/lib/prisma';
 import { mailService } from '@/utils/mail';
+import MailService from '../mail/mail.service';
 
 export default class UserService {
+  private mailService =new MailService()
   public async emailExists(email: string): Promise<boolean> {
     const user = await prisma.user.findUnique({
       where: { email },
@@ -47,24 +49,7 @@ export default class UserService {
       },
     });
 
-    const msg = {
-      to: email,
-      from: 'info@cabbyrentals.com',
-      subject: 'Your OTP for Cabby Rentals',
-      text: `Your OTP for Cabby Rentals is: ${otp}. It will expire in 15 minutes.`,
-      html: `
-        <strong>Your OTP for Cabby Rentals is:</strong> 
-        <h2>${otp}</h2>
-        <p>This OTP will expire in 15 minutes.</p>
-      `,
-    };
-
-    try {
-      console.log('OTP email sent successfully.', otp);
-      await mailService.send(msg);
-    } catch (error) {
-      console.error('Error sending OTP email: ', error);
-    }
+  await this.mailService.OptMailSender(email,otp)
   }
 
   public async verifyOtp(email, providedOtp) {
