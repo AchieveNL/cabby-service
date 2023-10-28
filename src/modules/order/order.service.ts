@@ -216,8 +216,10 @@ export default class OrderService {
     });
   };
 
-  public cancelOrder = async (orderId: string) => {
-    const order = await prisma.order.findUnique({ where: { id: orderId } });
+  public cancelOrder = async (orderId: string, userId: string) => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId, userId },
+    });
 
     if (!order) throw new Error('Order not found');
 

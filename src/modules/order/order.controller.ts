@@ -133,7 +133,7 @@ export default class OrderController extends Api {
   ) => {
     try {
       const { orderId } = req.body as CancelOrderDto;
-      await this.orderService.cancelOrder(orderId);
+      await this.orderService.cancelOrder(orderId, req.user?.id);
       return this.send(res, null, 204, 'Order cancelled successfully');
     } catch (error) {
       next(error);

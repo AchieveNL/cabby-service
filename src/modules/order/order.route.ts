@@ -33,6 +33,14 @@ router.get(
   orderController.getUserOrdersByStatus
 );
 
+router.post(
+  '/cancel',
+  verifyAuthToken,
+  requireAuth,
+  RequestValidator.validate(CancelOrderDto),
+  orderController.cancelOrder
+);
+
 router.patch(
   '/orders/:orderId/complete',
   verifyAuthToken,
@@ -59,14 +67,6 @@ router.get(
   verifyAuthToken,
   requireAuth,
   orderController.checkVehicleAvailabilityForTimeslot
-);
-
-router.post(
-  '/cancel',
-  verifyAuthToken,
-  requireAuth,
-  RequestValidator.validate(CancelOrderDto),
-  orderController.cancelOrder
 );
 
 router.post(
