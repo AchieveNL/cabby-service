@@ -133,8 +133,8 @@ export default class OrderService {
     return {
       order,
       vehicle: order.vehicle,
-      startCountdown: startCountdown / 1000, // Convert to seconds for consistency
-      endCountdown: endCountdown / 1000, // Convert to seconds for consistency
+      startCountdown: startCountdown / 1000,
+      endCountdown: endCountdown / 1000,
       statusMessage,
       orderMessage,
       readyToUse,
