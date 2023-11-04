@@ -49,7 +49,7 @@ export default class UserService {
       },
     });
 
-  await this.mailService.OptMailSender(email,otp)
+  await this.mailService.optMailSender(email,otp)
   }
 
   public async verifyOtp(email, providedOtp) {
