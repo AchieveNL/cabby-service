@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsNumber,
   IsUUID,
+  IsArray,
 } from 'class-validator';
 
 export class CreateDamageReportDto {
@@ -18,4 +19,8 @@ export class CreateDamageReportDto {
   @IsNotEmpty()
   @IsUUID()
   vehicleId: string;
+
+  @IsOptional()
+  @IsArray()
+  images?: string[];
 }
