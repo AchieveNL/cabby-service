@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 
 export const mailSender = async (otpMessage) => {
   try {
-    var transport = nodemailer.createTransport({
+    const transport = nodemailer.createTransport({
       host: 'sandbox.smtp.mailtrap.io',
       port: 2525,
       auth: {
@@ -11,7 +11,7 @@ export const mailSender = async (otpMessage) => {
       },
     });
 
-    let info = await transport.sendMail(otpMessage);
+    const info = await transport.sendMail(otpMessage);
     console.log('Email info: ', info);
     return info;
   } catch (error) {
