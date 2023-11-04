@@ -23,31 +23,32 @@ enum UserRole {
 }
 
 model user {
-  id                 String    @id @default(uuid())
-  email              String    @unique
-  password           String
-  revokeTokensBefore DateTime  @default(now())
-  status             UserStatus?
-  role               UserRole  @default(USER)
-  createdAt          DateTime  @default(now())
-  profile            userProfile?
-  passwordResetTokens passwordResetToken[] 
-  otp        String?    // Store hashed OTP for security.
-  otpExpiry  DateTime?  // OTP validity check.
-  payments   payment[]
-  orders     order[]
-  damageReports     damageReport[]
-  sentMessages     message[] @relation("MessageSender")
-  receivedMessages message[] @relation("MessageRecipient")
-  registrationOrder registrationOrder?
+  id                            String                         @id @default(uuid())
+  email                         String                         @unique
+  password                      String
+  revokeTokensBefore            DateTime                       @default(now())
+  status                        UserStatus?
+  role                          UserRole                       @default(USER)
+  createdAt                     DateTime                       @default(now())
+  profile                       userProfile?
+  passwordResetTokens           passwordResetToken[]
+  otp                           String? // Store hashed OTP for security.
+  otpExpiry                     DateTime? // OTP validity check.
+  payments                      payment[]
+  orders                        order[]
+  damageReports                 damageReport[]
+  sentMessages                  message[]                      @relation("MessageSender")
+  receivedMessages              message[]                      @relation("MessageRecipient")
+  registrationOrder             registrationOrder?
+  CustomerSupportRepresentative CustomerSupportRepresentative?
 }
 
 model passwordResetToken {
-  id       String   @id @default(uuid())
-  token    String   @unique
-  expiry   DateTime
-  userId   String
-  user     user    @relation(fields: [userId], references: [id])
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiry    DateTime
+  userId    String
+  user      user     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
 }
 
@@ -62,43 +63,43 @@ enum UserProfileStatus {
 }
 
 model userProfile {
-  id                   String        @id @default(uuid())
-  userId               String        @unique
-  city                 String
-  fullAddress          String
-  fullName             String
-  lastName             String
-  firstName            String
-  phoneNumber          String
-  profilePhoto         String?
-  signature            String?
-  zip                  String?
-  status UserProfileStatus @default(REQUIRE_REGISTRATION_FEE)
-  user      user    @relation(fields: [userId], references: [id])
-  driverLicense        driverLicense?
-  permitDetails        permitDetails?
+  id            String            @id @default(uuid())
+  userId        String            @unique
+  city          String
+  fullAddress   String
+  fullName      String
+  lastName      String
+  firstName     String
+  phoneNumber   String
+  profilePhoto  String?
+  signature     String?
+  zip           String?
+  status        UserProfileStatus @default(REQUIRE_REGISTRATION_FEE)
+  user          user              @relation(fields: [userId], references: [id])
+  driverLicense driverLicense?
+  permitDetails permitDetails?
 }
 
 model driverLicense {
-  id                   String        @id @default(uuid())
-  driverLicenseBack    String?
-  driverLicenseExpiry  String?
-  driverLicenseFront   String?
-  bsnNumber            String?
-  driverLicense        String?
-  userProfileId        String        @unique
-  userProfile          userProfile  @relation(fields: [userProfileId], references: [id])
+  id                  String      @id @default(uuid())
+  driverLicenseBack   String?
+  driverLicenseExpiry String?
+  driverLicenseFront  String?
+  bsnNumber           String?
+  driverLicense       String?
+  userProfileId       String      @unique
+  userProfile         userProfile @relation(fields: [userProfileId], references: [id])
 }
 
 model permitDetails {
-  id                   String        @id @default(uuid())
-  kiwaDocument         String?
-  kvkDocument          String?
-  taxiPermitId         String?
-  taxiPermitExpiry     String?
-  taxiPermitPicture    String?
-  userProfileId        String        @unique
-  userProfile          userProfile  @relation(fields: [userProfileId], references: [id])
+  id                String      @id @default(uuid())
+  kiwaDocument      String?
+  kvkDocument       String?
+  taxiPermitId      String?
+  taxiPermitExpiry  String?
+  taxiPermitPicture String?
+  userProfileId     String      @unique
+  userProfile       userProfile @relation(fields: [userProfileId], references: [id])
 }
 
 enum VehicleStatus {
@@ -109,28 +110,28 @@ enum VehicleStatus {
 }
 
 model vehicle {
-  id               String   @id @default(uuid())
-  logo             String?
-  companyName      String?
-  model            String?
-  rentalDuration   String?
-  licensePlate     String?  @unique
-  category         String?
-  manufactureYear  String?
-  engineType       String?
-  seatingCapacity  String?
-  batteryCapacity  String?
-  uniqueFeature    String?
-  images           String[]
-  availability     String?
-  unavailabilityReason  String?
-  currency         String?  @default("EUR")
-  pricePerDay         Decimal? @db.Decimal(6, 2)
-  status           VehicleStatus @default(PENDING)
+  id                   String        @id @default(uuid())
+  logo                 String?
+  companyName          String?
+  model                String?
+  rentalDuration       String?
+  licensePlate         String?       @unique
+  category             String?
+  manufactureYear      String?
+  engineType           String?
+  seatingCapacity      String?
+  batteryCapacity      String?
+  uniqueFeature        String?
+  images               String[]
+  availability         String?
+  unavailabilityReason String?
+  currency             String?       @default("EUR")
+  pricePerDay          Decimal?      @db.Decimal(6, 2)
+  status               VehicleStatus @default(PENDING)
 
-  orders           order[]
-  rejection        vehicleRejection?
-  damageReports    damageReport[]
+  orders        order[]
+  rejection     vehicleRejection?
+  damageReports damageReport[]
 }
 
 enum PaymentProduct {
@@ -146,20 +147,20 @@ enum PaymentStatus {
 }
 
 model payment {
-  id          String   @id @default(uuid())
-  userId      String
-  amount      Decimal  @db.Decimal(6, 2)
-  currency    String   @default("EUR")
-  paymentDate DateTime @default(now())
-  orderId            String?  @unique
-  registrationOrderId String?  @unique
-  product     PaymentProduct @default(RENT)
-  status      PaymentStatus  @default(PAID)
-  user        user           @relation(fields: [userId], references: [id])
-  order              order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  registrationOrder  registrationOrder? @relation(fields: [registrationOrderId], references: [id], onDelete: Cascade)
-  invoiceUrl  String?
-  
+  id                  String             @id @default(uuid())
+  userId              String
+  amount              Decimal            @db.Decimal(6, 2)
+  currency            String             @default("EUR")
+  paymentDate         DateTime           @default(now())
+  orderId             String?            @unique
+  registrationOrderId String?            @unique
+  product             PaymentProduct     @default(RENT)
+  status              PaymentStatus      @default(PAID)
+  user                user               @relation(fields: [userId], references: [id])
+  order               order?             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  registrationOrder   registrationOrder? @relation(fields: [registrationOrderId], references: [id], onDelete: Cascade)
+  invoiceUrl          String?
+
   @@unique([userId, paymentDate])
   @@index([registrationOrderId], name: "idx_registrationOrderId")
 }
@@ -172,17 +173,17 @@ enum RegistrationOrderStatus {
 }
 
 model registrationOrder {
-  id              String                 @id @default(uuid())
-  userId          String                 @unique
-  status          RegistrationOrderStatus @default(PENDING)
-  totalAmount     Decimal                @db.Decimal(6, 2) // The fixed registration fee
-  paymentId       String?                @unique
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @updatedAt
-  note            String?                // Any additional notes
+  id          String                  @id @default(uuid())
+  userId      String                  @unique
+  status      RegistrationOrderStatus @default(PENDING)
+  totalAmount Decimal                 @db.Decimal(6, 2) // The fixed registration fee
+  paymentId   String?                 @unique
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  note        String? // Any additional notes
 
-  user            user                   @relation(fields: [userId], references: [id])
-  payment         payment?
+  user    user     @relation(fields: [userId], references: [id])
+  payment payment?
 
   @@index([userId], name: "idx_registrationOrder_userId")
 }
@@ -197,61 +198,59 @@ enum OrderStatus {
 }
 
 model order {
-  id              String        @id @default(uuid())
+  id              String      @id @default(uuid())
   vehicleId       String
   userId          String
-  status          OrderStatus   @default(UNPAID)
-  totalAmount     Decimal       @db.Decimal(6, 2)
+  status          OrderStatus @default(UNPAID)
+  totalAmount     Decimal     @db.Decimal(6, 2)
   rentalStartDate DateTime
   rentalEndDate   DateTime
-  paymentId       String?       @unique
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  note            String?       
+  paymentId       String?     @unique
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  note            String?
 
-  vehicle         vehicle       @relation(fields: [vehicleId], references: [id])
-  user            user          @relation(fields: [userId], references: [id])
-  payment         payment?
-  rejection       orderRejection?
-  
+  vehicle   vehicle         @relation(fields: [vehicleId], references: [id])
+  user      user            @relation(fields: [userId], references: [id])
+  payment   payment?
+  rejection orderRejection?
+
   @@unique([vehicleId, rentalStartDate, rentalEndDate])
 }
 
-
 model orderRejection {
-  id       String @id @default(uuid())
-  orderId  String @unique // Associated Order ID
-  reason   String // Text field explaining why the order was rejected
-  date     DateTime @default(now()) // The date when the order was rejected
-  
-  order    order @relation(fields: [orderId], references: [id])
-  
+  id      String   @id @default(uuid())
+  orderId String   @unique // Associated Order ID
+  reason  String // Text field explaining why the order was rejected
+  date    DateTime @default(now()) // The date when the order was rejected
+
+  order order @relation(fields: [orderId], references: [id])
+
   @@index([orderId], name: "idx_orderId")
 }
 
 model vehicleRejection {
-  id         String @id @default(uuid())
-  vehicleId  String @unique // Associated Order ID
-  reason     String // Text field explaining why the order was rejected
-  date       DateTime @default(now()) // The date when the order was rejected
-  
-  vehicle    vehicle @relation(fields: [vehicleId], references: [id])
-  
+  id        String   @id @default(uuid())
+  vehicleId String   @unique // Associated Order ID
+  reason    String // Text field explaining why the order was rejected
+  date      DateTime @default(now()) // The date when the order was rejected
+
+  vehicle vehicle @relation(fields: [vehicleId], references: [id])
+
   @@index([vehicleId], name: "idx_vehicleId")
 }
 
-
 model damageReport {
-  id          Int      @id @default(autoincrement())
-  reportedAt  DateTime @default(now())
+  id          Int          @id @default(autoincrement())
+  reportedAt  DateTime     @default(now())
   description String
   status      ReportStatus @default(UNDERPAID)
   amount      Float?
   repairedAt  DateTime?
-  vehicleId   String 
+  vehicleId   String
   userId      String
-  vehicle     vehicle  @relation(fields: [vehicleId], references: [id])
-  user        user          @relation(fields: [userId], references: [id])
+  vehicle     vehicle      @relation(fields: [vehicleId], references: [id])
+  user        user         @relation(fields: [userId], references: [id])
 }
 
 enum ReportStatus {
@@ -260,13 +259,22 @@ enum ReportStatus {
 }
 
 model message {
-  id           String    @id @default(uuid())
-  senderId     String
-  recipientId  String
-  content      String
-  createdAt    DateTime  @default(now())
-  
+  id          String   @id @default(uuid())
+  senderId    String
+  recipientId String
+  content     String
+  createdAt   DateTime @default(now())
+
   // Relations
-  sender       user      @relation("MessageSender", fields: [senderId], references: [id])
-  recipient    user      @relation("MessageRecipient", fields: [recipientId], references: [id])
+  sender    user @relation("MessageSender", fields: [senderId], references: [id])
+  recipient user @relation("MessageRecipient", fields: [recipientId], references: [id])
+}
+
+model CustomerSupportRepresentative {
+  id     String @id @default(uuid())
+  userId String
+
+  user user @relation(fields: [userId], references: [id])
+
+  @@unique([userId])
 }
