@@ -13,6 +13,7 @@ export const setAuthCookies = (
     httpOnly: true,
     secure: isProductionOrStag,
     sameSite: isProductionOrStag ? 'none' : 'lax',
+    domain: isProductionOrStag ? '.a.run.app' : undefined,
   };
 
   res.cookie('token', newToken, {
