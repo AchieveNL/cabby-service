@@ -74,6 +74,7 @@ model userProfile {
   profilePhoto  String?
   signature     String?
   zip           String?
+  dateOfBirth   String?
   status        UserProfileStatus @default(REQUIRE_REGISTRATION_FEE)
   user          user              @relation(fields: [userId], references: [id])
   driverLicense driverLicense?
