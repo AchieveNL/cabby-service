@@ -249,6 +249,7 @@ model damageReport {
   repairedAt  DateTime?
   vehicleId   String
   userId      String
+  images      String[]     @default([])
   vehicle     vehicle      @relation(fields: [vehicleId], references: [id])
   user        user         @relation(fields: [userId], references: [id])
 }
