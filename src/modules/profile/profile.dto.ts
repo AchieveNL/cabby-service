@@ -28,8 +28,8 @@ export class CreateUserProfileDto {
   firstName: string;
 
   @IsString()
-  @IsNotEmpty()
-  phoneNumber: string;
+  @IsOptional()
+  phoneNumber?: string;
 
   @IsString()
   @IsNotEmpty()
