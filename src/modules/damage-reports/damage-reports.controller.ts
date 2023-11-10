@@ -84,4 +84,23 @@ export default class DamageReportsController extends Api {
       next(error);
     }
   };
+
+  public getReportDetails = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const id = req.params.id;
+      const reports = await this.service.getReportDetails(id);
+      return this.send(
+        res,
+        reports,
+        HttpStatusCode.Ok,
+        'Reports fetched successfully'
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
 }

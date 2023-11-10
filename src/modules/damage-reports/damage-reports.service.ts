@@ -41,4 +41,25 @@ export default class DamageReportsService {
       },
     });
   };
+
+  public getReportDetails = async (id: string) => {
+    return await prisma.damageReport.findFirst({
+      where: { id: parseInt(id) },
+      include: {
+        user: {
+          select: {
+            role: true,
+            profile: {
+              select: {
+                fullName: true,
+                lastName: true,
+                firstName: true,
+              },
+            },
+          },
+        },
+        vehicle: true,
+      },
+    });
+  };
 }
