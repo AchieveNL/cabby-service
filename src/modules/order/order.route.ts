@@ -33,6 +33,13 @@ router.post(
   orderController.unlockVehicle
 );
 
+router.post(
+  '/order/:orderId/lockVehicle',
+  verifyAuthToken,
+  requireAuth,
+  orderController.lockVehicle
+);
+
 router.get(
   '/user-orders',
   verifyAuthToken,
