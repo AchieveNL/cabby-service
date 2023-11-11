@@ -1,5 +1,5 @@
 import { type Request, type Response, type NextFunction } from 'express';
-import { HttpStatusCode } from 'axios';
+import axios, { HttpStatusCode } from 'axios';
 import VehicleService from './vehicle.service';
 import {
   type FilterVehiclesDto,
@@ -159,6 +159,27 @@ export default class VehicleController extends Api {
       return this.send(
         res,
         vehicle,
+        HttpStatusCode.Ok,
+        `Vehicle with license plate ${licensePlate} retrieved successfully`
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getVehicleByLicensePlateFromOpenData = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { licensePlate } = req.params;
+      const response = await axios.get(
+        `https://opendata.rdw.nl/resource/m9d7-ebf2.json?kenteken=${licensePlate}`
+      );
+      return this.send(
+        res,
+        response.data, // Only send the data property
         HttpStatusCode.Ok,
         `Vehicle with license plate ${licensePlate} retrieved successfully`
       );
