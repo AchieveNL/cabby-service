@@ -138,7 +138,35 @@ export default class OrderService {
       statusMessage,
       orderMessage,
       readyToUse,
+      isVehicleUnlocked: order.isVehicleUnlocked,
     };
+  };
+
+  public unlockVehicle = async (orderId: string) => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { vehicle: true },
+    });
+
+    if (!order) {
+      throw new Error('Order not found.');
+    }
+
+    const currentDate = new Date();
+    if (currentDate < order.rentalStartDate) {
+      throw new Error('Rental period has not started yet.');
+    }
+
+    // const response = await axios.post('https://api.trackjack.com/unlock', {
+    //   vehicleId: order.vehicle.id,
+    // });
+
+    const data = await prisma.order.update({
+      where: { id: orderId },
+      data: { isVehicleUnlocked: true },
+    });
+
+    return data;
   };
 
   async completeOrder(orderId: string, userId: string) {
