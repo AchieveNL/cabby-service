@@ -402,21 +402,21 @@ export default class OrderService {
 
   public calculateTotalRentPrice = async (
     vehicleId: string,
-    rentStarts: Date,
-    rentEnds: Date
+    rentStarts: string,
+    rentEnds: string
   ) => {
-    const oneDayMilliseconds = 24 * 60 * 60 * 1000;
-    const numberOfDays =
-      Math.round(
-        (rentEnds.getTime() - rentStarts.getTime()) / oneDayMilliseconds
-      ) + 1;
-
     const vehicle = await prisma.vehicle.findUnique({
       where: { id: vehicleId },
     });
     if (!vehicle) throw new Error('Vehicle not found.');
 
-    return numberOfDays * (Number(vehicle.pricePerDay) ?? 0);
+    const total = await this.calculateTotalAmount(
+      vehicleId,
+      rentStarts,
+      rentEnds
+    );
+
+    return total;
   };
 
   public isVehicleAvailableForTimeslot = async (

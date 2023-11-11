@@ -328,8 +328,8 @@ export default class OrderController extends Api {
 
       const totalRentPrice = await this.orderService.calculateTotalRentPrice(
         vehicleId,
-        new Date(rentStarts as string),
-        new Date(rentEnds as string)
+        rentStarts as string,
+        rentEnds as string
       );
 
       return this.send(res, { isAvailable, totalRentPrice });
