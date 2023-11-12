@@ -22,12 +22,21 @@ router.get(
   requireAdmin,
   controller.getAllReports
 );
+
 router.get(
   '/details/:id',
   verifyAuthToken,
   requireAuth,
   requireAdmin,
   controller.getReportDetails
+);
+
+router.get(
+  '/vehicle/:id',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  controller.getReportsByVehicle
 );
 
 router.patch(
