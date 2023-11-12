@@ -62,4 +62,10 @@ export default class DamageReportsService {
       },
     });
   };
+
+  public getReportsByVehicle = async (id: string) => {
+    return await prisma.damageReport.findMany({
+      where: { vehicleId: id },
+    });
+  };
 }
