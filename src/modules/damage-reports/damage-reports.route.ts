@@ -35,7 +35,6 @@ router.get(
   '/vehicle/:id',
   verifyAuthToken,
   requireAuth,
-  requireAdmin,
   controller.getReportsByVehicle
 );
 
