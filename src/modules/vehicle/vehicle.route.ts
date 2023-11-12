@@ -36,6 +36,13 @@ router.put(
   controller.updateVehicle
 );
 
+router.get(
+  '/available-models',
+  verifyAuthToken,
+  requireAuth,
+  controller.getAvailableVehicleModels
+);
+
 router.get('/', verifyAuthToken, requireAuth, controller.getAllVehicles);
 
 router.get(
