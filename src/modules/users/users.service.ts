@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
-import { type user, type UserStatus } from '@prisma/client';
+import { UserStatus, type user } from '@prisma/client';
 import MailService from '../mail/mail.service';
 import { type ChangeUserStatusDto } from './user.dto';
 import prisma from '@/lib/prisma';
@@ -80,7 +80,10 @@ export default class UserService {
 
   public async deleteAccount(userId: string): Promise<void> {
     try {
-      await prisma.user.delete({ where: { id: userId } });
+      await prisma.user.update({
+        where: { id: userId },
+        data: { status: UserStatus.DEACTIVATED },
+      });
     } catch (error) {
       throw new Error('Error deleting account');
     }

@@ -118,6 +118,15 @@ export default class UserController extends Api {
         password
       );
 
+      if (user?.status === 'DEACTIVATED') {
+        return this.send(
+          res,
+          null,
+          HttpStatusCode.BadRequest,
+          'Invalid email or password'
+        );
+      }
+
       if (!user) {
         return this.send(
           res,
