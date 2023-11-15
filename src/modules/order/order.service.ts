@@ -20,7 +20,7 @@ export default class OrderService {
     });
 
     if (activeOrPendingOrdersCount >= 2) {
-      throw new Error('You can have only 2 active or pending orders at max.');
+      return { error: 'You can have only 2 active or pending orders at max.' };
     }
 
     const totalAmount = await this.calculateTotalAmount(
