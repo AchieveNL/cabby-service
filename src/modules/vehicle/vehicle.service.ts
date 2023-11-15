@@ -133,4 +133,19 @@ export default class VehicleService {
     });
     return rejection;
   };
+
+  public getAvailableVehicleModels = async () => {
+    try {
+      const vehicles = await prisma.vehicle.findMany({
+        select: {
+          companyName: true,
+          model: true,
+        },
+        distinct: ['companyName', 'model'],
+      });
+      return vehicles;
+    } catch (error) {
+      throw new Error('Failed to retrieve available vehicle models');
+    }
+  };
 }

@@ -57,6 +57,46 @@ export default class OrderController extends Api {
     }
   };
 
+  public unlockVehicle = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { orderId } = req.params;
+      const unlockResult = await this.orderService.unlockVehicle(orderId);
+      return this.send(
+        res,
+        unlockResult,
+        HttpStatusCode.Ok,
+        'Vehicle unlocked successfully'
+      );
+    } catch (error) {
+      console.log(error);
+      next();
+    }
+  };
+
+  public lockVehicle = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { orderId } = req.params;
+      const unlockResult = await this.orderService.lockVehicle(orderId);
+      return this.send(
+        res,
+        unlockResult,
+        HttpStatusCode.Ok,
+        'Vehicle unlocked successfully'
+      );
+    } catch (error) {
+      console.log(error);
+      next();
+    }
+  };
+
   public completeOrder = async (
     req: Request,
     res: Response,
@@ -288,8 +328,8 @@ export default class OrderController extends Api {
 
       const totalRentPrice = await this.orderService.calculateTotalRentPrice(
         vehicleId,
-        new Date(rentStarts as string),
-        new Date(rentEnds as string)
+        rentStarts as string,
+        rentEnds as string
       );
 
       return this.send(res, { isAvailable, totalRentPrice });

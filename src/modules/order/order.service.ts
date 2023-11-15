@@ -138,7 +138,66 @@ export default class OrderService {
       statusMessage,
       orderMessage,
       readyToUse,
+      isVehicleUnlocked: order.isVehicleUnlocked,
     };
+  };
+
+  public unlockVehicle = async (orderId: string) => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { vehicle: true },
+    });
+
+    if (!order) {
+      throw new Error('Order not found.');
+    }
+
+    const currentDate = new Date();
+    if (currentDate < order.rentalStartDate) {
+      throw new Error('Rental period has not started yet.');
+    }
+
+    // const response = await axios.post('https://api.trackjack.com/unlock', {
+    //   vehicleId: order.vehicle.id,
+    // });
+
+    const data = await prisma.order.update({
+      where: { id: orderId },
+      data: { isVehicleUnlocked: true },
+    });
+
+    return data;
+  };
+
+  public lockVehicle = async (orderId: string) => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { vehicle: true },
+    });
+
+    if (!order) {
+      throw new Error('Order not found.');
+    }
+
+    const currentDate = new Date();
+    if (currentDate < order.rentalStartDate) {
+      throw new Error('Rental period has not started yet.');
+    }
+
+    if (!order.isVehicleUnlocked) {
+      throw new Error('Vehicle is already locked.');
+    }
+
+    // const response = await axios.post('https://api.trackjack.com/lock', {
+    //   vehicleId: order.vehicle.id,
+    // });
+
+    const data = await prisma.order.update({
+      where: { id: orderId },
+      data: { isVehicleUnlocked: false },
+    });
+
+    return data;
   };
 
   async completeOrder(orderId: string, userId: string) {
@@ -343,21 +402,21 @@ export default class OrderService {
 
   public calculateTotalRentPrice = async (
     vehicleId: string,
-    rentStarts: Date,
-    rentEnds: Date
+    rentStarts: string,
+    rentEnds: string
   ) => {
-    const oneDayMilliseconds = 24 * 60 * 60 * 1000;
-    const numberOfDays =
-      Math.round(
-        (rentEnds.getTime() - rentStarts.getTime()) / oneDayMilliseconds
-      ) + 1;
-
     const vehicle = await prisma.vehicle.findUnique({
       where: { id: vehicleId },
     });
     if (!vehicle) throw new Error('Vehicle not found.');
 
-    return numberOfDays * (Number(vehicle.pricePerDay) ?? 0);
+    const total = await this.calculateTotalAmount(
+      vehicleId,
+      rentStarts,
+      rentEnds
+    );
+
+    return total;
   };
 
   public isVehicleAvailableForTimeslot = async (

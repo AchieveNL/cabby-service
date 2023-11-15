@@ -16,9 +16,9 @@ import prismaClient from '@/lib/prisma';
 export const determineCorsOrigin = () => {
   switch (process.env.NODE_ENV) {
     case 'production':
-      return 'https://cabby-admin-production-jtj2mdm6ta-ez.a.run.app';
+      return 'https://dashboard.cabbyrentals.com';
     case 'staging':
-      return 'https://cabby-admin-staging-jtj2mdm6ta-ez.a.run.app';
+      return 'https://dashboard-staging.cabbyrentals.com';
     case 'development':
       return 'http://localhost:3000';
     default:

@@ -13,7 +13,7 @@ export const setAuthCookies = (
     httpOnly: true,
     secure: isProductionOrStag,
     sameSite: isProductionOrStag ? 'none' : 'lax',
-    domain: isProductionOrStag ? '.a.run.app' : undefined,
+    domain: isProductionOrStag ? '.cabbyrentals.com' : undefined,
   };
 
   res.cookie('token', newToken, {

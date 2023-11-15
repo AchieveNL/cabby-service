@@ -84,13 +84,15 @@ profile.patch(
   '/status/:id',
   verifyAuthToken,
   requireAuth,
+  requireAdmin,
   controller.updateUserProfileStatus
 );
 
 profile.get(
-  '/status/:id',
+  '/status/:status',
   verifyAuthToken,
   requireAuth,
+  requireAdmin,
   controller.getUserProfileByStatus
 );
 
