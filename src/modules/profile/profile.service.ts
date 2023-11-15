@@ -1,4 +1,4 @@
-import { type UserProfileStatus } from './types';
+import { UserProfileStatus } from './types';
 import prisma from '@/lib/prisma';
 
 export default class ProfileService {
@@ -8,6 +8,7 @@ export default class ProfileService {
         data: {
           ...userProfileData,
           userId,
+          status: UserProfileStatus.REQUIRE_REGISTRATION_FEE,
         },
       });
       return userProfile;

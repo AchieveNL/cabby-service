@@ -15,6 +15,7 @@ enum UserStatus {
   PENDING
   BLOCKED
   REJECTED
+  DEACTIVATED
 }
 
 enum UserRole {
