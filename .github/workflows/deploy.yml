@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: npm install 
+        run: npm install
 
       - name: Check types
         run: npm run check:types
@@ -43,7 +43,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: npm install 
+        run: npm install
 
       - name: Build
         run: npm run build
@@ -79,6 +79,8 @@ jobs:
             JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY_STAGING }}
             JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY_STAGING }}
             MOLLIE_API_KEY=${{ secrets.MOLLIE_API_KEY_STAGING }}
+            NODE_MAILER_USERNAME=${{ secrets.NODE_MAILER_USERNAME }}
+            NODE_MAILER_PASSWORD=${{ secrets.NODE_MAILER_PASSWORD }}
 
   build-and-deploy-production:
     environment:
@@ -92,7 +94,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: npm install 
+        run: npm install
 
       - name: Build
         run: npm run build
@@ -128,3 +130,5 @@ jobs:
             JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY_PRODUCTION }}
             JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY_PRODUCTION }}
             MOLLIE_API_KEY=${{ secrets.MOLLIE_API_KEY_PRODUCTION }}
+            NODE_MAILER_USERNAME=${{ secrets.NODE_MAILER_USERNAME }}
+            NODE_MAILER_PASSWORD=${{ secrets.NODE_MAILER_PASSWORD }}
