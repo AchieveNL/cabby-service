@@ -20,6 +20,13 @@ router.post(
   controller.createVehicle
 );
 
+router.get(
+  '/licensePlate/opendata/:licensePlate',
+  verifyAuthToken,
+  requireAuth,
+  controller.getVehicleByLicensePlateFromOpenData
+);
+
 router.put(
   '/update/:id',
   verifyAuthToken,
@@ -27,6 +34,13 @@ router.put(
   requireAdmin,
   RequestValidator.validate(CreateVehicleDto),
   controller.updateVehicle
+);
+
+router.get(
+  '/available-models',
+  verifyAuthToken,
+  requireAuth,
+  controller.getAvailableVehicleModels
 );
 
 router.get('/', verifyAuthToken, requireAuth, controller.getAllVehicles);

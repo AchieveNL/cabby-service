@@ -28,8 +28,8 @@ export class CreateUserProfileDto {
   firstName: string;
 
   @IsString()
-  @IsNotEmpty()
-  phoneNumber: string;
+  @IsOptional()
+  phoneNumber?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -42,6 +42,10 @@ export class CreateUserProfileDto {
   @IsString()
   @IsOptional()
   signature?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  dateOfBirth: string;
 }
 
 export class CreateRentalAgreementDto {

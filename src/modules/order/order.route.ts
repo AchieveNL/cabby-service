@@ -26,6 +26,20 @@ router.get(
   orderController.getOrderDetailsWithStatus
 );
 
+router.post(
+  '/order/:orderId/unlockVehicle',
+  verifyAuthToken,
+  requireAuth,
+  orderController.unlockVehicle
+);
+
+router.post(
+  '/order/:orderId/lockVehicle',
+  verifyAuthToken,
+  requireAuth,
+  orderController.lockVehicle
+);
+
 router.get(
   '/user-orders',
   verifyAuthToken,
