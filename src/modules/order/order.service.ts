@@ -2,13 +2,13 @@ import { type Decimal } from '@prisma/client/runtime/library';
 import { differenceInHours } from 'date-fns';
 import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
-import MailService from '../mail/mail.service';
+import AdminMailService from '../notifications/admin-mails.service';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
 
 export default class OrderService {
   private readonly paymentService = new PaymentService();
-  private readonly mailService = new MailService();
+  private readonly mailService = new AdminMailService();
 
   public createOrder = async (dto) => {
     const activeOrPendingOrdersCount = await prisma.order.count({

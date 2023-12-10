@@ -15,7 +15,7 @@ const generateEmail = (
   };
 };
 
-export default class MailService {
+export default class AdminMailService {
   async optMailSender(email: string, otp: string) {
     const mailMessage = generateEmail(
       email,
