@@ -7,11 +7,13 @@ import {
 import { UserStatus } from '../users/types';
 import { OrderStatus } from '../order/types';
 import FileService from '../file/file.service';
+import MailService from '../mail/mail.service';
 import prisma from '@/lib/prisma';
 import { REGISTRATION_FEE } from '@/utils/constants';
 
 export default class PaymentService {
   readonly fileService = new FileService();
+  readonly mailService = new MailService();
   readonly mollie = mollieClient.createMollieClient({
     apiKey: process.env.MOLLIE_API_KEY as string,
   });
@@ -182,10 +184,17 @@ export default class PaymentService {
     });
 
     if (updatedPayment.status === PaymentStatus.PAID) {
-      await prisma.userProfile.update({
+      const user = await prisma.userProfile.update({
         where: { userId: updatedPayment.userId },
         data: { status: UserStatus.PENDING },
       });
+      const userWithEmail = await prisma.user.findUnique({
+        where: { id: updatedPayment.userId },
+      });
+      await this.mailService.newRegistrationMailSender(
+        userWithEmail?.email!,
+        user.fullName
+      );
     }
 
     return true;

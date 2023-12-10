@@ -2,11 +2,13 @@ import { type Decimal } from '@prisma/client/runtime/library';
 import { differenceInHours } from 'date-fns';
 import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
+import MailService from '../mail/mail.service';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
 
 export default class OrderService {
   private readonly paymentService = new PaymentService();
+  private readonly mailService = new MailService();
 
   public createOrder = async (dto) => {
     const activeOrPendingOrdersCount = await prisma.order.count({
@@ -157,7 +159,7 @@ export default class OrderService {
       throw new Error('Rental period has not started yet.');
     }
 
-    // const response = await axios.post('https://api.trackjack.com/unlock', {
+    // const response = await axios.post('', {
     //   vehicleId: order.vehicle.id,
     // });
 
@@ -217,10 +219,29 @@ export default class OrderService {
       throw new Error('Not authorized to complete this order.');
     }
 
-    return await prisma.order.update({
+    const completedOrder = await prisma.order.update({
       where: { id: orderId },
       data: { status: 'COMPLETED' },
     });
+
+    const user = await prisma.user.findUnique({
+      where: { id: order.userId },
+      include: {
+        profile: {
+          select: {
+            fullName: true,
+          },
+        },
+      },
+    });
+
+    await this.mailService.rentCanceledMailSender(
+      user?.email!,
+      user?.profile?.fullName!,
+      order.vehicleId
+    );
+
+    return completedOrder;
   }
 
   public getUserOrdersByStatus = async (
@@ -293,6 +314,21 @@ export default class OrderService {
       where: { id: orderId },
       data: { status: OrderStatus.CANCELED }, // Make sure to handle enum/string correctly
     });
+    const user = await prisma.user.findUnique({
+      where: { id: order.userId },
+      include: {
+        profile: {
+          select: {
+            fullName: true,
+          },
+        },
+      },
+    });
+    await this.mailService.rentCanceledMailSender(
+      user?.email!,
+      user?.profile?.fullName!,
+      order.vehicleId
+    );
   };
 
   public confirmOrder = async (orderId: string) => {

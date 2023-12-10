@@ -84,6 +84,20 @@ export default class UserService {
         where: { id: userId },
         data: { status: UserStatus.DEACTIVATED },
       });
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          profile: {
+            select: {
+              fullName: true,
+            },
+          },
+        },
+      });
+      await this.mailService.accountDeletedMailSender(
+        user?.email!,
+        user?.profile?.fullName!
+      );
     } catch (error) {
       throw new Error('Error deleting account');
     }

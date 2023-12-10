@@ -1,11 +1,29 @@
+import MailService from '../mail/mail.service';
 import { ReportStatus } from './types';
 import prisma from '@/lib/prisma';
 
 export default class DamageReportsService {
+  readonly mailService = new MailService();
   public createDamageReport = async (data: any) => {
-    return await prisma.damageReport.create({
+    const damage = await prisma.damageReport.create({
       data,
     });
+    const user = await prisma.user.findUnique({
+      where: { id: data.userId },
+      include: {
+        profile: {
+          select: {
+            fullName: true,
+          },
+        },
+      },
+    });
+    await this.mailService.damageReportMailSender(
+      user?.email!,
+      user?.profile?.fullName!,
+      data?.vehicleId
+    );
+    return damage;
   };
 
   public getAllReports = async () => {
