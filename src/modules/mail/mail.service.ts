@@ -90,8 +90,7 @@ export default class MailService {
       
       Als je vragen hebt of hulp nodig hebt bij het afhandelen van deze annulering, staan we klaar om te assisteren.
       
-      Team Cabby
-      
+      Team Cabby 
   `
     );
 
@@ -282,7 +281,6 @@ export default class MailService {
       Als je verdere details nodig hebt of hulp nodig hebt bij het regelen van het onderhoud, aarzel dan niet om contact met ons op te nemen.
       
       Team Cabby
-      
   `
     );
 
