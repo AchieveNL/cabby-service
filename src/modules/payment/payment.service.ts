@@ -7,13 +7,13 @@ import {
 import { UserStatus } from '../users/types';
 import { OrderStatus } from '../order/types';
 import FileService from '../file/file.service';
-import MailService from '../mail/mail.service';
+import AdminMailService from '../notifications/admin-mails.service';
 import prisma from '@/lib/prisma';
 import { REGISTRATION_FEE } from '@/utils/constants';
 
 export default class PaymentService {
   readonly fileService = new FileService();
-  readonly mailService = new MailService();
+  readonly mailService = new AdminMailService();
   readonly mollie = mollieClient.createMollieClient({
     apiKey: process.env.MOLLIE_API_KEY as string,
   });

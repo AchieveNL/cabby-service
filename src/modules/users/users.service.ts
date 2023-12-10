@@ -1,12 +1,12 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { UserStatus, type user } from '@prisma/client';
-import MailService from '../mail/mail.service';
+import AdminMailService from '../notifications/admin-mails.service';
 import { type ChangeUserStatusDto } from './user.dto';
 import prisma from '@/lib/prisma';
 
 export default class UserService {
-  private readonly mailService = new MailService();
+  private readonly mailService = new AdminMailService();
   public async emailExists(email: string): Promise<boolean> {
     const user = await prisma.user.findUnique({
       where: { email },

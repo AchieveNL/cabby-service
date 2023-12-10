@@ -1,9 +1,9 @@
-import MailService from '../mail/mail.service';
+import AdminMailService from '../notifications/admin-mails.service';
 import { ReportStatus } from './types';
 import prisma from '@/lib/prisma';
 
 export default class DamageReportsService {
-  readonly mailService = new MailService();
+  readonly mailService = new AdminMailService();
   public createDamageReport = async (data: any) => {
     const damage = await prisma.damageReport.create({
       data,
