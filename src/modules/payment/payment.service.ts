@@ -13,7 +13,7 @@ import { REGISTRATION_FEE } from '@/utils/constants';
 
 export default class PaymentService {
   readonly fileService = new FileService();
-  readonly mailService = new AdminMailService();
+  readonly adminMailService = new AdminMailService();
   readonly mollie = mollieClient.createMollieClient({
     apiKey: process.env.MOLLIE_API_KEY as string,
   });
@@ -191,7 +191,7 @@ export default class PaymentService {
       const userWithEmail = await prisma.user.findUnique({
         where: { id: updatedPayment.userId },
       });
-      await this.mailService.newRegistrationMailSender(
+      await this.adminMailService.newRegistrationMailSender(
         userWithEmail?.email!,
         user.fullName
       );
