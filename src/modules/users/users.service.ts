@@ -1,12 +1,12 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
-import { UserStatus, type user } from '@prisma/client';
-import UserMailSevice from '../notifications/user-mails.service';
+import { type UserStatus, type user } from '@prisma/client';
+import UserMailService from '../notifications/user-mails.service';
 import { type ChangeUserStatusDto } from './user.dto';
 import prisma from '@/lib/prisma';
 
 export default class UserService {
-  private readonly mailService = new UserMailSevice();
+  private readonly userMailService = new UserMailService();
   public async emailExists(email: string): Promise<boolean> {
     const user = await prisma.user.findUnique({
       where: { email },
@@ -48,7 +48,7 @@ export default class UserService {
       },
     });
 
-    await this.mailService.optMailSender(email, otp);
+    await this.userMailService.optMailSender(email, otp);
   }
 
   public async verifyOtp(email, providedOtp) {
@@ -79,28 +79,33 @@ export default class UserService {
   }
 
   public async deleteAccount(userId: string): Promise<void> {
-    try {
-      await prisma.user.update({
-        where: { id: userId },
-        data: { status: UserStatus.DEACTIVATED },
-      });
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        include: {
-          profile: {
-            select: {
-              fullName: true,
-            },
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        profile: {
+          select: {
+            fullName: true,
           },
         },
-      });
-      await this.mailService.accountDeletedMailSender(
-        user?.email!,
-        user?.profile?.fullName!
-      );
-    } catch (error) {
-      throw new Error('Error deleting account');
-    }
+      },
+    });
+
+    await prisma.damageReport.deleteMany({ where: { userId } });
+    await prisma.order.deleteMany({ where: { userId } });
+    await prisma.payment.deleteMany({ where: { userId } });
+    await prisma.message.deleteMany({
+      where: { OR: [{ senderId: userId }, { recipientId: userId }] },
+    });
+    await prisma.passwordResetToken.deleteMany({ where: { userId } });
+    await prisma.registrationOrder.deleteMany({ where: { userId } });
+
+    await prisma.userProfile.delete({ where: { userId } });
+    await prisma.user.delete({ where: { id: userId } });
+
+    await this.userMailService.accountDeletedMailSender(
+      user?.email!,
+      user?.profile?.fullName!
+    );
   }
 
   public async changeUserStatus(data: ChangeUserStatusDto): Promise<void> {

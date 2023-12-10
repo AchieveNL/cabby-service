@@ -3,7 +3,7 @@ import { ReportStatus } from './types';
 import prisma from '@/lib/prisma';
 
 export default class DamageReportsService {
-  readonly mailService = new AdminMailService();
+  readonly adminMailService = new AdminMailService();
   public createDamageReport = async (data: any) => {
     const damage = await prisma.damageReport.create({
       data,
@@ -18,7 +18,7 @@ export default class DamageReportsService {
         },
       },
     });
-    await this.mailService.damageReportMailSender(
+    await this.adminMailService.damageReportMailSender(
       user?.email!,
       user?.profile?.fullName!,
       data?.vehicleId

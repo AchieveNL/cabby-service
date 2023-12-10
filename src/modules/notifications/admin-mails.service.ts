@@ -27,7 +27,6 @@ export default class AdminMailService {
     <p>This OTP will expire in 15 minutes.</p>
   `
     );
-    console.log('OTP email sent successfully.', otp);
 
     await mailSender(mailMessage);
   }

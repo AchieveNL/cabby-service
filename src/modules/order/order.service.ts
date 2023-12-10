@@ -8,7 +8,7 @@ import prisma from '@/lib/prisma';
 
 export default class OrderService {
   private readonly paymentService = new PaymentService();
-  private readonly mailService = new AdminMailService();
+  private readonly adminMailService = new AdminMailService();
 
   public createOrder = async (dto) => {
     const activeOrPendingOrdersCount = await prisma.order.count({
@@ -235,7 +235,7 @@ export default class OrderService {
       },
     });
 
-    await this.mailService.rentCanceledMailSender(
+    await this.adminMailService.rentCanceledMailSender(
       user?.email!,
       user?.profile?.fullName!,
       order.vehicleId
@@ -324,7 +324,7 @@ export default class OrderService {
         },
       },
     });
-    await this.mailService.rentCanceledMailSender(
+    await this.adminMailService.rentCanceledMailSender(
       user?.email!,
       user?.profile?.fullName!,
       order.vehicleId
