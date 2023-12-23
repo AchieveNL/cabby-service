@@ -42,6 +42,7 @@ export default class ProfileService {
         },
         permitDetails: true,
         driverLicense: true,
+        userVerification: true,
       },
     });
   }

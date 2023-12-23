@@ -80,14 +80,15 @@ model userProfile {
   user          user              @relation(fields: [userId], references: [id])
   driverLicense driverLicense?
   permitDetails permitDetails?
+  userVerification userVerification?
 }
 
 model driverLicense {
   id                  String      @id @default(uuid())
   driverLicenseBack   String?
   driverLicenseExpiry String?
+  bsnNumber     String?
   driverLicenseFront  String?
-  bsnNumber           String?
   driverLicense       String?
   userProfileId       String      @unique
   userProfile         userProfile @relation(fields: [userProfileId], references: [id])
@@ -102,6 +103,34 @@ model permitDetails {
   taxiPermitPicture String?
   userProfileId     String      @unique
   userProfile       userProfile @relation(fields: [userProfileId], references: [id])
+}
+
+model userVerification {
+  id                 String   @id @default(uuid())
+  userProfileId      String    @unique
+   
+   extractedFirstName  String?
+  extractedLastName   String?
+  extractedBsnNumber  String?
+  extractedDateOfBirth String?
+  extractedExpiryDate String?
+
+  // Existing data fields (from user profile)
+  existingFirstName   String?
+  existingLastName    String?
+  existingBsnNumber   String?
+  existingDateOfBirth String?
+  existingExpiryDate  String?
+
+
+  isFirstNameMatch   Boolean
+  isLastNameMatch    Boolean
+  isExpiryDateMatch  Boolean
+  isBsnNumberMatch   Boolean
+  isDateOfBirthMatch Boolean
+  createdAt          DateTime @default(now())
+
+  userProfile     userProfile @relation(fields: [userProfileId], references: [id])
 }
 
 enum VehicleStatus {
