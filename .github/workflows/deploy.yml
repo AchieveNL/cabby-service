@@ -81,6 +81,7 @@ jobs:
             MOLLIE_API_KEY=${{ secrets.MOLLIE_API_KEY_STAGING }}
             NODE_MAILER_USERNAME=${{ secrets.NODE_MAILER_USERNAME }}
             NODE_MAILER_PASSWORD=${{ secrets.NODE_MAILER_PASSWORD }}
+            MINDEE_API_KEY=${{ secrets.MINDEE_API_KEY }}
 
   build-and-deploy-production:
     environment:
@@ -132,3 +133,4 @@ jobs:
             MOLLIE_API_KEY=${{ secrets.MOLLIE_API_KEY_PRODUCTION }}
             NODE_MAILER_USERNAME=${{ secrets.NODE_MAILER_USERNAME }}
             NODE_MAILER_PASSWORD=${{ secrets.NODE_MAILER_PASSWORD }}
+            MINDEE_API_KEY=${{ secrets.MINDEE_API_KEY }}
