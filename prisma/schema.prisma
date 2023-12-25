@@ -42,6 +42,7 @@ model user {
   receivedMessages              message[]                      @relation("MessageRecipient")
   registrationOrder             registrationOrder?
   CustomerSupportRepresentative CustomerSupportRepresentative?
+  userTokens                    userTokens?
 }
 
 model passwordResetToken {
@@ -309,5 +310,14 @@ model CustomerSupportRepresentative {
 
   user user @relation(fields: [userId], references: [id])
 
+  @@unique([userId])
+}
+
+model userTokens {
+  id     String @id @default(uuid())
+  userId String
+  token String
+
+  user user @relation(fields: [userId], references: [id])
   @@unique([userId])
 }
