@@ -1,20 +1,27 @@
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
 export const mailSender = async (otpMessage) => {
   try {
-    const transport = nodemailer.createTransport({
-      host: 'sandbox.smtp.mailtrap.io',
-      port: 2525,
-      auth: {
-        user: process.env.NODE_MAILER_USERNAME,
-        pass: process.env.NODE_MAILER_PASSWORD,
-      },
-    });
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);
 
-    const info = await transport.sendMail(otpMessage);
-    console.log('Email info: ', info);
-    return info;
+    // Determine the recipient based on the environment
+    let recipient = otpMessage.to;
+    if (process.env.NODE_ENV !== 'production') {
+      recipient = 'no-reply@cabbyrentals.nl'; // Override recipient for non-production environments
+    }
+
+    const message = {
+      ...otpMessage,
+      to: recipient, // Use the determined recipient
+      from: 'no-reply@cabbyrentals.nl', // Your verified SendGrid sender
+    };
+
+    console.log('Sending email to: ', recipient);
+    const response = await sgMail.send(message);
+    console.log('Email sent:', response);
+    return response;
   } catch (error) {
-    console.log(error.message);
+    console.error('Error sending email:', error);
+    throw error; // Rethrow the error for handling elsewhere if needed
   }
 };

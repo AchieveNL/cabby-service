@@ -11,6 +11,7 @@ import {
 } from '@/modules/users/user.dto';
 import RequestValidator from '@/middlewares/request-validator';
 import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
+import { mailSender } from '@/config/mailer.config';
 
 const users: Router = Router();
 const controller = new Controller();
@@ -85,4 +86,24 @@ users.get(
 
 users.get('/:id', verifyAuthToken, requireAuth, controller.fetchUserById);
 
+users.get('/send-mail', async (req, res) => {
+  const mailMessage = {
+    to: 'no-reply@cabbyrentals.nl',
+    subject: 'Nieuwe Registratie - Actie Vereist',
+    text: `Nieuwe Registratie - Actie Vereist`,
+    html: `
+    Beste Admin,
+
+    Er heeft zich zojuist een nieuwe gebruiker geregistreerd op het Cabby-platform. De naam van de nieuwe gebruiker is any en ze hebben succesvol hun registratieproces voltooid.
+
+    We willen je op de hoogte stellen van deze nieuwe registratie zodat je actie kunt ondernemen om hun registratie te verifiëren en goed te keuren. Controleer de ingediende gegevens om ervoor te zorgen dat alles in orde is.
+    
+    Als je vragen hebt of verdere informatie nodig hebt, laat het ons dan weten.
+    Team Cabby
+`,
+  };
+
+  await mailSender(mailMessage);
+  res.send('Hello');
+});
 export default users;

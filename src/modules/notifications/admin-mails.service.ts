@@ -7,8 +7,8 @@ const generateEmail = (
   html: string
 ) => {
   return {
-    to: email,
-    from: 'info@cabbyrentals.com',
+    to: 'info@cabbyrentals.nl',
+    from: 'no-reply@cabbyrentals.nl',
     subject,
     text,
     html,

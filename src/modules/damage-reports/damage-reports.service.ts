@@ -1,9 +1,12 @@
 import AdminMailService from '../notifications/admin-mails.service';
+import UserMailService from '../notifications/user-mails.service';
 import { ReportStatus } from './types';
 import prisma from '@/lib/prisma';
 
 export default class DamageReportsService {
   readonly adminMailService = new AdminMailService();
+  readonly userMailService = new UserMailService();
+
   public createDamageReport = async (data: any) => {
     const damage = await prisma.damageReport.create({
       data,
@@ -22,6 +25,11 @@ export default class DamageReportsService {
       user?.email!,
       user?.profile?.fullName!,
       data?.vehicleId
+    );
+
+    await this.userMailService.damageReportEnteredMailSender(
+      user?.email!,
+      user?.profile?.fullName!
     );
     return damage;
   };
