@@ -224,9 +224,9 @@ export default class ProfileController extends Api {
 
   public updateUserProfileStatus = async (req, res, next) => {
     try {
-      const { status } = req.body;
+      const { status, reason } = req.body;
       const { id } = req.params;
-      await this.userProfileService.updateUserProfileStatus(id, status);
+      await this.userProfileService.updateUserProfileStatus(id, status, reason);
       this.send(res, null, HttpStatusCode.Ok, 'Status updated successfully');
     } catch (e) {
       next(e);

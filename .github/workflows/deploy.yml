@@ -82,6 +82,7 @@ jobs:
             NODE_MAILER_USERNAME=${{ secrets.NODE_MAILER_USERNAME }}
             NODE_MAILER_PASSWORD=${{ secrets.NODE_MAILER_PASSWORD }}
             MINDEE_API_KEY=${{ secrets.MINDEE_API_KEY }}
+            FIREBASE_KEY=${{ secrets.FIREBASE_KEY }}
 
   build-and-deploy-production:
     environment:
@@ -134,3 +135,4 @@ jobs:
             NODE_MAILER_USERNAME=${{ secrets.NODE_MAILER_USERNAME }}
             NODE_MAILER_PASSWORD=${{ secrets.NODE_MAILER_PASSWORD }}
             MINDEE_API_KEY=${{ secrets.MINDEE_API_KEY }}
+            FIREBASE_KEY=${{ secrets.FIREBASE_KEY }}

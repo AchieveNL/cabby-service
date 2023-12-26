@@ -82,6 +82,7 @@ model userProfile {
   driverLicense driverLicense?
   permitDetails permitDetails?
   userVerification userVerification?
+  driverRejection driverRejection?
 }
 
 model driverLicense {
@@ -131,6 +132,14 @@ model userVerification {
   isDateOfBirthMatch Boolean
   createdAt          DateTime @default(now())
 
+  userProfile     userProfile @relation(fields: [userProfileId], references: [id])
+}
+
+model driverRejection {
+  id      String   @id @default(uuid())
+  userProfileId  String    @unique
+  reason  String 
+  date    DateTime @default(now())
   userProfile     userProfile @relation(fields: [userProfileId], references: [id])
 }
 

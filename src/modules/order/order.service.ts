@@ -3,12 +3,14 @@ import { differenceInHours } from 'date-fns';
 import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
+import UserMailService from '../notifications/user-mails.service';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
 
 export default class OrderService {
   private readonly paymentService = new PaymentService();
   private readonly adminMailService = new AdminMailService();
+  private readonly userMailService = new UserMailService();
 
   public createOrder = async (dto) => {
     const activeOrPendingOrdersCount = await prisma.order.count({
@@ -235,10 +237,15 @@ export default class OrderService {
       },
     });
 
-    await this.adminMailService.rentCanceledMailSender(
+    await this.adminMailService.rentCompletedMailSender(
       user?.email!,
       user?.profile?.fullName!,
       order.vehicleId
+    );
+
+    await this.userMailService.rentCompletedMailSender(
+      user?.email!,
+      user?.profile?.fullName!
     );
 
     return completedOrder;
@@ -328,6 +335,10 @@ export default class OrderService {
       user?.email!,
       user?.profile?.fullName!,
       order.vehicleId
+    );
+    await this.userMailService.rentCanceledMailSender(
+      user?.email!,
+      user?.profile?.fullName!
     );
   };
 

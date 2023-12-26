@@ -8,14 +8,14 @@ const generateEmail = (
 ) => {
   return {
     to: email,
-    from: 'info@cabbyrentals.com',
+    from: 'no-reply@cabbyrentals.nl',
     subject,
     text,
     html,
   };
 };
 
-export default class UserMailSevice {
+export default class UserMailService {
   async optMailSender(email: string, otp: string) {
     const mailMessage = generateEmail(
       email,
