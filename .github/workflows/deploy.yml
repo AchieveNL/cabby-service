@@ -84,6 +84,8 @@ jobs:
             MINDEE_API_KEY=${{ secrets.MINDEE_API_KEY }}
             FIREBASE_KEY=${{ secrets.FIREBASE_KEY }}
             FIREBASE_SERVICE_ACCOUNT_BASE64=${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+            TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
+            TESLA_CLIENT_SECRET=${{ secrets.TESLA_CLIENT_SECRET }}
 
   build-and-deploy-production:
     environment:
@@ -138,3 +140,5 @@ jobs:
             MINDEE_API_KEY=${{ secrets.MINDEE_API_KEY }}
             FIREBASE_KEY=${{ secrets.FIREBASE_KEY }}
             FIREBASE_SERVICE_ACCOUNT_BASE64=${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+            TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
+            TESLA_CLIENT_SECRET=${{ secrets.TESLA_CLIENT_SECRET }}

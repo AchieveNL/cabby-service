@@ -330,3 +330,10 @@ model userTokens {
   user user @relation(fields: [userId], references: [id])
   @@unique([userId])
 }
+
+model TeslaToken {
+  id        Int      @id @default(autoincrement())
+  token     String
+  createdAt DateTime @default(now())
+}
+
