@@ -1,11 +1,41 @@
 import { type Decimal } from '@prisma/client/runtime/library';
 import { differenceInHours } from 'date-fns';
+import axios from 'axios';
 import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
 import UserMailService from '../notifications/user-mails.service';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
+
+// Your Tesla Developer Portal credentials
+const TESLA_CLIENT_ID = process.env.TESLA_CLIENT_ID;
+const TESLA_CLIENT_SECRET = process.env.TESLA_CLIENT_SECRET;
+
+// Function to get a Tesla API token using an authorization code
+const getTeslaApiToken = async (authorizationCode: string): Promise<string> => {
+  try {
+    const tokenResponse = await axios.post(
+      'https://auth.tesla.com/oauth2/v3/token',
+      {
+        grant_type: 'authorization_code',
+        client_id: TESLA_CLIENT_ID,
+        client_secret: TESLA_CLIENT_SECRET,
+        code: authorizationCode,
+        redirect_uri: 'https://example.com/auth/callback',
+        scope: 'openid vehicle_cmds',
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+    return accessToken;
+  } catch (error) {
+    console.error('Error obtaining Tesla API token:', error);
+    throw new Error('Failed to obtain Tesla API token.');
+  }
+};
+
+export { getTeslaApiToken };
 
 export default class OrderService {
   private readonly paymentService = new PaymentService();
@@ -161,10 +191,13 @@ export default class OrderService {
       throw new Error('Rental period has not started yet.');
     }
 
-    // const response = await axios.post('', {
-    //   vehicleId: order.vehicle.id,
-    // });
+    // // Get the Tesla API token
+    // const teslaApiToken = await getTeslaApiToken(orderId);
 
+    // // Unlock the Tesla vehicle using the Fleet API
+    // await this.unlockTeslaVehicle(order.vehicle.vin, teslaApiToken);
+
+    // Update the database indicating the vehicle is unlocked
     const data = await prisma.order.update({
       where: { id: orderId },
       data: { isVehicleUnlocked: true },
@@ -192,16 +225,65 @@ export default class OrderService {
       throw new Error('Vehicle is already locked.');
     }
 
-    // const response = await axios.post('https://api.trackjack.com/lock', {
-    //   vehicleId: order.vehicle.id,
-    // });
+    // Get the Tesla API token
+    // const teslaApiToken = await getTeslaApiToken(orderId);
 
+    // // Lock the Tesla vehicle using the Fleet API
+    // await this.lockTeslaVehicle(order.vehicle.vin, teslaApiToken);
+
+    // Update the database indicating the vehicle is locked
     const data = await prisma.order.update({
       where: { id: orderId },
       data: { isVehicleUnlocked: false },
     });
 
     return data;
+  };
+
+  // Function to unlock a Tesla vehicle
+  private readonly unlockTeslaVehicle = async (
+    vehicleVin: string,
+    teslaApiToken: string
+  ): Promise<any> => {
+    const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/door_unlock`;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${teslaApiToken}`,
+    };
+
+    try {
+      const response = await axios.post(url, {}, { headers });
+      const result = response.data;
+      console.log('Unlock Result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error unlocking Tesla vehicle:', error);
+      throw new Error('Failed to unlock Tesla vehicle.');
+    }
+  };
+
+  // Function to lock a Tesla vehicle
+  private readonly lockTeslaVehicle = async (
+    vehicleVin: string,
+    teslaApiToken: string
+  ): Promise<any> => {
+    const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/door_lock`;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${teslaApiToken}`,
+    };
+
+    try {
+      const response = await axios.post(url, {}, { headers });
+      const result = response.data;
+      console.log('Lock Result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error locking Tesla vehicle:', error);
+      throw new Error('Failed to lock Tesla vehicle.');
+    }
   };
 
   async completeOrder(orderId: string, userId: string) {
