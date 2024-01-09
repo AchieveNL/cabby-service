@@ -40,10 +40,9 @@ teslaAuth.get('/auth/callback', async (req, res) => {
     console.log('Tesla API token response:', tokenResponse);
 
     const teslaApiToken = tokenResponse.data.access_token;
-    const refreshToken = tokenResponse.data.refresh_token;
 
     await prisma.teslaToken.create({
-      data: { token: teslaApiToken, refreshToken, authorizationCode },
+      data: { token: teslaApiToken, authorizationCode },
     });
 
     res.send('Tesla API token obtained and stored successfully.');

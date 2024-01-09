@@ -8,35 +8,6 @@ import UserMailService from '../notifications/user-mails.service';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
 
-// Your Tesla Developer Portal credentials
-const TESLA_CLIENT_ID = process.env.TESLA_CLIENT_ID;
-const TESLA_CLIENT_SECRET = process.env.TESLA_CLIENT_SECRET;
-
-// Function to get a Tesla API token using an authorization code
-const getTeslaApiToken = async (authorizationCode: string): Promise<string> => {
-  try {
-    const tokenResponse = await axios.post(
-      'https://auth.tesla.com/oauth2/v3/token',
-      {
-        grant_type: 'authorization_code',
-        client_id: TESLA_CLIENT_ID,
-        client_secret: TESLA_CLIENT_SECRET,
-        code: authorizationCode,
-        redirect_uri: 'https://example.com/auth/callback',
-        scope: 'openid vehicle_cmds',
-      }
-    );
-
-    const accessToken = tokenResponse.data.access_token;
-    return accessToken;
-  } catch (error) {
-    console.error('Error obtaining Tesla API token:', error);
-    throw new Error('Failed to obtain Tesla API token.');
-  }
-};
-
-export { getTeslaApiToken };
-
 export default class OrderService {
   private readonly paymentService = new PaymentService();
   private readonly adminMailService = new AdminMailService();
@@ -191,11 +162,20 @@ export default class OrderService {
       throw new Error('Rental period has not started yet.');
     }
 
-    // // Get the Tesla API token
+    const teslaToken = await prisma.teslaToken.findFirst();
+
+    if (!teslaToken) {
+      console.log('Tesla API token not found.');
+      throw new Error('Tesla API token not found.');
+    }
+
+    if (!order.vehicle.vin) {
+      throw new Error('Vehicle VIN not found.');
+    }
+
     // const teslaApiToken = await getTeslaApiToken(orderId);
 
-    // // Unlock the Tesla vehicle using the Fleet API
-    // await this.unlockTeslaVehicle(order.vehicle.vin, teslaApiToken);
+    await this.unlockTeslaVehicle(order.vehicle.vin, teslaToken?.token);
 
     // Update the database indicating the vehicle is unlocked
     const data = await prisma.order.update({
@@ -225,11 +205,20 @@ export default class OrderService {
       throw new Error('Vehicle is already locked.');
     }
 
-    // Get the Tesla API token
+    const teslaToken = await prisma.teslaToken.findFirst();
+
+    if (!teslaToken) {
+      console.log('Tesla API token not found.');
+      throw new Error('Tesla API token not found.');
+    }
+
+    if (!order.vehicle.vin) {
+      throw new Error('Vehicle VIN not found.');
+    }
+
     // const teslaApiToken = await getTeslaApiToken(orderId);
 
-    // // Lock the Tesla vehicle using the Fleet API
-    // await this.lockTeslaVehicle(order.vehicle.vin, teslaApiToken);
+    await this.lockTeslaVehicle(order.vehicle.vin, teslaToken?.token);
 
     // Update the database indicating the vehicle is locked
     const data = await prisma.order.update({
