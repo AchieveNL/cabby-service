@@ -4,11 +4,11 @@ import prisma from './lib/prisma';
 
 const TESLA_CLIENT_ID = process.env.TESLA_CLIENT_ID;
 const TESLA_CLIENT_SECRET = process.env.TESLA_CLIENT_SECRET;
-const REDIRECT_URI = `${process.env.APP_BASE_URL}/api/v1/${process.env.NODE_ENV}/auth/tesla/callback`;
+const REDIRECT_URI = `https://api-staging.cabbyrentals.com/tesla/auth/callback`;
 
 const teslaAuth: Router = Router();
 
-teslaAuth.get('/auth/tesla', (req, res) => {
+teslaAuth.get('/auth', (req, res) => {
   const teslaAuthUrl = `https://auth.tesla.com/oauth2/v3/authorize?client_id=${
     TESLA_CLIENT_ID as string
   }&redirect_uri=${encodeURIComponent(
@@ -17,7 +17,7 @@ teslaAuth.get('/auth/tesla', (req, res) => {
   res.redirect(teslaAuthUrl);
 });
 
-teslaAuth.get('/auth/tesla/callback', async (req, res) => {
+teslaAuth.get('/auth/callback', async (req, res) => {
   const authorizationCode = req.query.code as string;
   console.log('Authorization code:', authorizationCode);
   if (!authorizationCode) {
@@ -40,9 +40,10 @@ teslaAuth.get('/auth/tesla/callback', async (req, res) => {
     console.log('Tesla API token response:', tokenResponse);
 
     const teslaApiToken = tokenResponse.data.access_token;
+    const refreshToken = tokenResponse.data.refresh_token;
 
     await prisma.teslaToken.create({
-      data: { token: teslaApiToken },
+      data: { token: teslaApiToken, refreshToken, authorizationCode },
     });
 
     res.send('Tesla API token obtained and stored successfully.');

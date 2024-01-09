@@ -9,6 +9,7 @@ import home from './home';
 import environment from './lib/environment';
 import expressJSDocSwaggerConfig from './config/express-jsdoc-swagger.config';
 import appConfig from './config/app.config';
+import teslaAuth from './tesla-auth';
 import errorHandler from '@/middlewares/error-handler';
 import routes from '@/modules/index';
 import prismaClient from '@/lib/prisma';
@@ -67,6 +68,7 @@ class App {
     } = appConfig;
     const { env } = environment;
     this.express.use('/', home);
+    this.express.use('/tesla', teslaAuth);
     this.express.use(`/api/${version}/${env}`, routes);
   }
 
