@@ -169,6 +169,7 @@ model vehicle {
   currency             String?       @default("EUR")
   pricePerDay          Decimal?      @db.Decimal(6, 2)
   status               VehicleStatus @default(PENDING)
+  vin                  String?
 
   orders        order[]
   rejection     vehicleRejection?
