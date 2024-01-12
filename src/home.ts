@@ -28,4 +28,18 @@ home.get('/origin', (_req: Request, res: Response) => {
 
 home.use('/assets', express.static('../public/assets'));
 
+home.get(
+  '/.well-known/appspecific/com.tesla.3p.public-key.pem',
+  (_req: Request, res: Response) => {
+    try {
+      res.sendFile(path.join(__dirname, '../public/assets/ec_public.pem'));
+    } catch (err) {
+      res.status(500).send({
+        success: false,
+        message: err.toString(),
+      });
+    }
+  }
+);
+
 export default home;
