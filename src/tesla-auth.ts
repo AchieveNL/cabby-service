@@ -13,7 +13,7 @@ teslaAuth.get('/auth', (req, res) => {
     TESLA_CLIENT_ID as string
   }&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
-  )}&response_type=code&scope=openid vehicle_cmds`;
+  )}&response_type=code&scope=openid vehicle_cmds offline_access`;
   res.redirect(teslaAuthUrl);
 });
 
