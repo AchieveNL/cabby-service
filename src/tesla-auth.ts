@@ -34,6 +34,7 @@ teslaAuth.get('/auth/callback', async (req, res) => {
         code: authorizationCode,
         redirect_uri: REDIRECT_URI,
         scope: 'openid vehicle_cmds',
+        audience: 'https://fleet-api.prd.eu.vn.cloud.tesla.com',
       }
     );
 
