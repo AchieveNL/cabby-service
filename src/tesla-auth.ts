@@ -8,6 +8,32 @@ const REDIRECT_URI = `https://api-staging.cabbyrentals.com/tesla/auth/callback`;
 
 const teslaAuth: Router = Router();
 
+teslaAuth.get('/partner/token', async (req, res) => {
+  try {
+    const tokenResponse = await axios.post(
+      'https://auth.tesla.com/oauth2/v3/token',
+      {
+        grant_type: 'client_credentials',
+        client_id: TESLA_CLIENT_ID,
+        client_secret: TESLA_CLIENT_SECRET,
+        audience: 'https://fleet-api.prd.eu.vn.cloud.tesla.com',
+      }
+    );
+
+    console.log('Tesla partner API token response:', tokenResponse);
+
+    const partnerApiToken = tokenResponse.data.access_token;
+
+    res.send({
+      message: 'Tesla Partner API token obtained and stored successfully.',
+      token: partnerApiToken,
+    });
+  } catch (error) {
+    console.error('Error during Tesla partner token generation:', error);
+    res.status(500).send('Failed to obtain Tesla Partner API token.');
+  }
+});
+
 teslaAuth.get('/auth', (req, res) => {
   const teslaAuthUrl = `https://auth.tesla.com/oauth2/v3/authorize?client_id=${
     TESLA_CLIENT_ID as string
