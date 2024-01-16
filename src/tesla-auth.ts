@@ -16,17 +16,35 @@ teslaAuth.get('/partner/token', async (req, res) => {
         grant_type: 'client_credentials',
         client_id: TESLA_CLIENT_ID,
         client_secret: TESLA_CLIENT_SECRET,
+        scope: 'openid vehicle_device_data vehicle_cmds vehicle_charging_cmds',
         audience: 'https://fleet-api.prd.eu.vn.cloud.tesla.com',
       }
     );
 
     console.log('Tesla partner API token response:', tokenResponse);
 
-    const partnerApiToken = tokenResponse.data.access_token;
+    const partnerApiToken: string = tokenResponse.data.access_token;
+
+    const registerResponse = await axios.post(
+      'https://owner-api.teslamotors.com/api/1/partner_accounts',
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${partnerApiToken}`,
+        },
+      }
+    );
+
+    console.log('Tesla app registration response:', registerResponse);
+
+    if (registerResponse.status !== 200) {
+      throw new Error('Registration failed');
+    }
 
     res.send({
       message: 'Tesla Partner API token obtained and stored successfully.',
       token: partnerApiToken,
+      data: registerResponse.data,
     });
   } catch (error) {
     console.error('Error during Tesla partner token generation:', error);
