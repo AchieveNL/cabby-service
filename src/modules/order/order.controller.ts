@@ -64,7 +64,10 @@ export default class OrderController extends Api {
   ) => {
     try {
       const { orderId } = req.params;
-      const unlockResult = await this.orderService.unlockVehicle(orderId);
+      const unlockResult = await this.orderService.unlockVehicle(
+        orderId,
+        req.user?.id
+      );
       return this.send(
         res,
         unlockResult,
@@ -84,7 +87,10 @@ export default class OrderController extends Api {
   ) => {
     try {
       const { orderId } = req.params;
-      const unlockResult = await this.orderService.lockVehicle(orderId);
+      const unlockResult = await this.orderService.lockVehicle(
+        orderId,
+        req.user?.id
+      );
       return this.send(
         res,
         unlockResult,

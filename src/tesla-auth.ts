@@ -90,6 +90,8 @@ teslaAuth.get('/auth/callback', async (req, res) => {
 
     console.log('tokenResponse.data', tokenResponse.data);
 
+    await prisma.teslaToken.deleteMany();
+
     await prisma.teslaToken.create({
       data: {
         token: teslaApiToken,
