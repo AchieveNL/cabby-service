@@ -90,7 +90,7 @@ export default class UserController extends Api {
           res,
           null,
           HttpStatusCode.BadRequest,
-          'Invalid email or password'
+          'Ongeldig e-mailadres of wachtwoord'
         );
       }
 
@@ -123,7 +123,7 @@ export default class UserController extends Api {
           res,
           null,
           HttpStatusCode.BadRequest,
-          'Invalid email or password'
+          'Ongeldig e-mailadres of wachtwoord'
         );
       }
 
@@ -132,7 +132,7 @@ export default class UserController extends Api {
           res,
           null,
           HttpStatusCode.BadRequest,
-          'Invalid email or password'
+          'Ongeldig e-mailadres of wachtwoord'
         );
       }
 
@@ -141,7 +141,7 @@ export default class UserController extends Api {
           res,
           null,
           HttpStatusCode.BadRequest,
-          'Invalid email or password'
+          'Ongeldig e-mailadres of wachtwoord'
         );
       }
 
