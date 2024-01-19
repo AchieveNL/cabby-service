@@ -5,6 +5,7 @@ import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
 import UserMailService from '../notifications/user-mails.service';
+import { NotificationService } from '../notifications/notification.service';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
 
@@ -12,6 +13,7 @@ export default class OrderService {
   private readonly paymentService = new PaymentService();
   private readonly adminMailService = new AdminMailService();
   private readonly userMailService = new UserMailService();
+  private readonly notificationService = new NotificationService();
 
   public createOrder = async (dto) => {
     const activeOrPendingOrdersCount = await prisma.order.count({
@@ -147,7 +149,7 @@ export default class OrderService {
     };
   };
 
-  public unlockVehicle = async (orderId: string) => {
+  public unlockVehicle = async (orderId: string, userId: string) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { vehicle: true },
@@ -175,7 +177,19 @@ export default class OrderService {
 
     // const teslaApiToken = await getTeslaApiToken(orderId);
 
-    await this.unlockTeslaVehicle(order.vehicle.vin, teslaToken?.token);
+    const result = await this.unlockTeslaVehicle(
+      order.vehicle.vin,
+      teslaToken?.token
+    );
+
+    if (result.response.result) {
+      await this.notificationService.sendNotificationToUser(
+        userId,
+        'Je Tesla is ontgrendeld.',
+        'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
+        JSON.stringify({ type: 'event' })
+      );
+    }
 
     // Update the database indicating the vehicle is unlocked
     const data = await prisma.order.update({
@@ -186,7 +200,7 @@ export default class OrderService {
     return data;
   };
 
-  public lockVehicle = async (orderId: string) => {
+  public lockVehicle = async (orderId: string, userId: string) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { vehicle: true },
@@ -218,7 +232,19 @@ export default class OrderService {
 
     // const teslaApiToken = await getTeslaApiToken(orderId);
 
-    await this.lockTeslaVehicle(order.vehicle.vin, teslaToken?.token);
+    const result = await this.lockTeslaVehicle(
+      order.vehicle.vin,
+      teslaToken?.token
+    );
+
+    if (result.response.result) {
+      await this.notificationService.sendNotificationToUser(
+        userId,
+        'Heel goed!',
+        'Je Tesla is nu vergrendeld. 🔐',
+        JSON.stringify({ type: 'event' })
+      );
+    }
 
     // Update the database indicating the vehicle is locked
     const data = await prisma.order.update({
