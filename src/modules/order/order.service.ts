@@ -78,22 +78,24 @@ export default class OrderService {
     let statusMessage = 'Processing...';
     switch (order.status) {
       case 'UNPAID':
-        statusMessage = 'Please complete the payment.';
+        statusMessage = 'Voltooi de betaling alstublieft.';
         break;
       case 'PENDING':
-        statusMessage = 'Order is pending approval.';
+        statusMessage = 'De reservering wacht op goedkeuring.';
         break;
       case 'CONFIRMED':
-        statusMessage = 'Order confirmed! Prepare for your trip.';
+        statusMessage = 'Reservering is bevestigd, bereid je reis voor!';
         break;
       case 'REJECTED':
-        statusMessage = 'Order was rejected. Please contact support.';
+        statusMessage =
+          'Reservering is afgewezen. Neem contact op voor ondersteuning.';
         break;
       case 'COMPLETED':
-        statusMessage = 'Order completed. Thank you for renting with us!';
+        statusMessage =
+          'Je reservering is beëindigd. Bedankt voor het huren bij Cabby!';
         break;
       case 'CANCELED':
-        statusMessage = 'Order was canceled.';
+        statusMessage = 'De reservering is geannuleerd.';
         break;
     }
 
@@ -103,9 +105,9 @@ export default class OrderService {
       const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
       const minutes = Math.floor((totalSeconds % 3600) / 60);
 
-      if (days > 0) return `${days} day(s)`;
-      if (hours > 0) return `${hours} hour(s)`;
-      return `${minutes} minute(s)`;
+      if (days > 0) return `${days} dag(en)`;
+      if (hours > 0) return `${hours} uur(uren)`;
+      return `${minutes} minuut(minuten)`;
     };
 
     let orderMessage = '';
@@ -116,16 +118,16 @@ export default class OrderService {
       order.status !== 'CANCELED' &&
       order.status !== 'COMPLETED'
     ) {
-      orderMessage = `Your rental starts in ${toDurationString(
+      orderMessage = `Je reservering begint over ${toDurationString(
         startCountdown
-      )}. Prepare!`;
+      )}. Bereid je voor`;
     } else if (
       startCountdown <= 0 &&
       endCountdown > 0 &&
       order.status !== 'CANCELED' &&
       order.status !== 'COMPLETED'
     ) {
-      orderMessage = `Your rental has started. Vehicle is ready to use for the next ${toDurationString(
+      orderMessage = `Je reservering is gestart. Voertuig is klaar voor gebruik voor de komende ${toDurationString(
         endCountdown
       )}.`;
       readyToUse = true;
@@ -134,7 +136,8 @@ export default class OrderService {
       order.status !== 'CANCELED' &&
       order.status !== 'COMPLETED'
     ) {
-      orderMessage = 'Your rental has ended. Thank you for renting with us!';
+      orderMessage =
+        'Je reservering is beëindigd. Bedankt voor het huren bij Cabby.';
     }
 
     return {
