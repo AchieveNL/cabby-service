@@ -1,6 +1,6 @@
+import * as https from 'https';
 import { type Decimal } from '@prisma/client/runtime/library';
 import { differenceInHours } from 'date-fns';
-import fetch from 'node-fetch';
 import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
@@ -8,6 +8,59 @@ import UserMailService from '../notifications/user-mails.service';
 import { NotificationService } from '../notifications/notification.service';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
+
+interface FetchOptions {
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  headers?: Record<string, string>;
+  body?: string;
+}
+
+interface FetchResponse {
+  ok: boolean;
+  status: number;
+  json: () => Promise<any>;
+  text: () => Promise<string>;
+}
+
+async function fetch(
+  url: string,
+  options: FetchOptions = {}
+): Promise<FetchResponse> {
+  return await new Promise((resolve, reject) => {
+    const method = options.method ?? 'GET';
+    const headers = options.headers ?? {};
+
+    const req = https.request(url, { method, headers }, (res) => {
+      let data = '';
+
+      res.on('data', (chunk) => {
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+        data += chunk;
+      });
+
+      res.on('end', () => {
+        const statusCode = res.statusCode as number;
+        const response: FetchResponse = {
+          ok: statusCode >= 200 && statusCode < 300,
+          status: statusCode,
+          json: async () => await Promise.resolve(JSON.parse(data)),
+          text: async () => await Promise.resolve(data),
+        };
+        resolve(response);
+      });
+    });
+
+    req.on('error', (e) => {
+      reject(e);
+    });
+
+    if (options.body) {
+      req.write(options.body);
+    }
+
+    req.end();
+  });
+}
 
 export default class OrderService {
   private readonly paymentService = new PaymentService();
@@ -277,7 +330,9 @@ export default class OrderService {
       if (!response.ok) {
         throw new Error(
           // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          `HTTP error! status: ${response.status} ${response.statusText} ${response.body}`
+          `HTTP error! status: ${response.status} ${JSON.stringify(
+            response.json()
+          )}`
         );
       }
 
@@ -309,7 +364,9 @@ export default class OrderService {
       if (!response.ok) {
         throw new Error(
           // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          `HTTP error! status: ${response.status} ${response.statusText} ${response.body}`
+          `HTTP error! status: ${response.status} ${JSON.stringify(
+            response.json()
+          )}`
         );
       }
 
