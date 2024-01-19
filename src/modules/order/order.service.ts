@@ -1,6 +1,6 @@
 import { type Decimal } from '@prisma/client/runtime/library';
 import { differenceInHours } from 'date-fns';
-import axios from 'axios';
+import fetch from 'node-fetch';
 import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
@@ -258,7 +258,6 @@ export default class OrderService {
     return data;
   };
 
-  // Function to unlock a Tesla vehicle
   private readonly unlockTeslaVehicle = async (
     vehicleVin: string,
     teslaApiToken: string
@@ -267,19 +266,28 @@ export default class OrderService {
 
     console.log('Unlocking Tesla vehicle:', vehicleVin, url, teslaApiToken);
 
-    const response = await axios.post(
-      url,
-      {},
-      {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${teslaApiToken}`,
         },
-        timeout: 10000,
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          `HTTP error! status: ${response.status} ${response.statusText} ${response.body}`
+        );
       }
-    );
-    const result = response.data;
-    console.log('Unlock Result:', result);
-    return result;
+
+      const result = await response.json();
+      console.log('Unlock Result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error unlocking Tesla vehicle:', error);
+      throw new Error('Failed to unlock Tesla vehicle.');
+    }
   };
 
   // Function to lock a Tesla vehicle
@@ -289,14 +297,23 @@ export default class OrderService {
   ): Promise<any> => {
     const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/door_lock`;
 
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${teslaApiToken}`,
-    };
-
     try {
-      const response = await axios.post(url, {}, { headers, timeout: 10000 });
-      const result = response.data;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${teslaApiToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          `HTTP error! status: ${response.status} ${response.statusText} ${response.body}`
+        );
+      }
+
+      const result = await response.json();
       console.log('Lock Result:', result);
       return result;
     } catch (error) {
