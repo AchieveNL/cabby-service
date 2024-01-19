@@ -496,12 +496,12 @@ export default class OrderService {
     return rejection;
   }
 
-  public getVehicleOrdersForNext30Days = async (vehicleId: string) => {
+  public getVehicleBookedPeriodsForNext30Days = async (vehicleId: string) => {
     const today = new Date();
     const thirtyDaysLater = new Date(today);
     thirtyDaysLater.setDate(today.getDate() + 30);
 
-    return await prisma.order.findMany({
+    const orders = await prisma.order.findMany({
       where: {
         vehicleId,
         rentalStartDate: {
@@ -515,7 +515,18 @@ export default class OrderService {
       orderBy: {
         rentalStartDate: 'asc',
       },
+      select: {
+        rentalStartDate: true,
+        rentalEndDate: true,
+      },
     });
+
+    const bookedPeriods = orders.map((order) => ({
+      from: order.rentalStartDate,
+      to: order.rentalEndDate,
+    }));
+
+    return { booked: bookedPeriods };
   };
 
   public calculateTotalRentPrice = async (

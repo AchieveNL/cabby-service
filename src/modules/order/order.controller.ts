@@ -256,55 +256,13 @@ export default class OrderController extends Api {
   ) => {
     try {
       const { vehicleId } = req.params;
-      const orders =
-        await this.orderService.getVehicleOrdersForNext30Days(vehicleId);
-
-      // Calculate the available timeslots based on the returned orders
-      const availability = this.calculateAvailability(orders);
+      const availability =
+        await this.orderService.getVehicleBookedPeriodsForNext30Days(vehicleId);
 
       return this.send(res, availability);
     } catch (error) {
       next(error);
     }
-  };
-
-  private readonly calculateAvailability = (orders: any[]) => {
-    const timeSlots = [
-      '00:00-06:00',
-      '06:00-12:00',
-      '12:00-18:00',
-      '18:00-24:00',
-    ];
-    const availability: any = {};
-    const currentDate = new Date();
-    const oneDayMilliseconds = 24 * 60 * 60 * 1000;
-
-    // Initialize the availability for the next 30 days
-    for (let i = 0; i < 30; i++) {
-      const day = new Date(currentDate.getTime() + i * oneDayMilliseconds);
-      const dayStr = day.toISOString().split('T')[0]; // Format as 'YYYY-MM-DD'
-      availability[dayStr] = { ...timeSlots.map((slot) => ({ [slot]: true })) };
-    }
-
-    // Go through each order and mark slots as unavailable
-    for (const order of orders) {
-      const startDay = new Date(order.startsAt).toISOString().split('T')[0];
-      const endDay = new Date(order.endsAt).toISOString().split('T')[0];
-
-      for (
-        let currentDay = new Date(startDay);
-        currentDay <= new Date(endDay);
-        currentDay = new Date(currentDay.getTime() + oneDayMilliseconds)
-      ) {
-        const dayStr = currentDay.toISOString().split('T')[0];
-        timeSlots.forEach((slot) => {
-          // Here you can add more precise logic to check if the order overlaps with the timeslot
-          availability[dayStr][slot] = false;
-        });
-      }
-    }
-
-    return availability;
   };
 
   public checkVehicleAvailabilityForTimeslot = async (
