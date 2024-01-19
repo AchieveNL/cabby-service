@@ -274,6 +274,7 @@ export default class OrderService {
         headers: {
           Authorization: `Bearer ${teslaApiToken}`,
         },
+        timeout: 10000,
       }
     );
     const result = response.data;
@@ -294,7 +295,7 @@ export default class OrderService {
     };
 
     try {
-      const response = await axios.post(url, {}, { headers });
+      const response = await axios.post(url, {}, { headers, timeout: 10000 });
       const result = response.data;
       console.log('Lock Result:', result);
       return result;
