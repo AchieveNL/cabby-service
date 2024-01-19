@@ -5,6 +5,7 @@ import prisma from './lib/prisma';
 const TESLA_CLIENT_ID = process.env.TESLA_CLIENT_ID;
 const TESLA_CLIENT_SECRET = process.env.TESLA_CLIENT_SECRET;
 const REDIRECT_URI = `https://api-staging.cabbyrentals.com/tesla/auth/callback`;
+const audience = 'https://fleet-api.prd.eu.vn.cloud.tesla.com';
 
 const teslaAuth: Router = Router();
 
@@ -17,7 +18,7 @@ teslaAuth.get('/partner/token', async (req, res) => {
         client_id: TESLA_CLIENT_ID,
         client_secret: TESLA_CLIENT_SECRET,
         scope: 'openid vehicle_device_data vehicle_cmds vehicle_charging_cmds',
-        audience: 'https://fleet-api.prd.eu.vn.cloud.tesla.com',
+        audience,
       }
     );
 
@@ -26,7 +27,7 @@ teslaAuth.get('/partner/token', async (req, res) => {
     const partnerApiToken: string = tokenResponse.data.access_token;
 
     const registerResponse = await axios.post(
-      'https://owner-api.teslamotors.com/api/1/partner_accounts',
+      `${audience}/api/1/partner_accounts`,
       {},
       {
         headers: {
@@ -85,9 +86,16 @@ teslaAuth.get('/auth/callback', async (req, res) => {
     console.log('Tesla API token response:', tokenResponse);
 
     const teslaApiToken = tokenResponse.data.access_token;
+    const teslaRefreshToken = tokenResponse.data.refresh_token;
+
+    console.log('tokenResponse.data', tokenResponse.data);
 
     await prisma.teslaToken.create({
-      data: { token: teslaApiToken, authorizationCode },
+      data: {
+        token: teslaApiToken,
+        authorizationCode,
+        refreshToken: teslaRefreshToken,
+      },
     });
 
     res.send('Tesla API token obtained and stored successfully.');
