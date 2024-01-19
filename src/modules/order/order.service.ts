@@ -106,8 +106,8 @@ export default class OrderService {
       const minutes = Math.floor((totalSeconds % 3600) / 60);
 
       if (days > 0) return `${days} dag(en)`;
-      if (hours > 0) return `${hours} uur(uren)`;
-      return `${minutes} minuut(minuten)`;
+      if (hours > 0) return `${hours} uur (uren)`;
+      return `${minutes} minuten (minuut)`;
     };
 
     let orderMessage = '';
@@ -120,7 +120,7 @@ export default class OrderService {
     ) {
       orderMessage = `Je reservering begint over ${toDurationString(
         startCountdown
-      )}. Bereid je voor`;
+      )}. Bereid je voor! 🚀`;
     } else if (
       startCountdown <= 0 &&
       endCountdown > 0 &&
