@@ -106,7 +106,7 @@ export default class OrderService {
       const minutes = Math.floor((totalSeconds % 3600) / 60);
 
       if (days > 0) return `${days} dag(en)`;
-      if (hours > 0) return `${hours} uur (uren)`;
+      if (hours > 0) return `${hours} uren (uur)`;
       return `${minutes} minuten (minuut)`;
     };
 
@@ -265,20 +265,20 @@ export default class OrderService {
   ): Promise<any> => {
     const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/door_unlock`;
 
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${teslaApiToken}`,
-    };
+    console.log('Unlocking Tesla vehicle:', vehicleVin, url, teslaApiToken);
 
-    try {
-      const response = await axios.post(url, {}, { headers });
-      const result = response.data;
-      console.log('Unlock Result:', result);
-      return result;
-    } catch (error) {
-      console.error('Error unlocking Tesla vehicle:', error);
-      throw new Error('Failed to unlock Tesla vehicle.');
-    }
+    const response = await axios.post(
+      url,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${teslaApiToken}`,
+        },
+      }
+    );
+    const result = response.data;
+    console.log('Unlock Result:', result);
+    return result;
   };
 
   // Function to lock a Tesla vehicle
