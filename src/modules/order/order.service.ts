@@ -341,7 +341,9 @@ export default class OrderService {
       return result;
     } catch (error) {
       console.error('Error unlocking Tesla vehicle:', error);
-      throw new Error('Failed to unlock Tesla vehicle.');
+      throw new Error(
+        `Failed to unlock Tesla vehicle, error: ${JSON.stringify(error)}`
+      );
     }
   };
 
