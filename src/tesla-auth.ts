@@ -17,7 +17,6 @@ teslaAuth.get('/partner/token', async (req, res) => {
         grant_type: 'client_credentials',
         client_id: TESLA_CLIENT_ID,
         client_secret: TESLA_CLIENT_SECRET,
-        scope: 'openid vehicle_device_data vehicle_cmds vehicle_charging_cmds',
         audience,
       }
     );
@@ -49,7 +48,11 @@ teslaAuth.get('/partner/token', async (req, res) => {
     });
   } catch (error) {
     console.error('Error during Tesla partner token generation:', error);
-    res.status(500).send('Failed to obtain Tesla Partner API token.');
+    res
+      .status(500)
+      .send(
+        'Error during Tesla partner token generation: ' + JSON.stringify(error)
+      );
   }
 });
 
