@@ -64,7 +64,7 @@ jobs:
           docker push ${{ env.IMAGE_URL }}:staging-${{ github.sha }}
 
       - name: Deploy to Cloud Run (Staging)
-        uses: google-github-actions/deploy-cloudrun@v0
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ secrets.SERVICE_NAME }}
           region: ${{ secrets.REGION }}
@@ -120,7 +120,7 @@ jobs:
           docker push ${{ env.IMAGE_URL }}:production-${{ github.sha }}
 
       - name: Deploy to Cloud Run (Production)
-        uses: google-github-actions/deploy-cloudrun@v0
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ secrets.SERVICE_NAME }}
           region: ${{ secrets.REGION }}
