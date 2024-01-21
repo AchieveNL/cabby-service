@@ -184,22 +184,24 @@ export default class OrderService {
       teslaToken?.token
     );
 
-    if (result.response.result) {
+    if (!result) {
+      throw new Error('Error unlocking Tesla vehicle.');
+    }
+
+    if (result?.response?.result) {
       await this.notificationService.sendNotificationToUser(
         userId,
         'Je Tesla is ontgrendeld.',
         'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
         JSON.stringify({ type: 'event' })
       );
+      // Update the database indicating the vehicle is unlocked
+      const data = await prisma.order.update({
+        where: { id: orderId },
+        data: { isVehicleUnlocked: true },
+      });
+      return data;
     }
-
-    // Update the database indicating the vehicle is unlocked
-    const data = await prisma.order.update({
-      where: { id: orderId },
-      data: { isVehicleUnlocked: true },
-    });
-
-    return data;
   };
 
   public lockVehicle = async (orderId: string, userId: string) => {
@@ -276,12 +278,10 @@ export default class OrderService {
         body: '',
       };
 
-      const result = await fetch(url, requestOptions)
-        .then(async (response) => await response.json())
-        .catch((error) => {
-          console.log('error while unlocking vehicle: ', error);
-          return null;
-        });
+      const result = await fetch(url, requestOptions).then(
+        async (response) => await response.json()
+      );
+
       return result;
     } catch (error) {
       console.error('Error unlocking Tesla vehicle:', error);
@@ -309,12 +309,9 @@ export default class OrderService {
         body: '',
       };
 
-      const result = await fetch(url, requestOptions)
-        .then(async (response) => await response.json())
-        .catch((error) => {
-          console.log('error while unlocking vehicle: ', error);
-          return null;
-        });
+      const result = await fetch(url, requestOptions).then(
+        async (response) => await response.json()
+      );
       return result;
     } catch (error) {
       console.error('Error locking Tesla vehicle:', error);
