@@ -179,8 +179,6 @@ export default class OrderService {
       throw new Error('Vehicle VIN not found.');
     }
 
-    // const teslaApiToken = await getTeslaApiToken(orderId);
-
     const result = await this.unlockTeslaVehicle(
       order.vehicle.vin,
       teslaToken?.token
