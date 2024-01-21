@@ -107,7 +107,7 @@ export default class OrderService {
       const minutes = Math.floor((totalSeconds % 3600) / 60);
 
       if (days > 0) return `${days} dag(en)`;
-      if (hours > 0) return `${hours} uren (uur)`;
+      if (hours > 0) return `${hours} uur`;
       return `${minutes} minuten (minuut)`;
     };
 
