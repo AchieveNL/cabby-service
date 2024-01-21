@@ -282,6 +282,8 @@ export default class OrderService {
         async (response) => await response.json()
       );
 
+      console.log('unLocking Tesla vehicle result:', result);
+
       return result;
     } catch (error) {
       console.error('Error unlocking Tesla vehicle:', error);
@@ -312,6 +314,8 @@ export default class OrderService {
       const result = await fetch(url, requestOptions).then(
         async (response) => await response.json()
       );
+
+      console.log('Locking Tesla vehicle result:', result);
       return result;
     } catch (error) {
       console.error('Error locking Tesla vehicle:', error);
