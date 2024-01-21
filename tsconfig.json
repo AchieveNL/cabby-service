@@ -14,7 +14,8 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "skipLibCheck": true
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "typeRoots": ["node_modules/@types", "src/@types"],
