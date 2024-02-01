@@ -79,8 +79,6 @@ jobs:
             JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY_STAGING }}
             JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY_STAGING }}
             MOLLIE_API_KEY=${{ secrets.MOLLIE_API_KEY_STAGING }}
-            NODE_MAILER_USERNAME=${{ secrets.NODE_MAILER_USERNAME }}
-            NODE_MAILER_PASSWORD=${{ secrets.NODE_MAILER_PASSWORD }}
             MINDEE_API_KEY=${{ secrets.MINDEE_API_KEY }}
             FIREBASE_KEY=${{ secrets.FIREBASE_KEY }}
             FIREBASE_SERVICE_ACCOUNT_BASE64=${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
@@ -135,8 +133,6 @@ jobs:
             JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY_PRODUCTION }}
             JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY_PRODUCTION }}
             MOLLIE_API_KEY=${{ secrets.MOLLIE_API_KEY_PRODUCTION }}
-            NODE_MAILER_USERNAME=${{ secrets.NODE_MAILER_USERNAME }}
-            NODE_MAILER_PASSWORD=${{ secrets.NODE_MAILER_PASSWORD }}
             MINDEE_API_KEY=${{ secrets.MINDEE_API_KEY }}
             FIREBASE_KEY=${{ secrets.FIREBASE_KEY }}
             FIREBASE_SERVICE_ACCOUNT_BASE64=${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
