@@ -195,7 +195,6 @@ export class FileService {
         `Factuur: CR-00${(
           await prisma.order.findMany({
             where: {
-              id: orderId,
               userId,
             },
           })
