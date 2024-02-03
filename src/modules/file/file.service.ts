@@ -349,9 +349,6 @@ export class FileService {
     drawItems();
     drawTotals();
 
-    // Factuur voldaan onder de voorwaarden van het opgestelde huurovereenkomst.
-    // Factuur is reeds betaald.
-
     const invoiceEnds = {
       x: 50,
       y: 350,
@@ -370,40 +367,18 @@ export class FileService {
       });
     });
 
-    // Add more text fields as needed
-
-    // Note: There's no doc.fontSize or doc.text in pdf-lib for drawing on a loaded document's page
-    // You must use the page.drawText method with appropriate options for each text element
-
     const pdfBytes = await doc.save();
+    const pdfBuffer = Buffer.from(pdfBytes);
+    const fileName = `invoice-${String(order.id)}.pdf`;
+    const mimeType = 'application/pdf';
 
-    // Define the local path for saving the PDF
-    const directoryPath = path.resolve(__dirname, 'invoices');
-    await fs.promises.mkdir(directoryPath, { recursive: true }); // Ensure the directory exists
-
-    const fileName = `invoice-${order.id}.pdf`;
-    const filePath = path.join(directoryPath, fileName);
-
-    // Save the PDF buffer to a file locally
-    await fs.promises.writeFile(filePath, pdfBytes);
-
-    // Return the local file path instead of a URL
-    return filePath;
-
-    // doc.end();
-    // const pdfBuffer = await getStream.buffer(doc);
-
-    // const mimeType = 'application/pdf';
-    // const fileName = `invoice-${String(order.id)}.pdf`;
-    // const fileType = 'PDF';
-
-    // const invoiceUrl = await this.uploadFile(
-    //   pdfBuffer,
-    //   fileName,
-    //   mimeType,
-    //   fileType
-    // );
-    // return invoiceUrl;
+    const invoiceUrl = await this.uploadFile(
+      pdfBuffer,
+      fileName,
+      mimeType,
+      'PDF'
+    );
+    return invoiceUrl;
   }
 }
 
