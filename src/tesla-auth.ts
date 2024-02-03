@@ -9,6 +9,44 @@ const audience = 'https://fleet-api.prd.eu.vn.cloud.tesla.com';
 
 const teslaAuth: Router = Router();
 
+export const refreshTeslaApiToken = async (
+  currentToken: string,
+  teslaApiRefreshToken: string
+) => {
+  try {
+    const refreshResponse = await axios.post(
+      'https://auth.tesla.com/oauth2/v3/token',
+      {
+        grant_type: 'refresh_token',
+        client_id: TESLA_CLIENT_ID,
+        client_secret: TESLA_CLIENT_SECRET,
+        refresh_token: teslaApiRefreshToken,
+      }
+    );
+
+    console.log('Tesla API token refresh response:', refreshResponse.data);
+
+    const newAccessToken = refreshResponse.data.access_token;
+    // Update the stored tokens with the new access token and optionally the new refresh token
+
+    await prisma.teslaToken.updateMany({
+      where: { token: currentToken },
+      data: {
+        token: newAccessToken,
+        refreshToken: teslaApiRefreshToken,
+      },
+    });
+
+    return newAccessToken;
+
+    // Retry the unlock request with the new access token
+    // Make sure to update the request headers with the new token
+  } catch (refreshError) {
+    console.error('Error refreshing Tesla API token:', refreshError);
+    // Handle refresh token error (e.g., also expired, network issues, etc.)
+  }
+};
+
 teslaAuth.get('/partner/token', async (req, res) => {
   try {
     const tokenResponse = await axios.post(
