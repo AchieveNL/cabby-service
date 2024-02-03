@@ -654,15 +654,23 @@ export default class OrderService {
     rentStarts: Date,
     rentEnds: Date
   ) => {
+    // Adjust rentStarts and rentEnds to include a 15-minute buffer
+    const adjustedRentStarts = new Date(rentStarts.getTime() - 15 * 60000); // Subtract 15 minutes
+    const adjustedRentEnds = new Date(rentEnds.getTime() + 15 * 60000); // Add 15 minutes
+
     const overlappingOrders = await prisma.order.count({
       where: {
         vehicleId,
-        rentalStartDate: {
-          lte: rentEnds,
-        },
-        rentalEndDate: {
-          gte: rentStarts,
-        },
+        OR: [
+          {
+            rentalStartDate: {
+              lt: adjustedRentEnds,
+            },
+            rentalEndDate: {
+              gt: adjustedRentStarts,
+            },
+          },
+        ],
         status: {
           not: OrderStatus.CANCELED,
         },
