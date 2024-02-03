@@ -9,6 +9,29 @@ import UserMailService from '../notifications/user-mails.service';
 import { NotificationService } from '../notifications/notification.service';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
+import { refreshTeslaApiToken } from '@/tesla-auth';
+
+const weakTheVehicleUp = async (vehicleTag: string, token: string) => {
+  const myHeaders = new Headers();
+  myHeaders.append('Content-Type', 'application/json');
+  myHeaders.append('Authorization', `Bearer ${token}`);
+
+  const requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+  };
+
+  try {
+    await fetch(
+      `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleTag}/wake_up`,
+      requestOptions
+    );
+    console.log('Vehicle woken up successfully.');
+  } catch (error) {
+    console.log('Error waking up vehicle:', error);
+    throw new Error('Error waking up vehicle' + JSON.stringify(error));
+  }
+};
 
 export default class OrderService {
   private readonly paymentService = new PaymentService();
@@ -175,13 +198,21 @@ export default class OrderService {
       throw new Error('Tesla API token not found.');
     }
 
+    if (!teslaToken.refreshToken) {
+      console.log('Tesla API refresh token not found.');
+      throw new Error('Tesla API refresh token not found.');
+    }
+
     if (!order.vehicle.vin) {
       throw new Error('Vehicle VIN not found.');
     }
 
+    await weakTheVehicleUp(order.vehicle.vin, teslaToken.token);
+
     const result = await this.unlockTeslaVehicle(
       order.vehicle.vin,
-      teslaToken?.token
+      teslaToken?.token,
+      teslaToken?.refreshToken
     );
 
     if (!result) {
@@ -229,6 +260,10 @@ export default class OrderService {
       console.log('Tesla API token not found.');
       throw new Error('Tesla API token not found.');
     }
+    if (!teslaToken.refreshToken) {
+      console.log('Tesla API refresh token not found.');
+      throw new Error('Tesla API refresh token not found.');
+    }
 
     if (!order.vehicle.vin) {
       throw new Error('Vehicle VIN not found.');
@@ -238,7 +273,8 @@ export default class OrderService {
 
     const result = await this.lockTeslaVehicle(
       order.vehicle.vin,
-      teslaToken?.token
+      teslaToken?.token,
+      teslaToken?.refreshToken
     );
 
     if (result.response.result) {
@@ -259,28 +295,45 @@ export default class OrderService {
     return data;
   };
 
+  private readonly httpCallVehicleCommand = async (
+    url: string,
+    teslaApiToken: string
+  ) => {
+    const myHeaders = new Headers();
+    myHeaders.append('Content-Type', 'application/json');
+    myHeaders.append('Authorization', `Bearer ${teslaApiToken}`);
+
+    const requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: '',
+    };
+
+    const response = await fetch(url, requestOptions);
+    return response;
+  };
+
   private readonly unlockTeslaVehicle = async (
     vehicleVin: string,
-    teslaApiToken: string
+    teslaApiToken: string,
+    teslaApiRefreshToken: string
   ): Promise<any> => {
     const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/door_unlock`;
 
-    console.log('Unlocking Tesla vehicle:', vehicleVin, url, teslaApiToken);
+    console.log('Unlocking Tesla vehicle:', vehicleVin);
 
     try {
-      const myHeaders = new Headers();
-      myHeaders.append('Content-Type', 'application/json');
-      myHeaders.append('Authorization', `Bearer ${teslaApiToken}`);
-
-      const requestOptions = {
-        method: 'POST',
-        headers: myHeaders,
-        body: '',
-      };
-
-      const result = await fetch(url, requestOptions).then(
-        async (response) => await response.json()
-      );
+      let response = await this.httpCallVehicleCommand(url, teslaApiToken);
+      if (response.status === 401) {
+        console.log('Tesla API token expired. Refreshing token...');
+        const newToken = await refreshTeslaApiToken(
+          teslaApiToken,
+          teslaApiRefreshToken
+        );
+        console.log('Token refreshed. Retrying...');
+        response = await this.httpCallVehicleCommand(url, newToken);
+      }
+      const result = await response.json();
 
       console.log('unLocking Tesla vehicle result:', result);
 
@@ -296,26 +349,26 @@ export default class OrderService {
   // Function to lock a Tesla vehicle
   private readonly lockTeslaVehicle = async (
     vehicleVin: string,
-    teslaApiToken: string
+    teslaApiToken: string,
+    teslaApiRefreshToken: string
   ): Promise<any> => {
     const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/door_lock`;
-    console.log('Locking Tesla vehicle:', vehicleVin, url, teslaApiToken);
+    console.log('Locking Tesla vehicle:', vehicleVin);
     try {
-      const myHeaders = new Headers();
-      myHeaders.append('Content-Type', 'application/json');
-      myHeaders.append('Authorization', `Bearer ${teslaApiToken}`);
-
-      const requestOptions = {
-        method: 'POST',
-        headers: myHeaders,
-        body: '',
-      };
-
-      const result = await fetch(url, requestOptions).then(
-        async (response) => await response.json()
-      );
+      let response = await this.httpCallVehicleCommand(url, teslaApiToken);
+      if (response.status === 401) {
+        console.log('Tesla API token expired. Refreshing token...');
+        const newToken = await refreshTeslaApiToken(
+          teslaApiToken,
+          teslaApiRefreshToken
+        );
+        console.log('Token refreshed. Retrying...');
+        response = await this.httpCallVehicleCommand(url, newToken);
+      }
+      const result = await response.json();
 
       console.log('Locking Tesla vehicle result:', result);
+
       return result;
     } catch (error) {
       console.error('Error locking Tesla vehicle:', error);
