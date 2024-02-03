@@ -38,4 +38,21 @@ export default class FileController extends Api {
       next(error);
     }
   };
+
+  public generatePdf = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const pdf = await this.fileService.generateAndSaveInvoice(
+        'f54d7a19-665a-4813-b650-caf7dd3ae8cd',
+        '67d60830-2d42-4fbd-9d8d-f5ebe6759017',
+        ''
+      );
+      res.status(200).send({ pdf });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
