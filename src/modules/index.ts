@@ -13,6 +13,7 @@ import damageReports from './damage-reports/damage-reports.route';
 import messages from './message/message.route';
 import thirdParty from './third-party/third-party.route';
 import notification from './notifications/notifications.route';
+import refunds from './refunds/refunds.route';
 
 const router: Router = Router();
 
@@ -29,5 +30,6 @@ router.use('/damage-reports', damageReports);
 router.use('/messages', messages);
 router.use('/third-party', thirdParty);
 router.use('/notification', notification);
+router.use('/refunds', refunds);
 
 export default router;
