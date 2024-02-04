@@ -78,7 +78,12 @@ profile.get(
   controller.getUserProfileById
 );
 
-profile.get('/drivers', verifyAuthToken, requireAuth, controller.getAllDrivers);
+profile.get(
+  '/drivers/list',
+  verifyAuthToken,
+  requireAuth,
+  controller.getAllDrivers
+);
 
 profile.patch(
   '/status/:id',

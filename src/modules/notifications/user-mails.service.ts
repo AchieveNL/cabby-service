@@ -52,6 +52,23 @@ export default class UserMailService {
     await mailSender(mailMessage);
   }
 
+  async refundUser(email: string, name: string, amount: string) {
+    const mailMessage = generateEmail(
+      email,
+      'Terugbetaling Verwerkt',
+      'Terugbetaling Verwerkt',
+      `
+        Beste ${name}, <br/><br/><br/>
+
+        Goed nieuws! We hebben zojuist een terugbetaling van  €${amount} verwerkt voor je recente transactie.<br/> Deze terugbetaling kan enkele dagen in beslag nemen. Bedankt voor je geduld en begrip. <br/><br/><br/>
+
+        Team Cabby
+    `
+    );
+
+    await mailSender(mailMessage);
+  }
+
   async driverSideMailSender(email: string, name: string) {
     const mailMessage = generateEmail(
       email,

@@ -83,6 +83,7 @@ model userProfile {
   permitDetails permitDetails?
   userVerification userVerification?
   driverRejection driverRejection?
+  refunds        Refunds[]
 }
 
 model driverLicense {
@@ -338,5 +339,14 @@ model TeslaToken {
   refreshToken       String?
   authorizationCode  String
   createdAt DateTime @default(now())
+}
+
+model Refunds {
+  id                 Int      @id @default(autoincrement())
+  amount             Decimal  @db.Decimal(6, 2)
+  userProfileId      String  
+  userProfile        userProfile @relation(fields: [userProfileId], references: [id])
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 }
 
