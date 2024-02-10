@@ -250,10 +250,6 @@ export default class OrderService {
       throw new Error('Rental period has not started yet.');
     }
 
-    if (!order.isVehicleUnlocked) {
-      throw new Error('Vehicle is already locked.');
-    }
-
     const teslaToken = await prisma.teslaToken.findFirst();
 
     if (!teslaToken) {
