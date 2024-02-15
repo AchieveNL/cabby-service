@@ -25,6 +25,8 @@ export default class ProfileService {
         },
       });
 
+      console.log('User profile created:', userProfile);
+
       await this.userMailService.driverSideMailSender(
         userProfileData.user?.email,
         userProfile.firstName
