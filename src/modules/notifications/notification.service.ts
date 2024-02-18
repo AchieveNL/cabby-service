@@ -58,6 +58,7 @@ export class NotificationService {
     };
 
     const accessToken = await getAccessToken();
+    console.log('Token: ', message, accessToken);
     const headers = {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
