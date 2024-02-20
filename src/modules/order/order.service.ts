@@ -220,12 +220,12 @@ export default class OrderService {
     }
 
     if (result?.response?.result) {
-      await this.notificationService.sendNotificationToUser(
-        userId,
-        'Je Tesla is ontgrendeld.',
-        'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
-        JSON.stringify({ type: 'event' })
-      );
+      // await this.notificationService.sendNotificationToUser(
+      //   userId,
+      //   'Je Tesla is ontgrendeld.',
+      //   'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
+      //   JSON.stringify({ type: 'event' })
+      // );
       // Update the database indicating the vehicle is unlocked
       const data = await prisma.order.update({
         where: { id: orderId },
@@ -274,12 +274,12 @@ export default class OrderService {
     );
 
     if (result.response.result) {
-      await this.notificationService.sendNotificationToUser(
-        userId,
-        'Heel goed!',
-        'Je Tesla is nu vergrendeld. 🔐',
-        JSON.stringify({ type: 'event' })
-      );
+      // await this.notificationService.sendNotificationToUser(
+      //   userId,
+      //   'Heel goed!',
+      //   'Je Tesla is nu vergrendeld. 🔐',
+      //   JSON.stringify({ type: 'event' })
+      // );
     }
 
     // Update the database indicating the vehicle is locked
