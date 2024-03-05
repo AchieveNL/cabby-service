@@ -562,12 +562,26 @@ export default class OrderService {
     rentalEndDate: string
   ) => {
     const pricePerDay = await this.retrieveVehiclePricePerDay(vehicleId);
+    const pricePerHour = Number(pricePerDay) / 24; // Calculate the hourly price based on the daily price
+
     const startDate = new Date(rentalStartDate);
     const endDate = new Date(rentalEndDate);
-    const durationInDays =
-      (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24);
 
-    return Number(pricePerDay) * durationInDays;
+    // Calculate the total duration in milliseconds
+    const totalDurationInMs = endDate.getTime() - startDate.getTime();
+
+    // Calculate the duration in full days
+    const durationInDays = Math.floor(totalDurationInMs / (1000 * 3600 * 24));
+
+    // Calculate the remaining hours after subtracting full days
+    const remainingHours =
+      (totalDurationInMs % (1000 * 3600 * 24)) / (1000 * 3600);
+
+    // Calculate total amount by days and remaining hours
+    const totalAmount =
+      durationInDays * Number(pricePerDay) + remainingHours * pricePerHour;
+
+    return totalAmount;
   };
 
   private readonly retrieveVehiclePricePerDay = async (vehicleId: string) => {
