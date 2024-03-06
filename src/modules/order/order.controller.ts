@@ -263,7 +263,9 @@ export default class OrderController extends Api {
     try {
       const { vehicleId } = req.params;
       const availability =
-        await this.orderService.getVehicleBookedPeriodsForNext30Days(vehicleId);
+        await this.orderService.getVehicleBookedPeriodsIncludingOngoing(
+          vehicleId
+        );
 
       return this.send(res, availability);
     } catch (error) {
