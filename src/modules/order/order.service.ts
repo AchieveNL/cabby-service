@@ -607,18 +607,26 @@ export default class OrderService {
     return rejection;
   }
 
-  public getVehicleBookedPeriodsForNext30Days = async (vehicleId: string) => {
+  public getVehicleBookedPeriodsIncludingOngoing = async (
+    vehicleId: string
+  ) => {
     const today = new Date();
-    const thirtyDaysLater = new Date(today);
-    thirtyDaysLater.setDate(today.getDate() + 30);
 
     const orders = await prisma.order.findMany({
       where: {
         vehicleId,
-        rentalStartDate: {
-          gte: today,
-          lte: thirtyDaysLater,
-        },
+        OR: [
+          {
+            rentalStartDate: {
+              gte: today, // Future bookings
+            },
+          },
+          {
+            rentalEndDate: {
+              gte: today, // Ongoing bookings that end in the future
+            },
+          },
+        ],
         status: {
           not: OrderStatus.CANCELED,
         },
