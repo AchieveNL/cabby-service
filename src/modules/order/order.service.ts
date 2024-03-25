@@ -627,9 +627,7 @@ export default class OrderService {
             },
           },
         ],
-        status: {
-          not: OrderStatus.CANCELED,
-        },
+        status: OrderStatus.CONFIRMED,
       },
       orderBy: {
         rentalStartDate: 'asc',
@@ -689,9 +687,7 @@ export default class OrderService {
             },
           },
         ],
-        status: {
-          not: OrderStatus.CANCELED,
-        },
+        status: OrderStatus.CONFIRMED,
       },
     });
 
