@@ -11,8 +11,6 @@ import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
 const router: Router = Router();
 const controller = new PermitController();
 
-router.get('/', controller.getAllVehicles);
-
 router.post(
   '/create',
   verifyAuthToken,
@@ -39,6 +37,8 @@ router.put(
 );
 
 router.get('/available-models', controller.getAvailableVehicleModels);
+
+router.get('/', verifyAuthToken, requireAuth, controller.getAllVehicles);
 
 router.get(
   '/status/:status',
