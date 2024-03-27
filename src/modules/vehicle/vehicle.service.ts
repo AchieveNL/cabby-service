@@ -28,11 +28,7 @@ export default class VehicleService {
 
   public getAllVehicles = async () => {
     try {
-      const vehicles = await prisma.vehicle.findMany({
-        select: {
-          vin: false,
-        },
-      });
+      const vehicles = await prisma.vehicle.findMany();
       return vehicles;
     } catch (error) {
       throw new Error('Failed to retrieve vehicles');
