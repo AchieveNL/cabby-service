@@ -148,4 +148,17 @@ export default class VehicleService {
       throw new Error('Failed to retrieve available vehicle models');
     }
   };
+
+  public getAvailableVehicles = async () => {
+    try {
+      const vehicles = await prisma.vehicle.findMany({
+        select: {
+          vin: false,
+        },
+      });
+      return vehicles;
+    } catch (error) {
+      throw new Error('Failed to retrieve vehicles');
+    }
+  };
 }
