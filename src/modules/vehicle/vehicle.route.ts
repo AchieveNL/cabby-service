@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import PermitController from './vehicle.controller';
+import VehicleController from './vehicle.controller';
 import {
   CreateVehicleDto,
   FilterVehiclesDto,
@@ -9,7 +9,7 @@ import RequestValidator from '@/middlewares/request-validator';
 import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
 
 const router: Router = Router();
-const controller = new PermitController();
+const controller = new VehicleController();
 
 router.post(
   '/create',
@@ -37,6 +37,7 @@ router.put(
 );
 
 router.get('/available-models', controller.getAvailableVehicleModels);
+router.get('/available-vehicles', controller.getAvailableVehicles);
 
 router.get('/', verifyAuthToken, requireAuth, controller.getAllVehicles);
 

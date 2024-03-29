@@ -89,6 +89,24 @@ export default class VehicleController extends Api {
     }
   };
 
+  public getAvailableVehicles = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const vehicles = await this.vehicleService.getAvailableVehicles();
+      return this.send(
+        res,
+        vehicles,
+        HttpStatusCode.Ok,
+        'Vehicles retrieved successfully'
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getVehiclesByStatus = async (
     req: Request,
     res: Response,
