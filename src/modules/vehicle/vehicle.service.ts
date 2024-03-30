@@ -149,11 +149,32 @@ export default class VehicleService {
     }
   };
 
-  public getAvailableVehicles = async () => {
+  public getAllAvailableVehicles = async () => {
     try {
       const vehicles = await prisma.vehicle.findMany({
         select: {
+          id: true,
+          logo: true,
+          companyName: true,
+          model: true,
+          rentalDuration: true,
+          licensePlate: true,
+          category: true,
+          manufactureYear: true,
+          engineType: true,
+          seatingCapacity: true,
+          batteryCapacity: true,
+          uniqueFeature: true,
+          images: true,
+          availability: true,
+          unavailabilityReason: true,
+          currency: true,
+          pricePerDay: true,
+          status: true,
           vin: false,
+          orders: false,
+          rejection: false,
+          damageReports: false,
         },
       });
       return vehicles;
