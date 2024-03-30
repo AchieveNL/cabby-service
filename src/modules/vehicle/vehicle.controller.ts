@@ -95,7 +95,7 @@ export default class VehicleController extends Api {
     next: NextFunction
   ) => {
     try {
-      const vehicles = await this.vehicleService.getAvailableVehicles();
+      const vehicles = await this.vehicleService.getAllAvailableVehicles();
       return this.send(
         res,
         vehicles,
