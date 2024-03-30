@@ -37,12 +37,12 @@ const expressJSDocSwaggerConfig = {
       },
     },
   ],
-  security: {
-    BearerAuth: {
-      type: 'http',
-      scheme: 'bearer',
-    },
-  },
+  // security: {
+  //   BearerAuth: {
+  //     type: 'http',
+  //     scheme: 'bearer',
+  //   },
+  // },
   baseDir,
   // Glob pattern to find your jsdoc files (multiple patterns can be added in an array)
   filesPattern: `${baseDir}/src/**/*.route.ts`,
