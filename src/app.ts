@@ -11,7 +11,7 @@ import expressJSDocSwaggerConfig from './config/express-jsdoc-swagger.config';
 import appConfig from './config/app.config';
 import teslaAuth from './tesla-auth';
 import errorHandler from '@/middlewares/error-handler';
-import routes from '@/modules/index';
+import routes from '@/modules/index.route';
 import prismaClient from '@/lib/prisma';
 
 export const determineCorsOrigin = () => {

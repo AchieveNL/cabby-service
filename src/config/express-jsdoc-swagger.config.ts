@@ -37,15 +37,9 @@ const expressJSDocSwaggerConfig = {
       },
     },
   ],
-  // security: {
-  //   BearerAuth: {
-  //     type: 'http',
-  //     scheme: 'bearer',
-  //   },
-  // },
   baseDir,
   // Glob pattern to find your jsdoc files (multiple patterns can be added in an array)
-  filesPattern: `${baseDir}/src/**/*.route.ts`,
+  filesPattern: `${baseDir}/src/modules/index.route.ts`,
   // URL where SwaggerUI will be rendered
   swaggerUIPath,
   // Expose OpenAPI UI
