@@ -4,7 +4,9 @@ import prisma from './lib/prisma';
 
 const TESLA_CLIENT_ID = process.env.TESLA_CLIENT_ID;
 const TESLA_CLIENT_SECRET = process.env.TESLA_CLIENT_SECRET;
-const REDIRECT_URI = `https://api-staging.cabbyrentals.com/tesla/auth/callback`;
+const REDIRECT_URI = `https://${
+  process.env.NODE_ENV === 'production' ? 'api' : 'api-staging'
+}.cabbyrentals.com/tesla/auth/callback`;
 const audience = 'https://fleet-api.prd.eu.vn.cloud.tesla.com';
 
 const teslaAuth: Router = Router();
