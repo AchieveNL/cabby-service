@@ -36,6 +36,18 @@ export default class VehicleService {
     return errorMessages;
   }
 
+  public updateVehicle = async (id: string, data) => {
+    try {
+      const vehicle = await prisma.vehicle.update({
+        where: { id },
+        data,
+      });
+      return vehicle;
+    } catch (error) {
+      throw new Error('Failed to update vehicle');
+    }
+  };
+
   public getAllVehicles = async () => {
     try {
       const vehicles = await prisma.vehicle.findMany();
