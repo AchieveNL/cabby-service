@@ -19,7 +19,7 @@ export const determineCorsOrigin = () => {
     case 'production':
       return 'https://dashboard.cabbyrentals.com';
     case 'staging':
-      return '*';
+      return 'https://dashboard-staging.cabbyrentals.com';
     case 'development':
       return 'http://localhost:3000';
     default:
