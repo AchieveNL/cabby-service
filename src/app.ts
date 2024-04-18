@@ -54,10 +54,7 @@ class App {
     };
 
     this.express.use(cors(corsOptions));
-
-    if (process.env.NODE_ENV === 'staging') {
-      this.express.options('*', cors(corsOptions));
-    }
+    this.express.options('*', cors(corsOptions));
   }
 
   private disableSettings(): void {
