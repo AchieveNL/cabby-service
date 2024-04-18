@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { type VehicleStatus } from './types';
 import {
   type FilterVehiclesDto,
@@ -7,12 +8,33 @@ import prisma from '@/lib/prisma';
 
 export default class VehicleService {
   public createVehicle = async (data) => {
-    const vehicle = await prisma.vehicle.create({
-      data,
-    });
-
-    return vehicle;
+    try {
+      const vehicle = await prisma.vehicle.create({
+        data,
+      });
+      return vehicle;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        const errorMessages = this.mapPrismaErrorToMessages(error);
+        throw new Error(errorMessages.join('; '));
+      } else {
+        throw new Error('Failed to create vehicle');
+      }
+    }
   };
+
+  mapPrismaErrorToMessages(error: Prisma.PrismaClientKnownRequestError) {
+    const errorMessages: string[] = [];
+    if (error.code === 'P2002' && error.meta) {
+      const targets = error.meta.target as string[];
+      errorMessages.push(`${targets.join(', ')} already exists.`);
+    } else if (error.code === 'P4001') {
+      errorMessages.push(error.message);
+    } else {
+      errorMessages.push('An error occurred while processing your request.');
+    }
+    return errorMessages;
+  }
 
   public updateVehicle = async (id: string, data) => {
     try {
