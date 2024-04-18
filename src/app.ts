@@ -48,14 +48,16 @@ class App {
     this.express.use(cookieParser());
     this.express.use(express.static('public'));
 
-    const corsOrigin = determineCorsOrigin();
+    const corsOptions = {
+      origin: determineCorsOrigin(),
+      credentials: true,
+    };
 
-    this.express.use(
-      cors({
-        origin: corsOrigin,
-        credentials: true,
-      })
-    );
+    this.express.use(cors(corsOptions));
+
+    if (process.env.NODE_ENV === 'staging') {
+      this.express.options('*', cors(corsOptions));
+    }
   }
 
   private disableSettings(): void {
