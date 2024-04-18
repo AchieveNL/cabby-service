@@ -94,6 +94,15 @@ export default class UserController extends Api {
         );
       }
 
+      if (user?.role !== UserRole.ADMIN) {
+        return this.send(
+          res,
+          null,
+          HttpStatusCode.BadRequest,
+          'Ongeldig e-mailadres of wachtwoord'
+        );
+      }
+
       const token = generateToken(user);
       const refreshToken = generateRefreshToken(user);
 
