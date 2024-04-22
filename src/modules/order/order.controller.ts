@@ -103,6 +103,29 @@ export default class OrderController extends Api {
     }
   };
 
+  public startVehicle = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { orderId } = req.params;
+      const unlockResult = await this.orderService.startVehicle(
+        orderId,
+        req.user?.id
+      );
+      return this.send(
+        res,
+        unlockResult,
+        HttpStatusCode.Ok,
+        'Vehicle unlocked successfully'
+      );
+    } catch (error) {
+      console.log(error);
+      next();
+    }
+  };
+
   public completeOrder = async (
     req: Request,
     res: Response,
