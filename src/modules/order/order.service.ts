@@ -291,6 +291,62 @@ export default class OrderService {
     return data;
   };
 
+  public startVehicle = async (orderId: string, userId: string) => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { vehicle: true },
+    });
+
+    if (!order) {
+      throw new Error('Order not found.');
+    }
+
+    const currentDate = new Date();
+    if (currentDate < order.rentalStartDate) {
+      throw new Error('Rental period has not started yet.');
+    }
+
+    const teslaToken = await prisma.teslaToken.findFirst();
+
+    if (!teslaToken) {
+      console.log('Tesla API token not found.');
+      throw new Error('Tesla API token not found.');
+    }
+    if (!teslaToken.refreshToken) {
+      console.log('Tesla API refresh token not found.');
+      throw new Error('Tesla API refresh token not found.');
+    }
+
+    if (!order.vehicle.vin) {
+      throw new Error('Vehicle VIN not found.');
+    }
+
+    // const teslaApiToken = await getTeslaApiToken(orderId);
+
+    const result = await this.startTeslaVehicle(
+      order.vehicle.vin,
+      teslaToken?.token,
+      teslaToken?.refreshToken
+    );
+
+    if (result.response.result) {
+      // await this.notificationService.sendNotificationToUser(
+      //   userId,
+      //   'Heel goed!',
+      //   'Je Tesla is nu vergrendeld. 🔐',
+      //   JSON.stringify({ type: 'event' })
+      // );
+    }
+
+    // Update the database indicating the vehicle is locked
+    const data = await prisma.order.update({
+      where: { id: orderId },
+      data: { isVehicleUnlocked: false },
+    });
+
+    return data;
+  };
+
   private readonly httpCallVehicleCommand = async (
     url: string,
     teslaApiToken: string
@@ -349,6 +405,35 @@ export default class OrderService {
     teslaApiRefreshToken: string
   ): Promise<any> => {
     const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/door_lock`;
+    console.log('Locking Tesla vehicle:', vehicleVin);
+    try {
+      let response = await this.httpCallVehicleCommand(url, teslaApiToken);
+      if (response.status === 401) {
+        console.log('Tesla API token expired. Refreshing token...');
+        const newToken = await refreshTeslaApiToken(
+          teslaApiToken,
+          teslaApiRefreshToken
+        );
+        console.log('Token refreshed. Retrying...');
+        response = await this.httpCallVehicleCommand(url, newToken);
+      }
+      const result = await response.json();
+
+      console.log('Locking Tesla vehicle result:', result);
+
+      return result;
+    } catch (error) {
+      console.error('Error locking Tesla vehicle:', error);
+      throw new Error('Failed to lock Tesla vehicle.');
+    }
+  };
+
+  private readonly startTeslaVehicle = async (
+    vehicleVin: string,
+    teslaApiToken: string,
+    teslaApiRefreshToken: string
+  ): Promise<any> => {
+    const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/remote_start_drive`;
     console.log('Locking Tesla vehicle:', vehicleVin);
     try {
       let response = await this.httpCallVehicleCommand(url, teslaApiToken);
