@@ -242,7 +242,7 @@ export default class OrderService {
     });
 
     if (!order) {
-      throw new Error('Order not found.');
+      throw new Error('Order not found..');
     }
 
     const currentDate = new Date();
