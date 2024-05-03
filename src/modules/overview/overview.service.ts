@@ -2,7 +2,9 @@ import prisma from '@/lib/prisma';
 
 export default class OverviewService {
   public getOverview = async () => {
-    const driversTotal = await prisma.userProfile.count();
+    const driversTotal = await prisma.userProfile.count({
+      where: { status: { in: ['ACTIVE', 'APPROVED'] } },
+    });
     const vehiclesTotal = await prisma.vehicle.count();
     const ordersTotal = await prisma.order.count();
     const ordersRejectionsTotal = await prisma.orderRejection.count();
