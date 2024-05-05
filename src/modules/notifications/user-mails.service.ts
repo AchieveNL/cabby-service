@@ -1,45 +1,69 @@
+import { readFile } from 'fs/promises';
+import path from 'path';
 import { mailSender } from '@/config/mailer.config';
 
-const generateEmail = (
+const generateEmail = async (
   email: string,
   subject: string,
   text: string,
   html: string
 ) => {
-  return {
-    to: email,
-    from: 'no-reply@cabbyrentals.nl',
-    subject,
-    text,
-    html,
-  };
+  try {
+    const data = await readFile(
+      path.join(__dirname, '../../../public/templates/email_template.html'),
+      'utf8'
+    );
+
+    // Typecast data to string
+    const template = data as unknown as string;
+
+    // Replace placeholders in the HTML template
+    const replacedHtml = template
+      .replace('{{title}}', subject)
+      .replace('{{content}}', text)
+      .replace('{{subcontent}}', '')
+      .replace('{{action}}', '');
+
+    return {
+      to: email,
+      from: 'no-reply@cabbyrentals.nl',
+      subject,
+      text,
+      html: replacedHtml,
+    };
+  } catch (err) {
+    console.error('Error reading file:', err);
+    throw err; // Propagate the error
+  }
 };
 
 export default class UserMailService {
   async optMailSender(email: string, otp: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Your OTP for Cabby Rentals',
       `Your OTP for Cabby Rentals is: ${otp}. It will expire in 15 minutes.`,
       `
         <strong>Your OTP for Cabby Rentals is:</strong> 
+        </br></br>
         <h2>${otp}</h2>
+        </br></br>
         <p>This OTP will expire in 15 minutes.</p>
       `
     );
-    console.log('OTP email sent successfully.', otp);
+    console.log('OTP email sent successfully.', mailMessage);
 
     await mailSender(mailMessage);
   }
 
   /// beste user or $P{name}
   async accountDeletedMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Account Verwijderd - Actie Vereist',
       `Account Verwijderd - Actie Vereist`,
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
 
       We willen je informeren dat een gebruiker zojuist hun Cabby-account heeft verwijderd. De gebruiker is ${name} en ze hebben ervoor gekozen om hun account permanent te sluiten.
 
@@ -53,12 +77,12 @@ export default class UserMailService {
   }
 
   async refundUser(email: string, name: string, amount: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Terugbetaling Verwerkt',
       'Terugbetaling Verwerkt',
       `
-        Beste ${name}, <br/><br/><br/>
+        Beste ${name}, </br></br></br>
 
         Goed nieuws! We hebben zojuist een terugbetaling van  €${amount} verwerkt voor je recente transactie.<br/> Deze terugbetaling kan enkele dagen in beslag nemen. Bedankt voor je geduld en begrip. <br/><br/><br/>
 
@@ -70,12 +94,12 @@ export default class UserMailService {
   }
 
   async driverSideMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Inschrijving`,
       'Onderwerp: Welkom bij Cabby - Borg Betaling Gelukt!',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
 
       Welkom bij Cabby, waar jouw reis begint met gemak en
       betrouwbaarheid! We willen je hartelijk bedanken voor het
@@ -92,12 +116,12 @@ export default class UserMailService {
   }
 
   async driverApprovedMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Bestuurder Goedgekeurd`,
       'Onderwerp: Jouw Cabby Account is Goedgekeurd!',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Fantastisch nieuws - je Cabby-account is nu officieel
       goedgekeurd. Je hebt nu de sleutel tot een wereld van
       mogelijkheden om taxi's te huren met gemak. Welkom aan
@@ -111,12 +135,12 @@ export default class UserMailService {
   }
 
   async driverRejectedMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Bestuurder Afgekeurd`,
       'Onderwerp: Belangrijke Update over je Cabby Account',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Het spijt ons dat we je moeten informeren dat je Cabby-account
       is afgekeurd vanwege deingediende documenten onvolledig
       waren. We begrijpen dat dit teleurstellend nieuws kan zijn, maar
@@ -131,12 +155,12 @@ export default class UserMailService {
   }
 
   async driverBlockedMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Bestuurder Geblokkeerd`,
       'Onderwerp: Belangrijke Mededeling - Je Cabby Account is Geblokkeerd',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Helaas hebben we moeten besluiten om je Cabby-account te
       blokkeren vanwege een overtreding van ons gebruikersbeleid.
       We begrijpen dat dit een ongemak kan zijn, en we staan klaar
@@ -151,12 +175,12 @@ export default class UserMailService {
   }
 
   async refundMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Terugbetaling`,
       'Onderwerp: Terugbetaling Verwerkt',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Goed nieuws! We hebben zojuist een terugbetaling verwerkt
       voor je recente transactie. Je kunt de details van de
       terugbetaling in je account bekijken. Bedankt voor je geduld en
@@ -171,12 +195,12 @@ export default class UserMailService {
   }
 
   async rentStartedMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Verhuur Gestart`,
       'Onderwerp: Jouw Cabby Verhuur is Gestart!',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Het avontuur begint nu! Jouw huurperiode met Cabby is zojuist
       gestart. Spring in de taxi en geniet van de rit. We wensen je een
       geweldige tijd op de weg.
@@ -190,12 +214,12 @@ export default class UserMailService {
   }
 
   async rentCanceledMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Verhuur Geannuleerd`,
       'Onderwerp: Jouw Cabby Verhuur is Geannuleerd      ',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Het spijt ons te horen dat je je recente huurperiode hebt
 geannuleerd vanwege een wijziging in de planning. We
 begrijpen dat plannen kunnen veranderen, en we zijn hier om te
@@ -210,12 +234,12 @@ Soms is het beste avontuur het volgende avontuur
   }
 
   async rentCompletedMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Verhuur Afgerond`,
       'Onderwerp: Jouw Cabby Verhuur is Afgerond',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Gefeliciteerd! Je hebt je huurperiode met succes afgerond.
       Bedankt dat je voor Cabby hebt gekozen. We hopen dat je een
       geweldige reis hebt gehad en kijken uit naar je volgende rit.
@@ -229,12 +253,12 @@ Soms is het beste avontuur het volgende avontuur
   }
 
   async damageReportEnteredMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Schaderapport Ingevoerd`,
       'Onderwerp: Schaderapport Ontvangen',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Bedankt voor het indienen van je schaderapport. Ons team zal
       dit zo snel mogelijk bekijken en contact met je opnemen voor
       verdere stappen. We waarderen je eerlijkheid en medewerking.
@@ -248,12 +272,12 @@ Soms is het beste avontuur het volgende avontuur
   }
 
   async driverBlockedOnacceptabelMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Onacceptabel Rijgedrag      `,
       'Onderwerp: Belangrijke Mededeling - Je Cabby Account is Geblokkeerd ',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Helaas hebben we moeten besluiten om je Cabby-account te
       blokkeren vanwege ernstig onacceptabel rijgedrag. We hebben
       vastgesteld dat je met onze voertuigen op gevaarlijke
@@ -275,12 +299,12 @@ Soms is het beste avontuur het volgende avontuur
   }
 
   async driverBlockedSchendingMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Schending van Vertrouwelijkheid en  Privacy`,
       'Onderwerp: Belangrijke Mededeling - Je Cabby Account is Geblokkeerd',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Helaas moeten we je informeren dat we je Cabby-account
       hebben geblokkeerd vanwege ernstige schendingen van
       vertrouwelijkheid en privacy. We hebben geconstateerd dat je
@@ -302,12 +326,12 @@ Soms is het beste avontuur het volgende avontuur
   }
 
   async driverBlockedOngeldigeMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Ongeldige of Verlopen Vergunning`,
       'Onderwerp: Belangrijke Mededeling - Je Cabby Account is Geblokkeerd',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Het spijt ons te moeten meedelen dat we je Cabby-account
       hebben geblokkeerd vanwege een ongeldige of verlopen
       vergunning. We hebben vastgesteld dat je niet langer beschikt
@@ -327,12 +351,12 @@ Soms is het beste avontuur het volgende avontuur
   }
 
   async driverBlockedHerhaaldeMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Herhaalde Schendingen van Gebruiksvoorwaarden`,
       'Onderwerp: Belangrijke Mededeling - Je Cabby Account is Geblokkeerd',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Het spijt ons te moeten meedelen dat we je Cabby-account
       hebben geblokkeerd vanwege herhaalde schendingen van
       onze gebruiksvoorwaarden. Dit omvat ongepast gedrag en
@@ -354,12 +378,12 @@ Soms is het beste avontuur het volgende avontuur
   }
 
   async driverBlockedVoertuigproblemenMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Voertuigproblemen`,
       'Onderwerp: Belangrijke Mededeling - Je Cabby Account is Geblokkeerd',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Het spijt ons te moeten meedelen dat we je Cabby-account
       hebben geblokkeerd vanwege voertuigproblemen. We hebben
       herhaalde meldingen ontvangen dat je opzettelijk schade hebt
@@ -381,12 +405,12 @@ Soms is het beste avontuur het volgende avontuur
   }
 
   async driverBlockedFraudeMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       `Fraude`,
       'Onderwerp: Belangrijke Mededeling - Je Cabby Account is Geblokkeerd',
       `
-      Beste ${name},
+      Beste ${name}, </br></br></br>
       Het spijt ons te moeten meedelen dat we je Cabby-account
       hebben geblokkeerd vanwege fraude.
       Na een grondig onderzoek hebben we vastgesteld dat je

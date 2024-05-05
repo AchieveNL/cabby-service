@@ -1,23 +1,45 @@
+import { readFile } from 'fs/promises';
+import path from 'path';
 import { mailSender } from '@/config/mailer.config';
 
-const generateEmail = (
+const generateEmail = async (
   email: string,
   subject: string,
   text: string,
   html: string
 ) => {
-  return {
-    to: 'info@cabbyrentals.nl',
-    from: 'no-reply@cabbyrentals.nl',
-    subject,
-    text,
-    html,
-  };
+  try {
+    const data = await readFile(
+      path.join(__dirname, '../../../public/templates/email_template.html'),
+      'utf8'
+    );
+
+    // Typecast data to string
+    const template = data as unknown as string;
+
+    // Replace placeholders in the HTML template
+    const replacedHtml = template
+      .replace('{{title}}', subject)
+      .replace('{{content}}', text)
+      .replace('{{subcontent}}', '')
+      .replace('{{action}}', '');
+
+    return {
+      to: email,
+      from: 'no-reply@cabbyrentals.nl',
+      subject,
+      text,
+      html: replacedHtml,
+    };
+  } catch (err) {
+    console.error('Error reading file:', err);
+    throw err; // Propagate the error
+  }
 };
 
 export default class AdminMailService {
   async optMailSender(email: string, otp: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Your OTP for Cabby Rentals',
       `Your OTP for Cabby Rentals is: ${otp}. It will expire in 15 minutes.`,
@@ -32,7 +54,7 @@ export default class AdminMailService {
   }
 
   async AdminMailsSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Nieuwe Registratie - Actie Vereist',
       `Nieuwe Registratie - Actie Vereist`,
@@ -52,7 +74,7 @@ export default class AdminMailService {
   }
 
   async newRegistrationMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Nieuwe Registratie - Actie Vereist',
       `Nieuwe Registratie - Actie Vereist`,
@@ -76,7 +98,7 @@ export default class AdminMailService {
     name: string,
     vehicleNumber: string
   ) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Huur Geannuleerd - Actie Vereist',
       `Huur Geannuleerd - Actie Vereist`,
@@ -101,7 +123,7 @@ export default class AdminMailService {
     name: string,
     vehicleNumber: string
   ) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Huur Gestart - Actie Vereist',
       `Huur Gestart - Actie Vereist`,
@@ -128,7 +150,7 @@ export default class AdminMailService {
     name: string,
     vehicleNumber: string
   ) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Huur Gestart - Actie Vereist',
       `Huur Gestart - Actie Vereist`,
@@ -154,7 +176,7 @@ export default class AdminMailService {
     name: string,
     vehicleNumber: string
   ) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Schademelding Ontvangen - Actie Vereist*',
       `Schademelding Ontvangen - Actie Vereist*`,
@@ -175,7 +197,7 @@ export default class AdminMailService {
   }
 
   async accountDeletedMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Account Verwijderd - Actie Vereist',
       `Account Verwijderd - Actie Vereist`,
@@ -194,7 +216,7 @@ export default class AdminMailService {
   }
 
   async paymentIssuesMailSender(email: string, paymentErrorMessage: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Betalingsprobleem - Actie Vereist',
       `Betalingsprobleem - Actie Vereist`,
@@ -215,7 +237,7 @@ export default class AdminMailService {
   }
 
   async userFeedbackMailSender(email: string, userFeedback: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Gebruikersfeedback - Lees de Feedback van Onze Gebruikers',
       `Gebruikersfeedback - Lees de Feedback van Onze Gebruikers`,
@@ -241,7 +263,7 @@ export default class AdminMailService {
     name: string,
     reason: string
   ) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Account Geblokkeerd - Actie Vereist',
       `Account Geblokkeerd - Actie Vereist`,
@@ -266,7 +288,7 @@ export default class AdminMailService {
     vehicleNumber: string,
     specificMaintainanceRequirement: string
   ) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Voertuigonderhoud - Actie Vereist',
       `Voertuigonderhoud - Actie Vereist`,
@@ -287,7 +309,7 @@ export default class AdminMailService {
   }
 
   async billingInquiriesMailSender(email: string, specificQuestion: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Factuurvragen - Actie Vereist',
       `Factuurvragen - Actie Vereist`,
@@ -314,7 +336,7 @@ export default class AdminMailService {
     name: string,
     specificDocument: string
   ) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Ontbrekende Chauffeursdocumentatie - Actie Vereist',
       `Ontbrekende Chauffeursdocumentatie - Actie Vereist`,
@@ -335,7 +357,7 @@ export default class AdminMailService {
   }
 
   async emergencyAlertsMailSender(email: string, description: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Noodwaarschuwing - Onmiddellijke Actie Vereist',
       `Noodwaarschuwing - Onmiddellijke Actie Vereist`,
@@ -354,7 +376,7 @@ export default class AdminMailService {
   }
 
   async driverPerformanceMailSender(email: string, feedback: string) {
-    const mailMessage = generateEmail(
+    const mailMessage = await generateEmail(
       email,
       'Chauffeursprestaties - Feedback en Beoordelingen',
       `Chauffeursprestaties - Feedback en Beoordelingen`,
