@@ -15,4 +15,7 @@ notificationRouter.post(
   controller.sendNotification
 );
 
+// notificationRouter.get('/test-email', async () => {
+//   await new UserMailService().optMailSender('', '12345');
+// });
 export default notificationRouter;
