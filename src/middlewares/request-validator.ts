@@ -31,7 +31,6 @@ export default class RequestValidator {
           next();
           return;
         }
-
         const rawErrors: string[] = [
           ...new Set([
             ...errors.flatMap((error) =>

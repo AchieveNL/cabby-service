@@ -65,32 +65,32 @@ enum UserProfileStatus {
 }
 
 model userProfile {
-  id            String            @id @default(uuid())
-  userId        String            @unique
-  city          String
-  fullAddress   String
-  fullName      String
-  lastName      String
-  firstName     String
-  phoneNumber   String?
-  profilePhoto  String?
-  signature     String?
-  zip           String?
-  dateOfBirth   String?
-  status        UserProfileStatus @default(REQUIRE_REGISTRATION_FEE)
-  user          user              @relation(fields: [userId], references: [id])
-  driverLicense driverLicense?
-  permitDetails permitDetails?
+  id               String            @id @default(uuid())
+  userId           String            @unique
+  city             String
+  fullAddress      String
+  fullName         String
+  lastName         String
+  firstName        String
+  phoneNumber      String?
+  profilePhoto     String?
+  signature        String?
+  zip              String?
+  dateOfBirth      String?
+  status           UserProfileStatus @default(REQUIRE_REGISTRATION_FEE)
+  user             user              @relation(fields: [userId], references: [id])
+  driverLicense    driverLicense?
+  permitDetails    permitDetails?
   userVerification userVerification?
-  driverRejection driverRejection?
-  refunds        Refunds[]
+  driverRejection  driverRejection?
+  refunds          Refunds[]
 }
 
 model driverLicense {
   id                  String      @id @default(uuid())
   driverLicenseBack   String?
   driverLicenseExpiry String?
-  bsnNumber     String?
+  bsnNumber           String?
   driverLicenseFront  String?
   driverLicense       String?
   userProfileId       String      @unique
@@ -109,14 +109,14 @@ model permitDetails {
 }
 
 model userVerification {
-  id                 String   @id @default(uuid())
-  userProfileId      String    @unique
-   
-   extractedFirstName  String?
-  extractedLastName   String?
-  extractedBsnNumber  String?
+  id            String @id @default(uuid())
+  userProfileId String @unique
+
+  extractedFirstName   String?
+  extractedLastName    String?
+  extractedBsnNumber   String?
   extractedDateOfBirth String?
-  extractedExpiryDate String?
+  extractedExpiryDate  String?
 
   // Existing data fields (from user profile)
   existingFirstName   String?
@@ -125,7 +125,6 @@ model userVerification {
   existingDateOfBirth String?
   existingExpiryDate  String?
 
-
   isFirstNameMatch   Boolean
   isLastNameMatch    Boolean
   isExpiryDateMatch  Boolean
@@ -133,15 +132,15 @@ model userVerification {
   isDateOfBirthMatch Boolean
   createdAt          DateTime @default(now())
 
-  userProfile     userProfile @relation(fields: [userProfileId], references: [id])
+  userProfile userProfile @relation(fields: [userProfileId], references: [id])
 }
 
 model driverRejection {
-  id      String   @id @default(uuid())
-  userProfileId  String    @unique
-  reason  String 
-  date    DateTime @default(now())
-  userProfile     userProfile @relation(fields: [userProfileId], references: [id])
+  id            String      @id @default(uuid())
+  userProfileId String      @unique
+  reason        String
+  date          DateTime    @default(now())
+  userProfile   userProfile @relation(fields: [userProfileId], references: [id])
 }
 
 enum VehicleStatus {
@@ -171,6 +170,7 @@ model vehicle {
   pricePerDay          Decimal?      @db.Decimal(6, 2)
   status               VehicleStatus @default(PENDING)
   vin                  String?
+  timeframes           Json?
 
   orders        order[]
   rejection     vehicleRejection?
@@ -241,19 +241,19 @@ enum OrderStatus {
 }
 
 model order {
-  id              String      @id @default(uuid())
-  vehicleId       String
-  userId          String
-  status          OrderStatus @default(UNPAID)
-  totalAmount     Decimal     @db.Decimal(6, 2)
-  rentalStartDate DateTime
-  rentalEndDate   DateTime
-  paymentId       String?     @unique
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  note            String?
-  isVehicleUnlocked  Boolean    @default(false)
-  
+  id                String      @id @default(uuid())
+  vehicleId         String
+  userId            String
+  status            OrderStatus @default(UNPAID)
+  totalAmount       Decimal     @db.Decimal(6, 2)
+  rentalStartDate   DateTime
+  rentalEndDate     DateTime
+  paymentId         String?     @unique
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  note              String?
+  isVehicleUnlocked Boolean     @default(false)
+
   vehicle   vehicle         @relation(fields: [vehicleId], references: [id])
   user      user            @relation(fields: [userId], references: [id])
   payment   payment?
@@ -327,26 +327,26 @@ model CustomerSupportRepresentative {
 model userTokens {
   id     String @id @default(uuid())
   userId String
-  token String
+  token  String
 
   user user @relation(fields: [userId], references: [id])
+
   @@unique([userId])
 }
 
 model TeslaToken {
-  id                 Int      @id @default(autoincrement())
-  token              String
-  refreshToken       String?
-  authorizationCode  String
-  createdAt DateTime @default(now())
+  id                Int      @id @default(autoincrement())
+  token             String
+  refreshToken      String?
+  authorizationCode String
+  createdAt         DateTime @default(now())
 }
 
 model Refunds {
-  id                 Int      @id @default(autoincrement())
-  amount             Decimal  @db.Decimal(6, 2)
-  userProfileId      String  
-  userProfile        userProfile @relation(fields: [userProfileId], references: [id])
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  id            Int         @id @default(autoincrement())
+  amount        Decimal     @db.Decimal(6, 2)
+  userProfileId String
+  userProfile   userProfile @relation(fields: [userProfileId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
-
