@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
 import { differenceInHours } from 'date-fns';
 // eslint-disable-next-line
@@ -607,8 +608,14 @@ export default class OrderService {
   };
 
   public getOrdersByStatus = async (status) => {
+    let where: Prisma.orderWhereInput = { status };
+    if (status === 'UNPAID') {
+      where = {
+        status: { notIn: ['CONFIRMED', 'COMPLETED', 'CANCELED', 'REJECTED'] },
+      };
+    }
     const orders = await prisma.order.findMany({
-      where: { status },
+      where,
       include: {
         user: {
           select: {
