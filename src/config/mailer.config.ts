@@ -7,7 +7,7 @@ export const mailSender = async (otpMessage) => {
     // Determine the recipient based on the environment
     let recipient = otpMessage.to;
     if (process.env.NODE_ENV !== 'production') {
-      recipient = 'no-reply@cabbyrentals.nl'; // Override recipient for non-production environments
+      recipient = process.env.TEST_EMAIL ?? 'no-reply@cabbyrentals.nl'; // Override recipient for non-production environments
     }
 
     const message = {
