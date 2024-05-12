@@ -90,7 +90,7 @@ export default class OrderService {
   public getOrderDetailsWithStatus = async (orderId: string) => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { vehicle: true },
+      include: { vehicle: true, payment: true },
     });
 
     if (!order) {
