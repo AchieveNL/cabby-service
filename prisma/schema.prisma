@@ -164,6 +164,7 @@ model vehicle {
   batteryCapacity      String?
   uniqueFeature        String?
   images               String[]
+  papers               String[]
   availability         String?
   unavailabilityReason String?
   currency             String?       @default("EUR")
@@ -248,6 +249,7 @@ model order {
   totalAmount       Decimal     @db.Decimal(6, 2)
   rentalStartDate   DateTime
   rentalEndDate     DateTime
+  stopRentDate      DateTime?
   paymentId         String?     @unique
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt

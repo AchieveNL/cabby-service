@@ -8,6 +8,7 @@ import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
 import UserMailService from '../notifications/user-mails.service';
 import { NotificationService } from '../notifications/notification.service';
+import OrderMailService from './order-mails.service';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
@@ -38,6 +39,7 @@ export default class OrderService {
   private readonly paymentService = new PaymentService();
   private readonly adminMailService = new AdminMailService();
   private readonly userMailService = new UserMailService();
+  private readonly orderMailService = new OrderMailService();
   private readonly notificationService = new NotificationService();
 
   public createOrder = async (dto) => {
@@ -477,7 +479,7 @@ export default class OrderService {
 
     const completedOrder = await prisma.order.update({
       where: { id: orderId },
-      data: { status: 'COMPLETED' },
+      data: { status: 'COMPLETED', stopRentDate: new Date() },
     });
 
     const user = await prisma.user.findUnique({
@@ -597,7 +599,13 @@ export default class OrderService {
   };
 
   public confirmOrder = async (orderId: string) => {
-    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: { select: { email: true } },
+        vehicle: { select: { papers: true } },
+      },
+    });
 
     if (!order) throw new Error('Order not found');
 
@@ -605,13 +613,22 @@ export default class OrderService {
       where: { id: orderId },
       data: { status: 'CONFIRMED' },
     });
+
+    await this.orderMailService.orderConfirmedMailSender(
+      order.user.email,
+      order.vehicle.papers
+    );
   };
 
   public getOrdersByStatus = async (status) => {
     let where: Prisma.orderWhereInput = { status };
     if (status === 'UNPAID') {
       where = {
-        status: { notIn: ['CONFIRMED', 'COMPLETED', 'CANCELED', 'REJECTED'] },
+        status: { notIn: ['CANCELED', 'REJECTED'] },
+        OR: [
+          { rentalEndDate: { lte: new Date() } },
+          // { rentalEndDate: { lte: {  } } },
+        ],
       };
     }
     const orders = await prisma.order.findMany({
