@@ -463,6 +463,7 @@ export default class OrderService {
   async completeOrder(orderId: string, userId: string) {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
+      include: { vehicle: true },
     });
 
     if (!order) {
@@ -496,7 +497,8 @@ export default class OrderService {
     await this.adminMailService.rentCompletedMailSender(
       user?.email!,
       user?.profile?.fullName!,
-      order.vehicleId
+      order.vehicle.licensePlate ?? '',
+      order.vehicle.model ?? ''
     );
 
     await this.userMailService.rentCompletedMailSender(
