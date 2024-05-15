@@ -174,6 +174,7 @@ export default class VehicleService {
   public getAllAvailableVehicles = async () => {
     try {
       const vehicles = await prisma.vehicle.findMany({
+        where: { status: 'ACTIVE' },
         select: {
           id: true,
           logo: true,
