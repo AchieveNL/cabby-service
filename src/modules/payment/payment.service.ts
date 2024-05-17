@@ -128,18 +128,24 @@ export default class PaymentService {
       });
     }
 
+    const deposit = await prisma.settings.findUnique({
+      where: { key: 'deposit' },
+    });
+
+    const fees = Number(deposit?.value).toFixed(2) || REGISTRATION_FEE;
+
     const registrationOrder = await prisma.registrationOrder.create({
       data: {
         userId: userId as string,
         status: RegistrationOrderStatus.PENDING,
-        totalAmount: parseFloat(REGISTRATION_FEE),
+        totalAmount: parseFloat(fees),
       },
     });
 
     const payment = await this.mollie.payments.create({
       amount: {
         currency: 'EUR',
-        value: REGISTRATION_FEE,
+        value: fees,
       },
       description: `Registration Order #${registrationOrder.id}`,
       redirectUrl: 'cabby://registration-payment-completed',
