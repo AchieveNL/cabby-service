@@ -163,6 +163,11 @@ model vehicle {
   seatingCapacity      String?
   batteryCapacity      String?
   uniqueFeature        String?
+  streetName           String?
+  streetNumber         String?
+  zipcodeNumber        String?
+  zipcodeCharacter     String?
+  state                String?
   images               String[]
   papers               String[]
   availability         String?
@@ -351,4 +356,10 @@ model Refunds {
   userProfile   userProfile @relation(fields: [userProfileId], references: [id])
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+}
+
+model Settings {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
 }
