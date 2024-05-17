@@ -90,6 +90,26 @@ export class CreateVehicleDto {
   vin?: string;
 
   @IsOptional()
+  @IsString()
+  streetName?: string;
+
+  @IsOptional()
+  @IsString()
+  streetNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  zipcodeNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  zipcodeCharacter?: string;
+
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  @IsOptional()
   timeframes?: {
     day: string;
     title: string;
