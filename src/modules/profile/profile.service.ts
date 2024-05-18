@@ -205,7 +205,7 @@ export default class ProfileService {
   }
 
   async getUserProfileByStatus(status: UserProfileStatus) {
-    console.log(status);
+    // console.log(status);
     return await prisma.userProfile.findMany({
       where: {
         status,
