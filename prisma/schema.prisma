@@ -247,19 +247,20 @@ enum OrderStatus {
 }
 
 model order {
-  id                String      @id @default(uuid())
-  vehicleId         String
-  userId            String
-  status            OrderStatus @default(UNPAID)
-  totalAmount       Decimal     @db.Decimal(6, 2)
-  rentalStartDate   DateTime
-  rentalEndDate     DateTime
-  stopRentDate      DateTime?
-  paymentId         String?     @unique
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  note              String?
-  isVehicleUnlocked Boolean     @default(false)
+  id                   String      @id @default(uuid())
+  vehicleId            String
+  userId               String
+  status               OrderStatus @default(UNPAID)
+  totalAmount          Decimal     @db.Decimal(6, 2)
+  rentalStartDate      DateTime
+  rentalEndDate        DateTime
+  stopRentDate         DateTime?
+  paymentId            String?     @unique
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  note                 String?
+  isVehicleUnlocked    Boolean     @default(false)
+  overdueEmailSentDate DateTime?
 
   vehicle   vehicle         @relation(fields: [vehicleId], references: [id])
   user      user            @relation(fields: [userId], references: [id])

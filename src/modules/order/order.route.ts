@@ -91,6 +91,24 @@ router.post(
 );
 
 router.post(
+  '/stop',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  RequestValidator.validate(CancelOrderDto),
+  orderController.stopOrder
+);
+
+router.post(
+  '/complete-admin',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  RequestValidator.validate(CancelOrderDto),
+  orderController.completeOrderAdmin
+);
+
+router.post(
   '/confirm',
   verifyAuthToken,
   requireAuth,

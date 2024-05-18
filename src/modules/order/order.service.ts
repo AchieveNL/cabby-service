@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma, order } from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
 import { differenceInHours } from 'date-fns';
 // eslint-disable-next-line
@@ -12,6 +12,7 @@ import OrderMailService from './order-mails.service';
 import { OrderStatus } from './types';
 import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
+import { netherlandsTimeNow } from '@/utils/date';
 
 const weakTheVehicleUp = async (vehicleTag: string, token: string) => {
   const myHeaders = new Headers();
@@ -478,9 +479,18 @@ export default class OrderService {
       throw new Error('Not authorized to complete this order.');
     }
 
+    const rentalEndDate = order.rentalEndDate;
+    const now = netherlandsTimeNow.toDate();
+    const isOverdue = rentalEndDate < now;
+
+    const updateData: Prisma.orderUpdateInput = { stopRentDate: now };
+    if (!isOverdue) {
+      updateData.status = OrderStatus.COMPLETED;
+    }
+
     const completedOrder = await prisma.order.update({
       where: { id: orderId },
-      data: { status: 'COMPLETED', stopRentDate: new Date() },
+      data: updateData,
     });
 
     const user = await prisma.user.findUnique({
@@ -561,14 +571,50 @@ export default class OrderService {
     });
   };
 
+  public completeOrderAdmin = async (orderId: string) => {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+
+    if (!order) {
+      throw new Error('Order not found.');
+    }
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status: OrderStatus.COMPLETED },
+    });
+  };
+
+  public stopOrder = async (orderId: string) => {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+
+    if (!order) {
+      throw new Error('Order not found.');
+    }
+
+    const rentalEndDate = order.rentalEndDate;
+    const now = netherlandsTimeNow.toDate();
+    const isOverdue = rentalEndDate < now;
+
+    const updateData: Prisma.orderUpdateInput = { stopRentDate: now };
+    if (!isOverdue) {
+      updateData.status = OrderStatus.COMPLETED;
+    }
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: updateData,
+    });
+  };
+
   public cancelOrder = async (orderId: string) => {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
 
     if (!order) throw new Error('Order not found');
 
-    const now = new Date();
+    const now = netherlandsTimeNow.toDate();
     const rentalStartDate = new Date(order.rentalStartDate);
 
+    // const lessThanDay = dayjs(dayjs()).diff(rentalStartDate, 'h') <= 24;
     if (differenceInHours(rentalStartDate, now) <= 24) {
       throw new Error(
         'Cannot cancel order less than 24 hours before rental start date'
@@ -623,26 +669,37 @@ export default class OrderService {
   };
 
   public getOrdersByStatus = async (status) => {
-    let where: Prisma.orderWhereInput = { status };
-    if (status === 'UNPAID') {
-      where = {
-        status: { notIn: ['CANCELED', 'REJECTED'] },
-        OR: [
-          { rentalEndDate: { lte: new Date() } },
-          // { rentalEndDate: { lte: {  } } },
-        ],
-      };
-    }
-    const orders = await prisma.order.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            profile: true,
-          },
+    let orders: order[] = [];
+    const include: Prisma.orderInclude = {
+      user: {
+        select: {
+          profile: true,
         },
-        vehicle: true,
       },
+      vehicle: true,
+    };
+
+    if (status === 'UNPAID') {
+      const ordersIds = await prisma.$queryRaw<order[]>`SELECT
+	*
+FROM
+	"order"
+WHERE ("stopRentDate" > "rentalEndDate"
+	OR "rentalEndDate" < now())
+AND status = 'CONFIRMED';
+
+                                      `;
+
+      orders = await prisma.order.findMany({
+        where: { id: { in: ordersIds.map((el) => el.id) } },
+        include,
+      });
+
+      return orders;
+    }
+    orders = await prisma.order.findMany({
+      where: { status },
+      include,
     });
     return orders;
   };
