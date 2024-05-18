@@ -8,12 +8,14 @@ import { UserStatus } from '../users/types';
 import { OrderStatus } from '../order/types';
 import FileService from '../file/file.service';
 import AdminMailService from '../notifications/admin-mails.service';
+import UserMailService from '../notifications/user-mails.service';
 import prisma from '@/lib/prisma';
 import { REGISTRATION_FEE } from '@/utils/constants';
 
 export default class PaymentService {
   readonly fileService = new FileService();
   readonly adminMailService = new AdminMailService();
+  readonly userMailService = new UserMailService();
   readonly mollie = mollieClient.createMollieClient({
     apiKey: process.env.MOLLIE_API_KEY as string,
   });
@@ -198,6 +200,10 @@ export default class PaymentService {
         where: { id: updatedPayment.userId },
       });
       await this.adminMailService.newRegistrationMailSender(
+        userWithEmail?.email!,
+        user.fullName
+      );
+      await this.userMailService.newRegistrationMailSender(
         userWithEmail?.email!,
         user.fullName
       );
