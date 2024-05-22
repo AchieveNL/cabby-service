@@ -107,12 +107,12 @@ export class FileService {
     // });
 
     const companyAdress = {
-      x: 400,
-      y: 780,
-      lines: ['Cabby', 'Venenweg 66', '1161 Zwanenburg'],
+      x: 50,
+      y: 700,
+      lines: ['Cabby', 'Venenweg 66', '1161 AK Zwanenburg'],
     };
 
-    // Adding text to the right side
+    // Adding text to the left side
     companyAdress.lines.forEach((line, index) => {
       invoice.drawText(line, {
         x: companyAdress.x,
@@ -150,11 +150,12 @@ export class FileService {
     // <Venenweg 66>
     // <1161AK Zwanenburg>
 
+    const companyName = order.vehicle.companyName;
     const customerAdress = {
       x: 50,
-      y: 700,
+      y: 620,
       lines: [
-        `${user.profile?.fullName ?? 'N/A'}`,
+        `${companyName ?? 'N/A'}`,
         `${user.profile?.fullAddress ?? 'N/A'}`,
         `${user.profile?.zip ?? 'N/A'} ${user.profile?.city ?? 'N/A'}`,
       ],
@@ -171,11 +172,19 @@ export class FileService {
 
     // Factuurdatum: <invoice date>
     // Vervaldatum: <expire date>
+    const factuurNumber = await prisma.order.count({
+      where: {
+        userId: order.userId,
+      },
+    });
 
     const invoiceDates = {
       x: 400,
-      y: 600,
-      lines: [`Factuurdatum: ${new Date().toLocaleDateString()}`],
+      y: 620,
+      lines: [
+        `Factuur: CR-00${factuurNumber}`,
+        `Factuurdatum: ${new Date().toLocaleDateString()}`,
+      ],
     };
 
     invoiceDates.lines.forEach((line, index) => {
@@ -188,47 +197,39 @@ export class FileService {
     });
 
     // Factuur: <invoice number>
-    const invoiceNumber = {
-      x: 50,
-      y: 600,
-      lines: [
-        `Factuur: CR-00${(
-          await prisma.order.findMany({
-            where: {
-              userId,
-            },
-          })
-        ).length.toString()}`,
-      ],
-    };
+    // const invoiceNumber = {
+    //   x: 50,
+    //   y: 600,
+    //   lines: [`Factuur: CR-00${factuurNumber}`],
+    // };
 
-    invoiceNumber.lines.forEach((line, index) => {
-      invoice.drawText(line, {
-        x: invoiceNumber.x,
-        y: invoiceNumber.y - index * 15,
-        size: textSize,
-        color: rgb(0, 0, 0),
-      });
-    });
+    // invoiceNumber.lines.forEach((line, index) => {
+    //   invoice.drawText(line, {
+    //     x: invoiceNumber.x,
+    //     y: invoiceNumber.y - index * 15,
+    //     size: textSize,
+    //     color: rgb(0, 0, 0),
+    //   });
+    // });
     // Car names example: Toyota Auris 8-SPK-31>
-    const carNames = {
-      x: 50,
-      y: 580,
-      lines: [
-        `${order.vehicle?.companyName ?? 'N/A'} ${
-          order.vehicle?.model ?? 'N/A'
-        } ${order.vehicle?.licensePlate ?? 'N/A'}`,
-      ],
-    };
+    // const carNames = {
+    //   x: 50,
+    //   y: 580,
+    //   lines: [
+    //     `${order.vehicle?.companyName ?? 'N/A'} ${
+    //       order.vehicle?.model ?? 'N/A'
+    //     } ${order.vehicle?.licensePlate ?? 'N/A'}`,
+    //   ],
+    // };
 
-    carNames.lines.forEach((line, index) => {
-      invoice.drawText(line, {
-        x: carNames.x,
-        y: carNames.y - index * 15,
-        size: textSize,
-        color: rgb(0, 0, 0),
-      });
-    });
+    // carNames.lines.forEach((line, index) => {
+    //   invoice.drawText(line, {
+    //     x: carNames.x,
+    //     y: carNames.y - index * 15,
+    //     size: textSize,
+    //     color: rgb(0, 0, 0),
+    //   });
+    // });
 
     const drawLine = (page, start, end) => {
       page.drawLine({
@@ -246,8 +247,8 @@ export class FileService {
       const headers = [
         'Aantal',
         'Beschrijving',
-        'Bedrag excl. btw',
         'Bedrag incl. btw',
+        // 'Bedrag excl. btw',
       ];
       const xPositions = [50, 100, 350, 450]; // Example positions, adjust as needed
       headers.forEach((text, index) => {
@@ -268,23 +269,31 @@ export class FileService {
 
     const VAT_RATE = 0.21; // 21%
 
+    const totalAmount = order.totalAmount;
+    const exclPrice = totalAmount.toFixed(2);
+    const inclPrice = (Number(totalAmount) * (1 + VAT_RATE)).toFixed(2);
+    const vat = (
+      Number(totalAmount) -
+      Number(totalAmount) / (1 + VAT_RATE)
+    ).toFixed(2);
+
     const items = [
       {
         quantity: 1,
-        description: `Huur ${order.vehicle?.model ?? ''}`,
+        description: `${
+          [order.vehicle?.model, order.vehicle.licensePlate].join(' ') ?? ''
+        }`,
         price: order.totalAmount.toFixed(2),
-        priceExclVat: (Number(order.totalAmount) / (1 + VAT_RATE)).toFixed(2),
-        priceInclVat: Number(order.totalAmount).toFixed(2),
+        priceExclVat: exclPrice,
+        // priceExclVat: (Number(order.totalAmount) / (1 + VAT_RATE)).toFixed(2),
+        // priceInclVat: Number(order.totalAmount).toFixed(2),
       },
     ];
 
     const totals = {
-      exclVat: (Number(order.totalAmount) / (1 + VAT_RATE)).toFixed(2),
-      vat: (
-        Number(order.totalAmount) -
-        Number(order.totalAmount) / (1 + VAT_RATE)
-      ).toFixed(2),
-      inclVat: order.totalAmount.toFixed(2),
+      exclVat: exclPrice,
+      vat,
+      inclVat: inclPrice,
     };
 
     const drawItems = () => {
@@ -300,16 +309,16 @@ export class FileService {
           y: yPosition,
           size: textSize,
         });
-        invoice.drawText(`€${item.priceExclVat}`, {
+        invoice.drawText(`€ ${item.priceExclVat}`, {
           x: 350,
           y: yPosition,
           size: textSize,
         });
-        invoice.drawText(`€${item.priceInclVat}`, {
-          x: 450,
-          y: yPosition,
-          size: textSize,
-        });
+        // invoice.drawText(`€ ${item.priceInclVat}`, {
+        //   x: 450,
+        //   y: yPosition,
+        //   size: textSize,
+        // });
       });
       // Draw the line after items
       drawLine(
@@ -322,12 +331,22 @@ export class FileService {
     const drawTotals = () => {
       const baseY = startYTable - (items.length + 2) * rowHeight;
       // Assuming `totals` is an object with your calculated totals
-      invoice.drawText(`Totaalbedrag excl. btw: €${totals.exclVat}`, {
+      invoice.drawText(`Totaalbedrag excl. btw`, {
+        x: 200,
+        y: baseY,
+        size: textSize,
+      });
+      invoice.drawText(`€ ${totals.exclVat}`, {
         x: 350,
         y: baseY,
         size: textSize,
       });
-      invoice.drawText(`Btw hoog (21.0%): €${totals.vat}`, {
+      invoice.drawText(`21.0% btw van € ${totals.exclVat}`, {
+        x: 200,
+        y: baseY - rowHeight,
+        size: textSize,
+      });
+      invoice.drawText(`€ ${totals.vat}`, {
         x: 350,
         y: baseY - rowHeight,
         size: textSize,
@@ -337,7 +356,12 @@ export class FileService {
         { x: 50, y: baseY - rowHeight - 5 },
         { x: 570, y: baseY - rowHeight - 5 }
       );
-      invoice.drawText(`Totaalbedrag incl. btw: €${totals.inclVat}`, {
+      invoice.drawText(`Totaalbedrag incl. btw`, {
+        x: 200,
+        y: baseY - 2 * rowHeight,
+        size: textSize,
+      });
+      invoice.drawText(`€ ${totals.inclVat}`, {
         x: 350,
         y: baseY - 2 * rowHeight,
         size: textSize,
@@ -352,7 +376,7 @@ export class FileService {
       x: 50,
       y: 350,
       lines: [
-        'Factuur voldaan onder de voorwaarden van het opgestelde huurovereenkomst.',
+        'Factuur voldaan onder de voorwaarden van de opgestelde huurovereenkomst.',
         'Factuur is reeds betaald.',
       ],
     };
@@ -370,6 +394,8 @@ export class FileService {
     const pdfBuffer = Buffer.from(pdfBytes);
     const fileName = `invoice-${String(order.id)}.pdf`;
     const mimeType = 'application/pdf';
+
+    // return fs.promises.writeFile(fileName, pdfBuffer);
 
     const invoiceUrl = await this.uploadFile(
       pdfBuffer,
