@@ -10,6 +10,7 @@ import UserMailService from '../notifications/user-mails.service';
 import { NotificationService } from '../notifications/notification.service';
 import OrderMailService from './order-mails.service';
 import { OrderStatus } from './types';
+import { calculateOrderPrice } from './functions';
 import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
 import { netherlandsTimeNow } from '@/utils/date';
@@ -50,6 +51,7 @@ export default class OrderService {
         OR: [
           { status: OrderStatus.CONFIRMED },
           { status: OrderStatus.PENDING },
+          // { stopRentDate: null },
         ],
       },
     });
@@ -58,23 +60,37 @@ export default class OrderService {
       return { error: 'You can have only 2 active or pending orders at max.' };
     }
 
-    const totalAmount = await this.calculateTotalAmount(
-      dto.vehicleId,
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { id: dto.vehicleId },
+    });
+
+    if (!vehicle) throw new Error('No vehicle found!');
+
+    const amount = calculateOrderPrice(
       dto.rentalStartDate,
-      dto.rentalEndDate
+      dto.rentalEndDate,
+      vehicle.timeframes as number[][]
     );
+
+    console.log('amount', amount);
+
+    // const totalAmount = await this.calculateTotalAmount(
+    //   dto.vehicleId,
+    //   dto.rentalStartDate,
+    //   dto.rentalEndDate
+    // );
 
     const order = await prisma.order.create({
       data: {
         ...dto,
-        totalAmount,
+        totalAmount: amount,
         status: OrderStatus.UNPAID,
       },
     });
 
     const paymentResponse = await this.paymentService.createOrderPayment({
       userId: dto.userId,
-      amount: totalAmount,
+      amount,
       orderId: order.id,
     });
 
@@ -766,11 +782,13 @@ AND status = 'CONFIRMED';
 
   public async createRejection(data: { orderId: string; reason: string }) {
     const { orderId, reason } = data;
-    const rejection = await prisma.orderRejection.create({
-      data: {
+    const rejection = await prisma.orderRejection.upsert({
+      where: { orderId },
+      create: {
         orderId,
         reason,
       },
+      update: { reason },
     });
     return rejection;
   }
