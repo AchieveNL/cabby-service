@@ -261,7 +261,10 @@ export default class UserController extends Api {
     next: NextFunction
   ) => {
     try {
-      await this.userService.deleteAccount(req.user?.id);
+      const isAdmin = req.user?.role === UserRole.ADMIN;
+      const userId = isAdmin ? req.body.userId : req.user?.id;
+
+      await this.userService.deleteAccount(userId);
       this.send(res, null, HttpStatusCode.Ok, 'Account deleted successfully');
     } catch (e) {
       next(e);

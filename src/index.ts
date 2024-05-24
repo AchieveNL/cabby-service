@@ -2,10 +2,12 @@ import { config as configDotenv } from 'dotenv';
 import server from './server';
 import { printAppInfo } from './utils/print-app-info';
 import appConfig from './config/app.config';
+import cronJobs from './utils/cron-jobs';
 import prismaClient from '@/lib/prisma';
 import environment from '@/lib/environment';
 
 configDotenv();
+cronJobs();
 
 server.listen(process.env.PORT || 8080, () => {
   const { port, env, appUrl: _appUrl } = environment;

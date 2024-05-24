@@ -11,6 +11,22 @@ import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
 const router: Router = Router();
 const controller = new VehicleController();
 
+router.get(
+  '/deposit',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  controller.getDeposit
+);
+
+router.post(
+  '/deposit',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  controller.upsertDeposit
+);
+
 router.post(
   '/create',
   verifyAuthToken,

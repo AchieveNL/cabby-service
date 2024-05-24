@@ -148,7 +148,8 @@ export default class AdminMailService {
   async rentCompletedMailSender(
     email: string,
     name: string,
-    vehicleNumber: string
+    licensePlate: string,
+    model: string
   ) {
     const mailMessage = await generateEmail(
       email,
@@ -157,13 +158,9 @@ export default class AdminMailService {
       `
       Beste Admin,
 
-      We willen je laten weten dat een gebruiker zojuist hun huurperiode heeft gestart. De huurder is ${name} en ze zijn begonnen met het gebruik van voertuig ${vehicleNumber}.
+We willen je laten weten dat ${name} zojuist hun huurperiode is gestart met het gebruik van ${model} met kentekenplaat ${licensePlate}. Dit is slechts een melding om je op de hoogte te stellen. Controleer regelmatig het systeem voor verdere updates en details met betrekking tot deze huurperiode. Als je vragen hebt of assistentie nodig hebt, laat het ons dan weten.
 
-      Dit is slechts een melding om je op de hoogte te stellen van deze huurstart. Controleer regelmatig het systeem voor verdere updates en details met betrekking tot deze huurperiode.
-      
-      Als je vragen hebt of assistentie nodig hebt, laat het ons dan weten.
-
-      Team Cabby
+Team Cabby
       
   `
     );
