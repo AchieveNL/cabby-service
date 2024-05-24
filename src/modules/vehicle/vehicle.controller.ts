@@ -327,4 +327,41 @@ export default class VehicleController extends Api {
       next(error);
     }
   };
+
+  public getDeposit = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const deposit = await this.vehicleService.getDeposit();
+      return this.send(
+        res,
+        deposit,
+        HttpStatusCode.Ok,
+        'Deposit retrieved successfully'
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public upsertDeposit = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { value } = req.body;
+      const availableVehicles = await this.vehicleService.upsertDeposit(value);
+      return this.send(
+        res,
+        availableVehicles,
+        HttpStatusCode.Ok,
+        'Deposit upserted successfully'
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
 }

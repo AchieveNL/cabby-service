@@ -15,7 +15,6 @@ export default class FileController extends Api {
         this.send(res, null, HttpStatusCode.BadRequest, 'File not provided');
         return;
       }
-
       const url = await this.fileService.uploadFile(
         file.buffer,
         file.originalname,

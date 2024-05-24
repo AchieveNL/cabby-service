@@ -209,6 +209,34 @@ export default class OrderController extends Api {
     }
   };
 
+  public stopOrder = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { orderId } = req.body as CancelOrderDto;
+      await this.orderService.stopOrder(orderId);
+      return this.send(res, null, 204, 'Order stopped successfully');
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public completeOrderAdmin = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { orderId } = req.body as CancelOrderDto;
+      await this.orderService.completeOrderAdmin(orderId);
+      return this.send(res, null, 204, 'Order completed successfully');
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public confirmOrder = async (
     req: Request,
     res: Response,

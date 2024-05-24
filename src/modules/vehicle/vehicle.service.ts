@@ -174,6 +174,7 @@ export default class VehicleService {
   public getAllAvailableVehicles = async () => {
     try {
       const vehicles = await prisma.vehicle.findMany({
+        where: { status: 'ACTIVE' },
         select: {
           id: true,
           logo: true,
@@ -202,6 +203,30 @@ export default class VehicleService {
       return vehicles;
     } catch (error) {
       throw new Error('Failed to retrieve vehicles');
+    }
+  };
+
+  public getDeposit = async () => {
+    try {
+      const deposit = await prisma.settings.findUnique({
+        where: { key: 'deposit' },
+      });
+      return deposit?.value;
+    } catch (error) {
+      throw new Error('Failed to retrieve deposit');
+    }
+  };
+
+  public upsertDeposit = async (value: number) => {
+    try {
+      const deposit = await prisma.settings.upsert({
+        where: { key: 'deposit' },
+        create: { key: 'deposit', value: value.toString() },
+        update: { value: value.toString() },
+      });
+      return deposit;
+    } catch (error) {
+      throw new Error('Failed to upsert deposit');
     }
   };
 }

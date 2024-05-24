@@ -76,6 +76,27 @@ export default class UserMailService {
     await mailSender(mailMessage);
   }
 
+  async newRegistrationMailSender(email: string, name: string) {
+    const mailMessage = generateEmail(
+      email,
+      'Nieuwe Registratie - Actie Vereist',
+      `Nieuwe Registratie - Actie Vereist`,
+      `
+      Registration (Inschrijving)
+
+Onderwerp: Welkom bij Cabby - Borg Betaling Gelukt!
+
+Beste ${name},
+
+Welkom bij Cabby, waar jouw reis begint met gemak en betrouwbaarheid! We willen je hartelijk bedanken voor het voltooien van je registratie en het succesvol betalen van de borg. Bij Cabby geloven we in een naadloze reiservaring, en we zijn verheugd dat je deel uitmaakt van onze community.
+
+Geniet van de rit!
+  `
+    );
+
+    await mailSender(mailMessage);
+  }
+
   async refundUser(email: string, name: string, amount: string) {
     const mailMessage = await generateEmail(
       email,
