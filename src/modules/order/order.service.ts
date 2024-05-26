@@ -496,7 +496,7 @@ export default class OrderService {
     }
 
     const rentalEndDate = order.rentalEndDate;
-    const now = netherlandsTimeNow.toDate();
+    const now = netherlandsTimeNow;
     const isOverdue = rentalEndDate < now;
 
     const updateData: Prisma.orderUpdateInput = { stopRentDate: now };
@@ -608,7 +608,7 @@ export default class OrderService {
     }
 
     const rentalEndDate = order.rentalEndDate;
-    const now = netherlandsTimeNow.toDate();
+    const now = netherlandsTimeNow;
     const isOverdue = rentalEndDate < now;
 
     const updateData: Prisma.orderUpdateInput = { stopRentDate: now };
@@ -627,7 +627,7 @@ export default class OrderService {
 
     if (!order) throw new Error('Order not found');
 
-    const now = netherlandsTimeNow.toDate();
+    const now = netherlandsTimeNow;
     const rentalStartDate = new Date(order.rentalStartDate);
 
     // const lessThanDay = dayjs(dayjs()).diff(rentalStartDate, 'h') <= 24;
