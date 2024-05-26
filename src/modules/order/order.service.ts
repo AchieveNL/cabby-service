@@ -65,11 +65,14 @@ export default class OrderService {
     });
 
     if (!vehicle) throw new Error('No vehicle found!');
+    const rentalStartDate = dto.rentalStartDate;
+    const rentalEndDate = dto.rentalEndDate;
+    const timeframes = vehicle.timeframes as number[][];
 
     const amount = calculateOrderPrice(
-      dto.rentalStartDate,
-      dto.rentalEndDate,
-      vehicle.timeframes as number[][]
+      rentalStartDate,
+      rentalEndDate,
+      timeframes
     );
 
     console.log('amount', amount);
@@ -834,19 +837,19 @@ AND status = 'CONFIRMED';
 
   public calculateTotalRentPrice = async (
     vehicleId: string,
-    rentStarts: string,
-    rentEnds: string
+    rentStarts: Date,
+    rentEnds: Date
   ) => {
     const vehicle = await prisma.vehicle.findUnique({
       where: { id: vehicleId },
     });
     if (!vehicle) throw new Error('Vehicle not found.');
 
-    const total = await this.calculateTotalAmount(
-      vehicleId,
-      rentStarts,
-      rentEnds
-    );
+    // const startDate = new Date(rentStarts);
+    // const endDate = new Date(rentEnds);
+    const timeframes = vehicle.timeframes as number[][];
+
+    const total = calculateOrderPrice(rentStarts, rentEnds, timeframes);
 
     return total;
   };
