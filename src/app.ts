@@ -1,3 +1,4 @@
+import './utils/dateUtils';
 import cors from 'cors';
 import nocache from 'nocache';
 import express from 'express';
