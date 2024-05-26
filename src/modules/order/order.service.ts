@@ -65,11 +65,14 @@ export default class OrderService {
     });
 
     if (!vehicle) throw new Error('No vehicle found!');
+    const rentalStartDate = dto.rentalStartDate;
+    const rentalEndDate = dto.rentalEndDate;
+    const timeframes = vehicle.timeframes as number[][];
 
     const amount = calculateOrderPrice(
-      dto.rentalStartDate,
-      dto.rentalEndDate,
-      vehicle.timeframes as number[][]
+      rentalStartDate,
+      rentalEndDate,
+      timeframes
     );
 
     console.log('amount', amount);
@@ -496,7 +499,7 @@ export default class OrderService {
     }
 
     const rentalEndDate = order.rentalEndDate;
-    const now = netherlandsTimeNow.toDate();
+    const now = netherlandsTimeNow;
     const isOverdue = rentalEndDate < now;
 
     const updateData: Prisma.orderUpdateInput = { stopRentDate: now };
@@ -608,7 +611,7 @@ export default class OrderService {
     }
 
     const rentalEndDate = order.rentalEndDate;
-    const now = netherlandsTimeNow.toDate();
+    const now = netherlandsTimeNow;
     const isOverdue = rentalEndDate < now;
 
     const updateData: Prisma.orderUpdateInput = { stopRentDate: now };
@@ -627,7 +630,7 @@ export default class OrderService {
 
     if (!order) throw new Error('Order not found');
 
-    const now = netherlandsTimeNow.toDate();
+    const now = netherlandsTimeNow;
     const rentalStartDate = new Date(order.rentalStartDate);
 
     // const lessThanDay = dayjs(dayjs()).diff(rentalStartDate, 'h') <= 24;
@@ -834,19 +837,19 @@ AND status = 'CONFIRMED';
 
   public calculateTotalRentPrice = async (
     vehicleId: string,
-    rentStarts: string,
-    rentEnds: string
+    rentStarts: Date,
+    rentEnds: Date
   ) => {
     const vehicle = await prisma.vehicle.findUnique({
       where: { id: vehicleId },
     });
     if (!vehicle) throw new Error('Vehicle not found.');
 
-    const total = await this.calculateTotalAmount(
-      vehicleId,
-      rentStarts,
-      rentEnds
-    );
+    // const startDate = new Date(rentStarts);
+    // const endDate = new Date(rentEnds);
+    const timeframes = vehicle.timeframes as number[][];
+
+    const total = calculateOrderPrice(rentStarts, rentEnds, timeframes);
 
     return total;
   };
