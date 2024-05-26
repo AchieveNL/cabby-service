@@ -1,7 +1,7 @@
 import { Prisma, type order } from '@prisma/client';
 import cron from 'node-cron';
 import { mailService } from './mail';
-import { fromEmail, isDevelopement, toEmail } from './constants';
+import { fromEmail, isDevelopment, toEmail } from './constants';
 import prisma from '@/lib/prisma';
 import dayjs from '@/utils/date';
 
@@ -60,7 +60,7 @@ function cronJobs() {
       // Get overdue orders
       const orders = await prisma.$queryRaw<OverdueResult[]>(query);
 
-      if (orders.length > 0 && !isDevelopement) {
+      if (orders.length > 0 && !isDevelopment) {
         const ids = orders.map((el) => el.id);
 
         // Send emails of overdue orders to admin
