@@ -74,9 +74,9 @@ export function calculateOrderPrice(
 ) {
   startDate = new Date(startDate);
   endDate = new Date(endDate);
-  //   console.log({ startDate, endDate, pricing });
+  console.log({ startDate, endDate, pricing });
   const timeframes = calculateTimeframes(startDate, endDate);
-  //   console.log(timeframes);
+  console.log(timeframes);
 
   let price = 0;
 
