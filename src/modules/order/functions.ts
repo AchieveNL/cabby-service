@@ -9,21 +9,21 @@ const timeframes = [
 
 const milliInHours = 60 * 60 * 1000;
 
-const values = [
-  [0, 0, 0, 0],
-  [0, 0, 0, 0],
-  [0, 0, 0, 0],
-  [0, 0, 0, 0],
-  [0, 0, 0, 0],
-  [0, 0, 0, 0],
-  [0, 0, 0, 0],
-];
-
 function durationInMilli(start: Date, end: Date) {
   return dayjs(end).diff(start) / milliInHours;
 }
 
 function calculateTimeframes(startDate: Date, endDate: Date) {
+  const values = [
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ];
+
   let start = startDate;
   const end = endDate;
 
@@ -44,16 +44,16 @@ function calculateTimeframes(startDate: Date, endDate: Date) {
       let value = 0;
       if (!(endDate <= timeframeStart || startDate >= timeframeEnd)) {
         if (timeframeStart >= startDate && timeframeEnd <= endDate) {
-          // console.log("1");
+          // console.log('1');
           value = 6;
         } else if (timeframeStart <= startDate && endDate <= timeframeEnd) {
-          // console.log("2");
+          // console.log('2');
           value = durationInMilli(startDate, endDate);
         } else if (timeframeEnd >= endDate) {
-          // console.log("3");
+          // console.log('3');
           value = durationInMilli(timeframeStart, endDate);
         } else if (timeframeStart <= startDate) {
-          // console.log("4");
+          // console.log('4');
           value = durationInMilli(start, timeframeEnd);
         }
 
@@ -74,9 +74,9 @@ export function calculateOrderPrice(
 ) {
   startDate = new Date(startDate);
   endDate = new Date(endDate);
-  //   console.log({ startDate, endDate, pricing });
+  // console.log({ startDate, endDate, pricing });
   const timeframes = calculateTimeframes(startDate, endDate);
-  //   console.log(timeframes);
+  // console.log(timeframes);
 
   let price = 0;
 

@@ -333,10 +333,15 @@ export default class OrderController extends Api {
       const { vehicleId } = req.params;
       const { rentStarts, rentEnds } = req.query;
 
+      const startDate = new Date(rentStarts as string);
+      const endDate = new Date(rentEnds as string);
+
+      // console.log(startDate, endDate);
+
       const isAvailable = await this.orderService.isVehicleAvailableForTimeslot(
         vehicleId,
-        new Date(rentStarts as string),
-        new Date(rentEnds as string)
+        startDate,
+        endDate
       );
 
       if (!isAvailable) {
@@ -345,8 +350,8 @@ export default class OrderController extends Api {
 
       const totalRentPrice = await this.orderService.calculateTotalRentPrice(
         vehicleId,
-        rentStarts as string,
-        rentEnds as string
+        startDate,
+        endDate
       );
 
       return this.send(res, { isAvailable, totalRentPrice });
