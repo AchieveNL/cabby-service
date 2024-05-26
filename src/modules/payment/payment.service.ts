@@ -138,14 +138,16 @@ export default class PaymentService {
 
     const fees = Number(deposit?.value).toFixed(2) || REGISTRATION_FEE;
 
-    // const depositInvoiceUrl =
-    //   await this.fileService.generateAndSaveDepositInvoice({ userId });
+    const invoiceUrl = await this.fileService.generateAndSaveDepositInvoice({
+      userId,
+    });
 
     const registrationOrder = await prisma.registrationOrder.create({
       data: {
         userId: userId as string,
         status: RegistrationOrderStatus.PENDING,
         totalAmount: parseFloat(fees),
+        invoiceUrl,
       },
     });
 
