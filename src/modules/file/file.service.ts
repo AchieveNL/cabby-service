@@ -4,6 +4,8 @@ import path from 'path';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { bucketName, gStorage } from '@/utils/storage';
 import prisma from '@/lib/prisma';
+import { capitalizeFirstLetter } from '@/utils/text';
+import { dayjsExtended, utcOffset } from '@/utils/date';
 
 export class FileService {
   private readonly storage = gStorage;
@@ -69,8 +71,8 @@ export class FileService {
 
   public async generateAndSaveInvoice(
     orderId: string,
-    userId: string,
-    paymentId: string
+    userId?: string,
+    paymentId?: string
   ): Promise<string> {
     const order = await prisma.order.findUnique({
       where: {
@@ -150,14 +152,17 @@ export class FileService {
     // <Venenweg 66>
     // <1161AK Zwanenburg>
 
-    const companyName = order.vehicle.companyName;
+    // const companyName = order.vehicle.companyName;
+    const fullAddress = user.profile?.fullAddress;
+    const zip = user.profile?.zip?.toUpperCase() ?? 'N/A';
+    const city = user.profile?.city ?? 'N/A';
     const customerAdress = {
       x: 50,
       y: 620,
       lines: [
-        `${companyName ?? 'N/A'}`,
-        `${user.profile?.fullAddress ?? 'N/A'}`,
-        `${user.profile?.zip ?? 'N/A'} ${user.profile?.city ?? 'N/A'}`,
+        `${'<companyName>' ?? 'N/A'}`,
+        `${fullAddress ? capitalizeFirstLetter(fullAddress) : 'N/A'}`,
+        `${zip} ${city}`,
       ],
     };
 
@@ -178,12 +183,21 @@ export class FileService {
       },
     });
 
+    const startDate = dayjsExtended(order.rentalStartDate)
+      .subtract(utcOffset, 'm')
+      .format('L HH:mm');
+    const endDate = dayjsExtended(order.rentalEndDate)
+      .subtract(utcOffset, 'm')
+      .format('L HH:mm');
     const invoiceDates = {
       x: 400,
       y: 620,
       lines: [
         `Factuur: CR-00${factuurNumber}`,
         `Factuurdatum: ${new Date().toLocaleDateString()}`,
+        `Huurperiode : `,
+        startDate,
+        endDate,
       ],
     };
 
@@ -240,7 +254,7 @@ export class FileService {
       });
     };
 
-    const startYTable = 550;
+    const startYTable = 520;
     const rowHeight = 20;
 
     const drawTableHeader = () => {
@@ -393,6 +407,264 @@ export class FileService {
     const pdfBytes = await doc.save();
     const pdfBuffer = Buffer.from(pdfBytes);
     const fileName = `invoice-${String(order.id)}.pdf`;
+    const mimeType = 'application/pdf';
+
+    // return fs.promises.writeFile(fileName, pdfBuffer);
+
+    const invoiceUrl = await this.uploadFile(
+      pdfBuffer,
+      fileName,
+      mimeType,
+      'PDF'
+    );
+    return invoiceUrl;
+  }
+
+  public async generateAndSaveDepositInvoice({
+    userId,
+  }: {
+    userId: string;
+  }): Promise<string> {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      include: { profile: true },
+    });
+
+    const depositData = await prisma.settings.findUnique({
+      where: { key: 'deposit' },
+    });
+
+    const deposit = Number(depositData?.value ?? 700);
+
+    if (!user) {
+      throw new Error('User not found.');
+    }
+
+    const existingPdfBytes = this.readFile(
+      path.join(__dirname, '../../../public/assets/cabby_factuur-leeg.pdf')
+    );
+    const doc = await PDFDocument.load(existingPdfBytes);
+    const invoice = doc.getPages()[0];
+    const textSize = 12;
+
+    const companyAdress = {
+      x: 50,
+      y: 700,
+      lines: ['Cabby', 'Venenweg 66', '1161 AK Zwanenburg'],
+    };
+
+    // Adding text to the left side
+    companyAdress.lines.forEach((line, index) => {
+      invoice.drawText(line, {
+        x: companyAdress.x,
+        y: companyAdress.y - index * 15,
+        size: textSize,
+        color: rgb(0, 0, 0),
+      });
+    });
+
+    const companyDetails = {
+      x: 400,
+      y: 700,
+      lines: [
+        'KVK: 85848867',
+        'BTW: NL863765701B01',
+        'IBAN: NL43 BUNQ 2074 9321 11',
+        'BIC: BUNQNL2A',
+      ],
+    };
+
+    companyDetails.lines.forEach((line, index) => {
+      invoice.drawText(line, {
+        x: companyDetails.x,
+        y: companyDetails.y - index * 15,
+        size: textSize,
+        color: rgb(0, 0, 0),
+      });
+    });
+
+    // const companyName = order.vehicle.companyName;
+    const fullAddress = user.profile?.fullAddress;
+    const zip = user.profile?.zip?.toUpperCase() ?? 'N/A';
+    const city = user.profile?.city ?? 'N/A';
+    const customerAdress = {
+      x: 50,
+      y: 620,
+      lines: [
+        `${'<companyName>' ?? 'N/A'}`,
+        `${fullAddress ? capitalizeFirstLetter(fullAddress) : 'N/A'}`,
+        `${zip} ${city}`,
+      ],
+    };
+
+    customerAdress.lines.forEach((line, index) => {
+      invoice.drawText(line, {
+        x: customerAdress.x,
+        y: customerAdress.y - index * 15,
+        size: textSize,
+        color: rgb(0, 0, 0),
+      });
+    });
+
+    // Factuurdatum: <invoice date>
+    // Vervaldatum: <expire date>
+    const factuurNumber = await prisma.registrationOrder.count();
+
+    const invoiceDates = {
+      x: 400,
+      y: 620,
+      lines: [
+        `Factuur: CR-00${factuurNumber}`,
+        `Factuurdatum: ${new Date().toLocaleDateString()}`,
+      ],
+    };
+
+    invoiceDates.lines.forEach((line, index) => {
+      invoice.drawText(line, {
+        x: invoiceDates.x,
+        y: invoiceDates.y - index * 15,
+        size: textSize,
+        color: rgb(0, 0, 0),
+      });
+    });
+
+    const drawLine = (page, start, end) => {
+      page.drawLine({
+        start: { x: start.x, y: start.y },
+        end: { x: end.x, y: end.y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+    };
+
+    const startYTable = 550;
+    const rowHeight = 20;
+
+    const drawTableHeader = () => {
+      const headers = [
+        'Aantal',
+        'Beschrijving',
+        'Bedrag incl. btw',
+        // 'Bedrag excl. btw',
+      ];
+      const xPositions = [50, 100, 350, 450]; // Example positions, adjust as needed
+      headers.forEach((text, index) => {
+        invoice.drawText(text, {
+          x: xPositions[index],
+          y: startYTable,
+          size: textSize,
+          color: rgb(0, 0, 0),
+        });
+      });
+      // Draw the header underline
+      drawLine(
+        invoice,
+        { x: 50, y: startYTable - 15 },
+        { x: 570, y: startYTable - 15 }
+      );
+    };
+
+    const VAT_RATE = 0.21; // 21%
+
+    const totalAmount = deposit;
+    const exclPrice = totalAmount.toFixed(2);
+    const inclPrice = (Number(totalAmount) * (1 + VAT_RATE)).toFixed(2);
+    const vat = (
+      Number(totalAmount) -
+      Number(totalAmount) / (1 + VAT_RATE)
+    ).toFixed(2);
+
+    const items = [
+      {
+        quantity: 1,
+        description: 'Borg',
+        price: deposit,
+        priceExclVat: exclPrice,
+        // priceExclVat: (Number(order.totalAmount) / (1 + VAT_RATE)).toFixed(2),
+        // priceInclVat: Number(order.totalAmount).toFixed(2),
+      },
+    ];
+
+    const totals = {
+      exclVat: exclPrice,
+      vat,
+      inclVat: inclPrice,
+    };
+
+    const drawItems = () => {
+      items.forEach((item, index) => {
+        const yPosition = startYTable - (index + 1.5) * rowHeight;
+        invoice.drawText(item.quantity.toString(), {
+          x: 50,
+          y: yPosition,
+          size: textSize,
+        });
+        invoice.drawText(item.description, {
+          x: 100,
+          y: yPosition,
+          size: textSize,
+        });
+        invoice.drawText(`€ ${item.priceExclVat}`, {
+          x: 350,
+          y: yPosition,
+          size: textSize,
+        });
+        // invoice.drawText(`€ ${item.priceInclVat}`, {
+        //   x: 450,
+        //   y: yPosition,
+        //   size: textSize,
+        // });
+      });
+      // Draw the line after items
+      drawLine(
+        invoice,
+        { x: 50, y: startYTable - (items.length + 1) * rowHeight - 5 },
+        { x: 570, y: startYTable - (items.length + 1) * rowHeight - 5 }
+      );
+    };
+
+    const drawTotals = () => {
+      const baseY = startYTable - (items.length + 2) * rowHeight;
+      // Assuming `totals` is an object with your calculated totals
+      invoice.drawText(`Totaalbedrag`, {
+        x: 200,
+        y: baseY,
+        size: textSize,
+      });
+      invoice.drawText(`€ ${totals.exclVat}`, {
+        x: 350,
+        y: baseY,
+        size: textSize,
+      });
+    };
+
+    drawTableHeader();
+    drawItems();
+    drawTotals();
+
+    const invoiceEnds = {
+      x: 50,
+      y: 350,
+      lines: [
+        'Factuur voldaan onder de voorwaarden van de opgestelde huurovereenkomst.',
+        'Factuur is reeds betaald.',
+      ],
+    };
+
+    invoiceEnds.lines.forEach((line, index) => {
+      invoice.drawText(line, {
+        x: invoiceEnds.x,
+        y: invoiceEnds.y - index * 50,
+        size: textSize,
+        color: rgb(0, 0, 0),
+      });
+    });
+
+    const pdfBytes = await doc.save();
+    const pdfBuffer = Buffer.from(pdfBytes);
+    const fileName = `invoice-deposit.pdf`;
     const mimeType = 'application/pdf';
 
     // return fs.promises.writeFile(fileName, pdfBuffer);

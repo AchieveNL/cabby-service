@@ -28,6 +28,8 @@ export default class PaymentService {
   public async createOrderPayment({ userId, amount, orderId }) {
     const parameters = this.generateOrderPaymentParameters(amount, orderId);
     const payment = await this.mollie.payments.create(parameters);
+    const checkoutUrl = payment.getCheckoutUrl();
+    console.log('payment', payment, checkoutUrl);
 
     const { id } = await prisma.payment.create({
       data: {
@@ -55,7 +57,7 @@ export default class PaymentService {
       },
     });
 
-    return { payment: id, checkoutUrl: payment.getCheckoutUrl() };
+    return { payment: id, checkoutUrl };
   }
 
   public async updateOrderPaymentStatus(paymentId: string) {
@@ -136,11 +138,16 @@ export default class PaymentService {
 
     const fees = Number(deposit?.value).toFixed(2) || REGISTRATION_FEE;
 
+    const invoiceUrl = await this.fileService.generateAndSaveDepositInvoice({
+      userId,
+    });
+
     const registrationOrder = await prisma.registrationOrder.create({
       data: {
         userId: userId as string,
         status: RegistrationOrderStatus.PENDING,
         totalAmount: parseFloat(fees),
+        invoiceUrl,
       },
     });
 
@@ -192,21 +199,16 @@ export default class PaymentService {
     });
 
     if (updatedPayment.status === PaymentStatus.PAID) {
-      const user = await prisma.userProfile.update({
-        where: { userId: updatedPayment.userId },
+      const userId = updatedPayment.userId;
+      const userProfile = await prisma.userProfile.update({
+        where: { userId },
         data: { status: UserStatus.PENDING },
+        include: { user: { select: { email: true } } },
       });
-      const userWithEmail = await prisma.user.findUnique({
-        where: { id: updatedPayment.userId },
-      });
-      await this.adminMailService.newRegistrationMailSender(
-        userWithEmail?.email!,
-        user.fullName
-      );
-      await this.userMailService.newRegistrationMailSender(
-        userWithEmail?.email!,
-        user.fullName
-      );
+      const email = userProfile.user.email;
+      const fullName = userProfile.fullName;
+      await this.adminMailService.newRegistrationMailSender(email, fullName);
+      await this.userMailService.newRegistrationMailSender(email, fullName);
     }
 
     return true;

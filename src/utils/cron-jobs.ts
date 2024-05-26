@@ -1,9 +1,9 @@
 import { Prisma, type order } from '@prisma/client';
 import cron from 'node-cron';
 import { mailService } from './mail';
-import { fromEmail, isDevelopement, toEmail } from './constants';
+import { fromEmail, isDevelopment, toEmail } from './constants';
 import prisma from '@/lib/prisma';
-import dayjs from '@/utils/date';
+import { netherlandsTimeNow } from '@/utils/date';
 
 const query = Prisma.sql`SELECT
 	o.id,
@@ -18,7 +18,9 @@ FROM
 	JOIN "userProfile" up ON up."userId" = u.id
 	JOIN vehicle v ON v.id = o."vehicleId"
 WHERE
-	"stopRentDate" > "rentalEndDate" AND "overdueEmailSentDate" IS NULL;
+	("stopRentDate" > "rentalEndDate"
+	OR "rentalEndDate" > ${netherlandsTimeNow})
+AND "overdueEmailSentDate" IS NULL;
 `;
 
 type OverdueResult = order & {
@@ -55,25 +57,25 @@ Team Cabby`,
 function cronJobs() {
   cron.schedule('* * * * *', async () => {
     try {
-      const now = dayjs().toDate();
       let mark = 0;
       // Get overdue orders
       const orders = await prisma.$queryRaw<OverdueResult[]>(query);
 
-      if (orders.length > 0 && !isDevelopement) {
+      if (orders.length > 0 && !isDevelopment) {
         const ids = orders.map((el) => el.id);
 
         // Send emails of overdue orders to admin
         await emailSend(orders);
 
         // Mark overdue orders emails as sent
-        mark =
-          await prisma.$executeRaw`Update "order" SET "overdueEmailSentDate" = ${now} where id IN (${Prisma.join(
-            ids
-          )})`;
+        const query2 = Prisma.sql`Update "order" SET "overdueEmailSentDate" = ${netherlandsTimeNow} where id IN (${Prisma.join(
+          ids
+        )})`;
+
+        mark = await prisma.$executeRaw(query2);
       }
       console.log('Number of overdue orders rows updated', mark);
-      console.log('running a task every minute', now);
+      console.log('running a task every minute', netherlandsTimeNow);
     } catch (error) {
       console.log('Error', error);
     }
