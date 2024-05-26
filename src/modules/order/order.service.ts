@@ -1,4 +1,4 @@
-import type { Prisma, order } from '@prisma/client';
+import { Prisma, type order } from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
 import { differenceInHours } from 'date-fns';
 // eslint-disable-next-line
@@ -699,15 +699,15 @@ export default class OrderService {
     };
 
     if (status === 'UNPAID') {
-      const ordersIds = await prisma.$queryRaw<order[]>`SELECT
-	*
-FROM
-	"order"
-WHERE ("stopRentDate" > "rentalEndDate"
-	OR "rentalEndDate" < now())
-AND status = 'CONFIRMED';
-
+      const query = Prisma.sql`SELECT
+                                  *
+                                FROM
+                                  "order"
+                                WHERE ("stopRentDate" > "rentalEndDate"
+                                  OR "rentalEndDate" > ${netherlandsTimeNow})
+                                AND status = 'CONFIRMED';
                                       `;
+      const ordersIds = await prisma.$queryRaw<order[]>(query);
 
       orders = await prisma.order.findMany({
         where: { id: { in: ordersIds.map((el) => el.id) } },
