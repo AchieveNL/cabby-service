@@ -1,4 +1,4 @@
-import { Prisma, type order } from '@prisma/client';
+import { Prisma, UserRole, type user, type order } from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
 import { differenceInHours } from 'date-fns';
 // eslint-disable-next-line
@@ -75,25 +75,19 @@ export default class OrderService {
       timeframes
     );
 
-    console.log('amount', amount);
-
-    // const totalAmount = await this.calculateTotalAmount(
-    //   dto.vehicleId,
-    //   dto.rentalStartDate,
-    //   dto.rentalEndDate
-    // );
+    const totalAmount = amount * 1.21;
 
     const order = await prisma.order.create({
       data: {
         ...dto,
-        totalAmount: amount,
+        totalAmount,
         status: OrderStatus.UNPAID,
       },
     });
 
     const paymentResponse = await this.paymentService.createOrderPayment({
       userId: dto.userId,
-      amount,
+      amount: totalAmount,
       orderId: order.id,
     });
 
@@ -625,7 +619,7 @@ export default class OrderService {
     });
   };
 
-  public cancelOrder = async (orderId: string) => {
+  public cancelOrder = async (orderId: string, userSender: user) => {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
 
     if (!order) throw new Error('Order not found');
@@ -633,8 +627,10 @@ export default class OrderService {
     const now = netherlandsTimeNow;
     const rentalStartDate = new Date(order.rentalStartDate);
 
+    const isAdmin = userSender.role === UserRole.ADMIN;
+
     // const lessThanDay = dayjs(dayjs()).diff(rentalStartDate, 'h') <= 24;
-    if (differenceInHours(rentalStartDate, now) <= 24) {
+    if (!isAdmin && differenceInHours(rentalStartDate, now) <= 24) {
       throw new Error(
         'Cannot cancel order less than 24 hours before rental start date'
       );
@@ -704,7 +700,7 @@ export default class OrderService {
                                 FROM
                                   "order"
                                 WHERE ("stopRentDate" > "rentalEndDate"
-                                  OR "rentalEndDate" > ${netherlandsTimeNow})
+                                  OR "rentalEndDate" < ${netherlandsTimeNow})
                                 AND status = 'CONFIRMED';
                                       `;
       const ordersIds = await prisma.$queryRaw<order[]>(query);
