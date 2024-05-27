@@ -1,5 +1,6 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import { HttpStatusCode } from 'axios';
+import { type user } from '@prisma/client';
 import OrderService from './order.service';
 import {
   type RejectOrderDto,
@@ -202,7 +203,8 @@ export default class OrderController extends Api {
   ) => {
     try {
       const { orderId } = req.body as CancelOrderDto;
-      await this.orderService.cancelOrder(orderId);
+      const user = req.user as user;
+      await this.orderService.cancelOrder(orderId, user);
       return this.send(res, null, 204, 'Order cancelled successfully');
     } catch (error) {
       next(error);
@@ -348,11 +350,13 @@ export default class OrderController extends Api {
         return this.send(res, { isAvailable, totalRentPrice: null });
       }
 
-      const totalRentPrice = await this.orderService.calculateTotalRentPrice(
+      const amount = await this.orderService.calculateTotalRentPrice(
         vehicleId,
         startDate,
         endDate
       );
+
+      const totalRentPrice = amount * 1.21;
 
       return this.send(res, { isAvailable, totalRentPrice });
     } catch (error) {
