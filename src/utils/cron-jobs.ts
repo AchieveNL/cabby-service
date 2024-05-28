@@ -19,7 +19,7 @@ FROM
 	JOIN vehicle v ON v.id = o."vehicleId"
 WHERE
 	("stopRentDate" > "rentalEndDate"
-	OR "rentalEndDate" > ${netherlandsTimeNow})
+	OR "rentalEndDate" < ${netherlandsTimeNow})
 AND "overdueEmailSentDate" IS NULL;
 `;
 
