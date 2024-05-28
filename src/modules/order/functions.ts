@@ -1,4 +1,4 @@
-import dayjs from '@/utils/date';
+import dayjsExtended from '@/utils/date';
 
 const timeframes = [
   [0, 6],
@@ -10,7 +10,7 @@ const timeframes = [
 const milliInHours = 60 * 60 * 1000;
 
 function durationInMilli(start: Date, end: Date) {
-  return dayjs(end).diff(start) / milliInHours;
+  return dayjsExtended(end).diff(start) / milliInHours;
 }
 
 function calculateTimeframes(startDate: Date, endDate: Date) {
@@ -28,7 +28,7 @@ function calculateTimeframes(startDate: Date, endDate: Date) {
   const end = endDate;
 
   while (start <= end) {
-    const day = dayjs.utc(start).get('day');
+    const day = dayjsExtended.utc(start).get('day');
     const row = day - 1;
     // console.log("Row", row);
     const trueRow = row >= 0 ? row : 6;
@@ -38,8 +38,11 @@ function calculateTimeframes(startDate: Date, endDate: Date) {
       // console.log("Column", column);
       const one = timeframe[0];
       const two = timeframe[1];
-      const timeframeStart = dayjs.utc(start).set('hours', one).toDate();
-      const timeframeEnd = dayjs.utc(start).set('hours', two).toDate();
+      const timeframeStart = dayjsExtended
+        .utc(start)
+        .set('hours', one)
+        .toDate();
+      const timeframeEnd = dayjsExtended.utc(start).set('hours', two).toDate();
 
       let value = 0;
       if (!(endDate <= timeframeStart || startDate >= timeframeEnd)) {
@@ -61,7 +64,7 @@ function calculateTimeframes(startDate: Date, endDate: Date) {
       }
     }
 
-    start = dayjs.utc(start).add(1, 'day').toDate();
+    start = dayjsExtended.utc(start).add(1, 'day').toDate();
   }
 
   return values;
