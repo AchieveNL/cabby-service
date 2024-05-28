@@ -11,14 +11,15 @@ dayjs.extend(timezone);
 dayjs.extend(duration);
 dayjs.extend(utc);
 
-export default dayjs;
-
 const tz = 'Europe/Amsterdam';
-const netherlandsOffset = dayjs().tz(tz).utcOffset();
+dayjs.tz.setDefault(tz);
 
-export const utcOffset = dayjs().utcOffset();
 export const dayjsExtended = dayjs;
-export const netherlandsTimeNow = dayjs()
-  .utc()
-  .add(netherlandsOffset, 'm')
-  .toDate();
+
+export default dayjsExtended;
+
+const netherlandsOffset = dayjs().tz(tz).utcOffset();
+export const utcOffset = dayjs().utcOffset();
+
+export const netherlandsTimeNow = () =>
+  dayjs().utc().add(netherlandsOffset, 'm').toDate();

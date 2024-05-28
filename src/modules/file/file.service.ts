@@ -147,11 +147,6 @@ export class FileService {
       });
     });
 
-    // <Maurits Autoverhuur B.V.>
-    // <T.a.v. M Nasr>
-    // <Venenweg 66>
-    // <1161AK Zwanenburg>
-
     // const companyName = order.vehicle.companyName;
     const fullAddress = user.profile?.fullAddress;
     const zip = user.profile?.zip?.toUpperCase() ?? 'N/A';
@@ -195,7 +190,7 @@ export class FileService {
       lines: [
         `Factuur: CR-00${factuurNumber}`,
         `Factuurdatum: ${new Date().toLocaleDateString()}`,
-        `Huurperiode : `,
+        `Huurperiode: `,
         startDate,
         endDate,
       ],
@@ -209,41 +204,6 @@ export class FileService {
         color: rgb(0, 0, 0),
       });
     });
-
-    // Factuur: <invoice number>
-    // const invoiceNumber = {
-    //   x: 50,
-    //   y: 600,
-    //   lines: [`Factuur: CR-00${factuurNumber}`],
-    // };
-
-    // invoiceNumber.lines.forEach((line, index) => {
-    //   invoice.drawText(line, {
-    //     x: invoiceNumber.x,
-    //     y: invoiceNumber.y - index * 15,
-    //     size: textSize,
-    //     color: rgb(0, 0, 0),
-    //   });
-    // });
-    // Car names example: Toyota Auris 8-SPK-31>
-    // const carNames = {
-    //   x: 50,
-    //   y: 580,
-    //   lines: [
-    //     `${order.vehicle?.companyName ?? 'N/A'} ${
-    //       order.vehicle?.model ?? 'N/A'
-    //     } ${order.vehicle?.licensePlate ?? 'N/A'}`,
-    //   ],
-    // };
-
-    // carNames.lines.forEach((line, index) => {
-    //   invoice.drawText(line, {
-    //     x: carNames.x,
-    //     y: carNames.y - index * 15,
-    //     size: textSize,
-    //     color: rgb(0, 0, 0),
-    //   });
-    // });
 
     const drawLine = (page, start, end) => {
       page.drawLine({
@@ -264,7 +224,7 @@ export class FileService {
         'Bedrag incl. btw',
         // 'Bedrag excl. btw',
       ];
-      const xPositions = [50, 100, 350, 450]; // Example positions, adjust as needed
+      const xPositions = [50, 100, 400, 450]; // Example positions, adjust as needed
       headers.forEach((text, index) => {
         invoice.drawText(text, {
           x: xPositions[index],
@@ -284,8 +244,8 @@ export class FileService {
     const VAT_RATE = 0.21; // 21%
 
     const totalAmount = order.totalAmount;
-    const exclPrice = totalAmount.toFixed(2);
-    const inclPrice = (Number(totalAmount) * (1 + VAT_RATE)).toFixed(2);
+    const inclPrice = totalAmount.toFixed(2);
+    const exclPrice = (Number(totalAmount) / (1 + VAT_RATE)).toFixed(2);
     const vat = (
       Number(totalAmount) -
       Number(totalAmount) / (1 + VAT_RATE)
@@ -324,7 +284,7 @@ export class FileService {
           size: textSize,
         });
         invoice.drawText(`€ ${item.priceExclVat}`, {
-          x: 350,
+          x: 400,
           y: yPosition,
           size: textSize,
         });
@@ -351,7 +311,7 @@ export class FileService {
         size: textSize,
       });
       invoice.drawText(`€ ${totals.exclVat}`, {
-        x: 350,
+        x: 400,
         y: baseY,
         size: textSize,
       });
@@ -361,7 +321,7 @@ export class FileService {
         size: textSize,
       });
       invoice.drawText(`€ ${totals.vat}`, {
-        x: 350,
+        x: 400,
         y: baseY - rowHeight,
         size: textSize,
       });
@@ -376,7 +336,7 @@ export class FileService {
         size: textSize,
       });
       invoice.drawText(`€ ${totals.inclVat}`, {
-        x: 350,
+        x: 400,
         y: baseY - 2 * rowHeight,
         size: textSize,
       });
