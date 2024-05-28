@@ -7,7 +7,9 @@ const home: Router = Router();
 
 home.get('/test', (_req: Request, res: Response) => {
   try {
-    res.send({ netherlandsTimeNow });
+    const value = netherlandsTimeNow();
+    console.log(value);
+    res.send({ value });
   } catch (err) {
     res.status(500).send({
       success: false,

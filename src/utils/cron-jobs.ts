@@ -6,21 +6,21 @@ import prisma from '@/lib/prisma';
 import { netherlandsTimeNow } from '@/utils/date';
 
 const query = Prisma.sql`SELECT
-	o.id,
-	o."rentalEndDate",
-	o."stopRentDate",
-	o."overdueEmailSentDate",
-	up."fullName",
-	v."licensePlate"
-FROM
-	"order" o
-	JOIN "user" u ON u.id = o."userId"
-	JOIN "userProfile" up ON up."userId" = u.id
-	JOIN vehicle v ON v.id = o."vehicleId"
-WHERE
-	("stopRentDate" > "rentalEndDate"
-	OR "rentalEndDate" < ${netherlandsTimeNow})
-AND "overdueEmailSentDate" IS NULL;
+    o.id,
+    o."rentalEndDate",
+    o."stopRentDate",
+    o."overdueEmailSentDate",
+    up."fullName",
+    v."licensePlate"
+  FROM
+    "order" o
+    JOIN "user" u ON u.id = o."userId"
+    JOIN "userProfile" up ON up."userId" = u.id
+    JOIN vehicle v ON v.id = o."vehicleId"
+  WHERE
+    ("stopRentDate" > "rentalEndDate"
+    OR "rentalEndDate" < ${netherlandsTimeNow()})
+  AND "overdueEmailSentDate" IS NULL;
 `;
 
 type OverdueResult = order & {
@@ -68,14 +68,14 @@ function cronJobs() {
         await emailSend(orders);
 
         // Mark overdue orders emails as sent
-        const query2 = Prisma.sql`Update "order" SET "overdueEmailSentDate" = ${netherlandsTimeNow} where id IN (${Prisma.join(
+        const query2 = Prisma.sql`Update "order" SET "overdueEmailSentDate" = ${netherlandsTimeNow()} where id IN (${Prisma.join(
           ids
         )})`;
 
         mark = await prisma.$executeRaw(query2);
       }
       console.log('Number of overdue orders rows updated', mark);
-      console.log('running a task every minute', netherlandsTimeNow);
+      console.log('running a task every minute', netherlandsTimeNow());
     } catch (error) {
       console.log('Error', error);
     }
