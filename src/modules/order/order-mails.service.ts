@@ -1,5 +1,6 @@
 import { type MailDataRequired } from '@sendgrid/mail';
 import { mailSender } from '@/config/mailer.config';
+import { generateEmailTemplate } from '@/utils/email-components';
 
 type Options = Omit<MailDataRequired, 'from'>;
 
@@ -13,14 +14,15 @@ export default class OrderMailService {
     //     .then((buf) => `data:image/png;base64,` + buf.toString('base64'))
     // );
 
+    const html = await generateEmailTemplate({
+      subject: 'Your order is confirmed',
+      text: 'Your order is confirmed',
+    });
+
     const mailMessage = generateEmail({
       to: email,
       subject: 'Your order is confirmed',
-      text: `Your order is confirmed`,
-      html: `
-        <h2>Your order is confirmed</h2>
-        ${papers.map((paper) => `<img src=${paper} alt=${paper}/>`).join(' ')}
-      `,
+      html,
       // attachments: papers.map((paper, index) => {
       //   const paperArray = paper.split('/');
       //   const filename = paperArray[paperArray.length - 1];

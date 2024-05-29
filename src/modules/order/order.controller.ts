@@ -7,6 +7,8 @@ import {
   type CreateOrderDto,
   type CancelOrderDto,
   type RejectConfirmOrderDto,
+  type changeOrderStatusDto,
+  type DeleteOrderDto,
 } from './order.dto';
 import { OrderStatus } from './types';
 import Api from '@/lib/api';
@@ -248,6 +250,34 @@ export default class OrderController extends Api {
       const { orderId } = req.body as RejectConfirmOrderDto;
       await this.orderService.confirmOrder(orderId);
       return this.send(res, null, 200, 'Order confirmed successfully');
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public deleteOrder = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { orderId } = req.body as DeleteOrderDto;
+      await this.orderService.deleteOrder(orderId);
+      return this.send(res, null, 200, 'Order deleted successfully');
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public changeOrderStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { orderId, status } = req.body as changeOrderStatusDto;
+      await this.orderService.changeOrderStatus(orderId, status);
+      return this.send(res, null, 200, 'Order changed successfully');
     } catch (error) {
       next(error);
     }
