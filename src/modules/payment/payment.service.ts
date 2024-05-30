@@ -132,15 +132,21 @@ export default class PaymentService {
       });
     }
 
+    console.log('existingRegistrationOrder: ', existingRegistrationOrder);
+
     const deposit = await prisma.settings.findUnique({
       where: { key: 'deposit' },
     });
 
     const fees = Number(deposit?.value).toFixed(2) || REGISTRATION_FEE;
 
+    console.log('fees: ' + fees);
+
     const invoiceUrl = await this.fileService.generateAndSaveDepositInvoice({
       userId,
     });
+
+    console.log('invoiceUrl: ' + invoiceUrl);
 
     const registrationOrder = await prisma.registrationOrder.create({
       data: {
