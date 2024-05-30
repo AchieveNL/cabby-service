@@ -138,7 +138,11 @@ export default class PaymentService {
       where: { key: 'deposit' },
     });
 
-    const fees = Number(deposit?.value).toFixed(2) || REGISTRATION_FEE;
+    console.log('deposit: ', deposit);
+
+    const fees = deposit?.value
+      ? Number(deposit?.value).toFixed(2)
+      : REGISTRATION_FEE;
 
     console.log('fees: ' + fees);
 
@@ -157,6 +161,8 @@ export default class PaymentService {
       },
     });
 
+    console.log('registrationOrder: ', registrationOrder);
+
     const payment = await this.mollie.payments.create({
       amount: {
         currency: 'EUR',
@@ -173,6 +179,8 @@ export default class PaymentService {
       },
     });
 
+    console.log('payment: ', payment);
+
     const { id } = await prisma.payment.create({
       data: {
         userId,
@@ -183,6 +191,8 @@ export default class PaymentService {
         status: PaymentStatus.PENDING,
       },
     });
+
+    console.log('id: ', id);
 
     return { payment: id, checkoutUrl: payment.getCheckoutUrl() };
   };
