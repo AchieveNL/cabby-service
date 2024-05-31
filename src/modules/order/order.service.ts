@@ -843,7 +843,7 @@ export default class OrderService {
 
     // const startDate = new Date(rentStarts);
     // const endDate = new Date(rentEnds);
-    const timeframes = vehicle.timeframes as number[][];
+    const timeframes = (vehicle?.timeframes ?? []) as number[][];
 
     const total = calculateOrderPrice(rentStarts, rentEnds, timeframes);
 
