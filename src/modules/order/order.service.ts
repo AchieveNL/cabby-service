@@ -683,6 +683,31 @@ export default class OrderService {
     );
   };
 
+  public deleteOrder = async (orderId: string) => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) throw new Error('Order not found');
+
+    await prisma.order.delete({
+      where: { id: orderId },
+    });
+  };
+
+  public changeOrderStatus = async (orderId: string, status: OrderStatus) => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) throw new Error('Order not found');
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status },
+    });
+  };
+
   public getOrdersByStatus = async (status) => {
     let orders: order[] = [];
     const include: Prisma.orderInclude = {
@@ -700,10 +725,12 @@ export default class OrderService {
                                 FROM
                                   "order"
                                 WHERE ("stopRentDate" > "rentalEndDate"
-                                  OR "rentalEndDate" < ${netherlandsTimeNow})
+                                  OR "rentalEndDate" < ${netherlandsTimeNow()})
                                 AND status = 'CONFIRMED';
                                       `;
       const ordersIds = await prisma.$queryRaw<order[]>(query);
+
+      console.log(ordersIds);
 
       orders = await prisma.order.findMany({
         where: { id: { in: ordersIds.map((el) => el.id) } },

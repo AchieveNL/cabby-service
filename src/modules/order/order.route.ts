@@ -3,7 +3,9 @@ import OrderController from './order.controller';
 import {
   CancelOrderDto,
   CreateOrderDto,
+  DeleteOrderDto,
   RejectConfirmOrderDto,
+  changeOrderStatusDto,
 } from './order.dto';
 import RequestValidator from '@/middlewares/request-validator';
 import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
@@ -115,6 +117,24 @@ router.post(
   requireAdmin,
   RequestValidator.validate(RejectConfirmOrderDto),
   orderController.confirmOrder
+);
+
+router.post(
+  '/delete',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  RequestValidator.validate(DeleteOrderDto),
+  orderController.deleteOrder
+);
+
+router.post(
+  '/change-status',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  RequestValidator.validate(changeOrderStatusDto),
+  orderController.changeOrderStatus
 );
 
 router.post(

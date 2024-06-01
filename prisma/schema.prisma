@@ -73,6 +73,7 @@ model userProfile {
   lastName         String
   firstName        String
   phoneNumber      String?
+  companyName      String?
   profilePhoto     String?
   signature        String?
   zip              String?
@@ -277,7 +278,7 @@ model orderRejection {
   reason  String // Text field explaining why the order was rejected
   date    DateTime @default(now()) // The date when the order was rejected
 
-  order order @relation(fields: [orderId], references: [id])
+  order order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId], name: "idx_orderId")
 }

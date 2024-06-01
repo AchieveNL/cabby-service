@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsString } from 'class-validator';
+import { type OrderStatus } from './types';
 
 export class CreateOrderDto {
   @IsNotEmpty()
@@ -24,6 +25,16 @@ export class RejectOrderDto {
   reason: string;
 }
 
+export class changeOrderStatusDto {
+  @IsNotEmpty()
+  @IsString()
+  orderId: string;
+
+  @IsNotEmpty()
+  @IsString()
+  status: OrderStatus;
+}
+
 export class CancelOrderDto {
   @IsNotEmpty()
   @IsString()
@@ -31,6 +42,12 @@ export class CancelOrderDto {
 }
 
 export class RejectConfirmOrderDto {
+  @IsNotEmpty()
+  @IsString()
+  orderId: string;
+}
+
+export class DeleteOrderDto {
   @IsNotEmpty()
   @IsString()
   orderId: string;
