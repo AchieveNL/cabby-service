@@ -1,3 +1,6 @@
+import { readFile } from 'fs/promises';
+import path, { dirname } from 'path';
+
 export const emailActionButton = (text: string, url: string) => {
   return `
   <td class="t16" style="
@@ -37,4 +40,39 @@ export const emailActionButton = (text: string, url: string) => {
   mso-text-raise: 10px;
 " target="_blank">${text}
 password</a></td>`;
+};
+
+export const generateEmailTemplate = async ({
+  subject,
+  text,
+}: {
+  subject: string;
+  text: string;
+  // email: string;
+  // html: string;
+}) => {
+  const appDir = dirname(require?.main?.filename as string);
+  const templatePath = path.join(
+    appDir,
+    '../public/templates/email_template.html'
+  );
+
+  try {
+    const data = await readFile(templatePath, 'utf8');
+
+    // Typecast data to string
+    const template = data as unknown as string;
+
+    // Replace placeholders in the HTML template
+    const replacedHtml = template
+      .replace('{{title}}', subject)
+      .replace('{{content}}', text)
+      .replace('{{subcontent}}', '')
+      .replace('{{action}}', '');
+
+    return replacedHtml;
+  } catch (err) {
+    console.error('Error reading file:', err);
+    throw err; // Propagate the error
+  }
 };
