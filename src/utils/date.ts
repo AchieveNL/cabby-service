@@ -23,3 +23,7 @@ export const utcOffset = dayjs().utcOffset();
 
 export const netherlandsTimeNow = () =>
   dayjs().utc().add(netherlandsOffset, 'm').toDate();
+
+export const formatDateWithoutTimezone = (date) => {
+  return dayjs(date).format('YYYY-MM-DDTHH:mm:ss.SSS');
+};
