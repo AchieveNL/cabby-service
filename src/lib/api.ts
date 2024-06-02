@@ -2,8 +2,6 @@ import { HttpStatusCode } from 'axios';
 import { type Response } from 'express';
 import environment from './environment';
 import logger from './logger';
-import { removeTimezoneFromDates } from '@/utils/date-utils';
-
 /**
  * `Api` Represents an abstract base class for common expressJS API operations.
  *  Inherit this class to use the helper functions.
@@ -31,7 +29,7 @@ abstract class Api {
 
     return res.status(statusCode).json({
       message,
-      payload: removeTimezoneFromDates(payload),
+      payload,
     });
   }
 
