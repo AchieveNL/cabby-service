@@ -370,7 +370,7 @@ export default class OrderService {
     // Update the database indicating the vehicle is locked
     const data = await prisma.order.update({
       where: { id: orderId },
-      data: { isVehicleUnlocked: false },
+      data: { isVehicleUnlocked: true },
     });
 
     return data;
@@ -504,14 +504,10 @@ export default class OrderService {
       throw new Error('Not authorized to complete this order.');
     }
 
-    const rentalEndDate = order.rentalEndDate;
     const now = netherlandsTimeNow();
-    const isOverdue = rentalEndDate < now;
 
     const updateData: Prisma.orderUpdateInput = { stopRentDate: now };
-    if (!isOverdue) {
-      updateData.status = OrderStatus.COMPLETED;
-    }
+    updateData.status = OrderStatus.COMPLETED;
 
     const completedOrder = await prisma.order.update({
       where: { id: orderId },
