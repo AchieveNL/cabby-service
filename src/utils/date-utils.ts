@@ -1,55 +1,29 @@
-import moment from 'moment-timezone';
+import dayjs from 'dayjs';
 
-const DEFAULT_TIMEZONE = 'Europe/Amsterdam';
-const DEFAULT_LOCALE = 'nl-NL';
-moment.tz.setDefault(DEFAULT_TIMEZONE);
-moment.locale(DEFAULT_LOCALE);
+const formatDateWithoutTimezone = (date: Date): string => {
+  return dayjs(date).format('YYYY-MM-DDTHH:mm:ss.SSS');
+};
 
-const OriginalDate = Date;
+export const removeTimezoneFromDates = (obj: any): any => {
+  if (obj === null || obj === undefined) return obj;
 
-class CustomDate extends OriginalDate {
-  constructor(...args: any[]) {
-    if (args.length === 0) {
-      super(moment().tz(DEFAULT_TIMEZONE).format());
-    } else if (args.length === 1 && typeof args[0] === 'string') {
-      super(moment.tz(args[0], DEFAULT_TIMEZONE).format());
-    } else {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
-      // @ts-ignore
-      super(...args);
+  if (typeof obj === 'string' && !isNaN(Date.parse(obj))) {
+    // Check if the string is a valid date and format it
+    return formatDateWithoutTimezone(new Date(obj));
+  } else if (typeof obj === 'object' && !Array.isArray(obj)) {
+    // If it's an object, recursively apply the function to each property
+    for (const key in obj) {
+      // eslint-disable-next-line no-prototype-builtins
+      if (obj.hasOwnProperty(key)) {
+        obj[key] = removeTimezoneFromDates(obj[key]);
+      }
+    }
+  } else if (Array.isArray(obj)) {
+    // If it's an array, recursively apply the function to each item
+    for (let i = 0; i < obj.length; i++) {
+      obj[i] = removeTimezoneFromDates(obj[i]);
     }
   }
 
-  toLocaleDateString(
-    locale: string = DEFAULT_LOCALE,
-    options: Intl.DateTimeFormatOptions = {}
-  ): string {
-    return moment(this).tz(DEFAULT_TIMEZONE).locale(locale).format('L');
-  }
-
-  toLocaleString(
-    locale: string = DEFAULT_LOCALE,
-    options: Intl.DateTimeFormatOptions = {}
-  ): string {
-    return moment(this).tz(DEFAULT_TIMEZONE).locale(locale).format('L LT');
-  }
-
-  toLocaleTimeString(
-    locale: string = DEFAULT_LOCALE,
-    options: Intl.DateTimeFormatOptions = {}
-  ): string {
-    return moment(this).tz(DEFAULT_TIMEZONE).locale(locale).format('LT');
-  }
-}
-
-(global as any).Date = CustomDate;
-
-export const getCurrentDate = (): string => moment().format();
-export const formatDate = (
-  date: Date,
-  format: string = 'YYYY-MM-DD HH:mm:ss'
-): string => moment(date).format(format);
-export const parseDate = (
-  dateString: string,
-  format: string = 'YYYY-MM-DD HH:mm:ss'
-): Date => new Date(moment.tz(dateString, format, DEFAULT_TIMEZONE).format());
+  return obj;
+};
