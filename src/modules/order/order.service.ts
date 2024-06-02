@@ -212,7 +212,7 @@ export default class OrderService {
     const currentDate = new Date();
     console.log('currentDate:', currentDate);
     console.log('order.rentalStartDate:', order.rentalStartDate);
-    console.log('start date : ', new Date(order.rentalStartDate));
+    console.log('start date :', new Date(order.rentalStartDate));
     if (currentDate < order.rentalStartDate) {
       throw new Error('Rental period has not started yet.');
     }
