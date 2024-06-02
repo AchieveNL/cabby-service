@@ -111,7 +111,7 @@ export default class OrderService {
       throw new Error('Order not found.');
     }
 
-    const currentDate = new Date();
+    const currentDate = netherlandsTimeNow();
     const startCountdown =
       order.rentalStartDate.getTime() - currentDate.getTime(); // in milliseconds
     const endCountdown = order.rentalEndDate.getTime() - currentDate.getTime(); // in milliseconds
@@ -209,13 +209,13 @@ export default class OrderService {
       throw new Error('Order not found.');
     }
 
-    const currentDate = new Date();
+    const currentDate = netherlandsTimeNow();
     console.log('currentDate:', currentDate);
     console.log('order.rentalStartDate:', order.rentalStartDate);
     console.log('start date :', new Date(order.rentalStartDate));
-    // if (currentDate < order.rentalStartDate) {
-    //   throw new Error('Rental period has not started yet.');
-    // }
+    if (currentDate < order.rentalStartDate) {
+      throw new Error('Rental period has not started yet.');
+    }
 
     const teslaToken = await prisma.teslaToken.findFirst();
 
@@ -271,10 +271,10 @@ export default class OrderService {
       throw new Error('Order not found.');
     }
 
-    // const currentDate = new Date();
-    // if (currentDate < order.rentalStartDate) {
-    //   throw new Error('Rental period has not started yet.');
-    // }
+    const currentDate = netherlandsTimeNow();
+    if (currentDate < order.rentalStartDate) {
+      throw new Error('Rental period has not started yet.');
+    }
 
     const teslaToken = await prisma.teslaToken.findFirst();
 
@@ -327,10 +327,10 @@ export default class OrderService {
       throw new Error('Order not found.');
     }
 
-    const currentDate = new Date();
-    // if (currentDate < order.rentalStartDate) {
-    //   throw new Error('Rental period has not started yet.');
-    // }
+    const currentDate = netherlandsTimeNow();
+    if (currentDate < order.rentalStartDate) {
+      throw new Error('Rental period has not started yet.');
+    }
     console.log('currentDate:', currentDate);
     console.log('order.rentalStartDate:', order.rentalStartDate);
     console.log('start date :', new Date(order.rentalStartDate));
@@ -504,15 +504,21 @@ export default class OrderService {
       throw new Error('Not authorized to complete this order.');
     }
 
+    console.log('Completing order:', orderId);
+
     const now = netherlandsTimeNow();
 
-    const updateData: Prisma.orderUpdateInput = { stopRentDate: now };
-    updateData.status = OrderStatus.COMPLETED;
+    const updateData: Prisma.orderUpdateInput = {
+      stopRentDate: now,
+      status: OrderStatus.COMPLETED,
+    };
 
     const completedOrder = await prisma.order.update({
       where: { id: orderId },
       data: updateData,
     });
+
+    console.log("Order completed. Updating vehicle's status to AVAILABLE.");
 
     const user = await prisma.user.findUnique({
       where: { id: order.userId },
@@ -830,7 +836,7 @@ export default class OrderService {
   public getVehicleBookedPeriodsIncludingOngoing = async (
     vehicleId: string
   ) => {
-    const today = new Date();
+    const today = netherlandsTimeNow();
 
     const orders = await prisma.order.findMany({
       where: {
