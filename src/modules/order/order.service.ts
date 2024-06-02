@@ -213,9 +213,9 @@ export default class OrderService {
     console.log('currentDate:', currentDate);
     console.log('order.rentalStartDate:', order.rentalStartDate);
     console.log('start date :', new Date(order.rentalStartDate));
-    if (currentDate < order.rentalStartDate) {
-      throw new Error('Rental period has not started yet.');
-    }
+    // if (currentDate < order.rentalStartDate) {
+    //   throw new Error('Rental period has not started yet.');
+    // }
 
     const teslaToken = await prisma.teslaToken.findFirst();
 
@@ -271,10 +271,10 @@ export default class OrderService {
       throw new Error('Order not found.');
     }
 
-    const currentDate = new Date();
-    if (currentDate < order.rentalStartDate) {
-      throw new Error('Rental period has not started yet.');
-    }
+    // const currentDate = new Date();
+    // if (currentDate < order.rentalStartDate) {
+    //   throw new Error('Rental period has not started yet.');
+    // }
 
     const teslaToken = await prisma.teslaToken.findFirst();
 
@@ -328,9 +328,12 @@ export default class OrderService {
     }
 
     const currentDate = new Date();
-    if (currentDate < order.rentalStartDate) {
-      throw new Error('Rental period has not started yet.');
-    }
+    // if (currentDate < order.rentalStartDate) {
+    //   throw new Error('Rental period has not started yet.');
+    // }
+    console.log('currentDate:', currentDate);
+    console.log('order.rentalStartDate:', order.rentalStartDate);
+    console.log('start date :', new Date(order.rentalStartDate));
 
     const teslaToken = await prisma.teslaToken.findFirst();
 
