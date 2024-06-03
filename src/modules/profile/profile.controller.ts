@@ -29,6 +29,7 @@ export default class ProfileController extends Api {
     next: NextFunction
   ) => {
     try {
+      console.log(req.body);
       const userProfile = await this.userProfileService.createUserProfile(
         req.user?.id,
         req.body
