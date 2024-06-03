@@ -1,13 +1,12 @@
 import * as path from 'path';
 import express, { Router, type Request, type Response } from 'express';
 import { determineCorsOrigin } from './app';
-import { netherlandsTimeNow } from './utils/date';
 
 const home: Router = Router();
 
 home.get('/test', (_req: Request, res: Response) => {
   try {
-    const value = netherlandsTimeNow();
+    const value = new Date();
     console.log(value);
     res.send({ value });
   } catch (err) {
