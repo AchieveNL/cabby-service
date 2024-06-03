@@ -13,7 +13,7 @@ import { OrderStatus } from './types';
 import { calculateOrderPrice } from './functions';
 import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
-import { formatDateWithoutTimezone, netherlandsTimeNow } from '@/utils/date';
+import { formatDateWithoutTimezone } from '@/utils/date';
 
 const weakTheVehicleUp = async (vehicleTag: string, token: string) => {
   const myHeaders = new Headers();
@@ -111,7 +111,7 @@ export default class OrderService {
       throw new Error('Order not found.');
     }
 
-    const currentDate = netherlandsTimeNow();
+    const currentDate = new Date();
     const startCountdown =
       order.rentalStartDate.getTime() - currentDate.getTime(); // in milliseconds
     const endCountdown = order.rentalEndDate.getTime() - currentDate.getTime(); // in milliseconds
@@ -209,7 +209,7 @@ export default class OrderService {
       throw new Error('Order not found.');
     }
 
-    const currentDate = netherlandsTimeNow();
+    const currentDate = new Date();
     console.log('currentDate:', currentDate);
     console.log('order.rentalStartDate:', order.rentalStartDate);
     console.log('start date :', new Date(order.rentalStartDate));
@@ -271,7 +271,7 @@ export default class OrderService {
       throw new Error('Order not found.');
     }
 
-    const currentDate = netherlandsTimeNow();
+    const currentDate = new Date();
     if (currentDate < order.rentalStartDate) {
       throw new Error('Rental period has not started yet.');
     }
@@ -327,7 +327,7 @@ export default class OrderService {
       throw new Error('Order not found.');
     }
 
-    const currentDate = netherlandsTimeNow();
+    const currentDate = new Date();
     if (currentDate < order.rentalStartDate) {
       throw new Error('Rental period has not started yet.');
     }
@@ -506,7 +506,7 @@ export default class OrderService {
 
     console.log('Completing order:', orderId);
 
-    const now = netherlandsTimeNow();
+    const now = new Date();
 
     const updateData: Prisma.orderUpdateInput = {
       stopRentDate: now,
@@ -619,7 +619,7 @@ export default class OrderService {
     }
 
     const rentalEndDate = order.rentalEndDate;
-    const now = netherlandsTimeNow();
+    const now = new Date();
     const isOverdue = rentalEndDate < now;
 
     const updateData: Prisma.orderUpdateInput = { stopRentDate: now };
@@ -638,7 +638,7 @@ export default class OrderService {
 
     if (!order) throw new Error('Order not found');
 
-    const now = netherlandsTimeNow();
+    const now = new Date();
     const rentalStartDate = new Date(order.rentalStartDate);
 
     const isAdmin = userSender.role === UserRole.ADMIN;
@@ -739,7 +739,7 @@ export default class OrderService {
                                 FROM
                                   "order"
                                 WHERE ("stopRentDate" > "rentalEndDate"
-                                  OR "rentalEndDate" < ${netherlandsTimeNow()})
+                                  OR "rentalEndDate" < now())
                                 AND status = 'CONFIRMED';
                                       `;
       const ordersIds = await prisma.$queryRaw<order[]>(query);
@@ -836,7 +836,7 @@ export default class OrderService {
   public getVehicleBookedPeriodsIncludingOngoing = async (
     vehicleId: string
   ) => {
-    const today = netherlandsTimeNow();
+    const today = new Date();
 
     const orders = await prisma.order.findMany({
       where: {
