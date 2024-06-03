@@ -3,7 +3,6 @@ import cron from 'node-cron';
 import { mailService } from './mail';
 import { fromEmail, isDevelopment, toEmail } from './constants';
 import prisma from '@/lib/prisma';
-import { netherlandsTimeNow } from '@/utils/date';
 
 const query = Prisma.sql`SELECT
     o.id,
@@ -19,7 +18,7 @@ const query = Prisma.sql`SELECT
     JOIN vehicle v ON v.id = o."vehicleId"
   WHERE
     ("stopRentDate" > "rentalEndDate"
-    OR "rentalEndDate" < ${netherlandsTimeNow()})
+    OR "rentalEndDate" < now())
   AND "overdueEmailSentDate" IS NULL;
 `;
 
@@ -68,14 +67,14 @@ function cronJobs() {
         await emailSend(orders);
 
         // Mark overdue orders emails as sent
-        const query2 = Prisma.sql`Update "order" SET "overdueEmailSentDate" = ${netherlandsTimeNow()} where id IN (${Prisma.join(
+        const query2 = Prisma.sql`Update "order" SET "overdueEmailSentDate" = now() where id IN (${Prisma.join(
           ids
         )})`;
 
         mark = await prisma.$executeRaw(query2);
       }
       console.log('Number of overdue orders rows updated', mark);
-      console.log('running a task every minute', netherlandsTimeNow());
+      console.log('running a task every minute', new Date());
     } catch (error) {
       console.log('Error', error);
     }

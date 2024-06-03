@@ -28,10 +28,6 @@ export class CreateVehicleDto {
   @IsString()
   model: string;
 
-  @IsNotEmpty()
-  @IsString()
-  rentalDuration: string;
-
   @IsOptional()
   @IsString()
   licensePlate?: string;
