@@ -12,6 +12,10 @@ export class CreatePermitDto {
 
   @IsString()
   @IsOptional()
+  companyName?: string;
+
+  @IsString()
+  @IsOptional()
   taxiPermitId?: string;
 
   @IsString()
