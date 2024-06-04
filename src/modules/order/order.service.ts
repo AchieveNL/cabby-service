@@ -13,7 +13,6 @@ import { OrderStatus } from './types';
 import { calculateOrderPrice } from './functions';
 import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
-import { formatDateWithoutTimezone } from '@/utils/date';
 
 const weakTheVehicleUp = async (vehicleTag: string, token: string) => {
   const myHeaders = new Headers();
@@ -182,13 +181,7 @@ export default class OrderService {
     }
 
     return {
-      order: {
-        ...order,
-        rentalStartDate: formatDateWithoutTimezone(order.rentalStartDate),
-        rentalEndDate: formatDateWithoutTimezone(order.rentalEndDate),
-        createdAt: formatDateWithoutTimezone(order.createdAt),
-        updatedAt: formatDateWithoutTimezone(order.updatedAt),
-      },
+      order,
       vehicle: order.vehicle,
       startCountdown: startCountdown / 1000,
       endCountdown: endCountdown / 1000,
