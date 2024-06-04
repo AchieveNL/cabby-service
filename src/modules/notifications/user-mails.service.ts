@@ -1,12 +1,14 @@
 import { readFile } from 'fs/promises';
 import path from 'path';
+import axios from 'axios';
 import { mailSender } from '@/config/mailer.config';
 
 const generateEmail = async (
   email: string,
   subject: string,
   text: string,
-  html: string
+  html: string = '',
+  attachments?: any
 ) => {
   try {
     const data = await readFile(
@@ -30,6 +32,7 @@ const generateEmail = async (
       subject,
       text,
       html: replacedHtml,
+      attachments,
     };
   } catch (err) {
     console.error('Error reading file:', err);
@@ -76,22 +79,34 @@ export default class UserMailService {
     await mailSender(mailMessage);
   }
 
-  async newRegistrationMailSender(email: string, name: string) {
-    const mailMessage = generateEmail(
+  async newRegistrationMailSender(email: string, name: string, url: string) {
+    const image = await axios.get(url, { responseType: 'arraybuffer' });
+    const raw = Buffer.from(image.data).toString('base64');
+    const attachments = [
+      {
+        content: raw,
+        filename: 'attachment.pdf',
+        type: 'application/pdf',
+        disposition: 'attachment',
+      },
+    ];
+
+    const mailMessage = await generateEmail(
       email,
       'Nieuwe Registratie - Actie Vereist',
-      `Nieuwe Registratie - Actie Vereist`,
       `
-      Registration (Inschrijving)
-
-Onderwerp: Welkom bij Cabby - Borg Betaling Gelukt!
-
-Beste ${name},
+      Beste ${name},
 
 Welkom bij Cabby, waar jouw reis begint met gemak en betrouwbaarheid! We willen je hartelijk bedanken voor het voltooien van je registratie en het succesvol betalen van de borg. Bij Cabby geloven we in een naadloze reiservaring, en we zijn verheugd dat je deel uitmaakt van onze community.
 
+In de bijlage vind je de factuur van de betaalde borg.
+
 Geniet van de rit!
-  `
+
+Team Cabby
+  `,
+      '',
+      attachments
     );
 
     await mailSender(mailMessage);
