@@ -40,7 +40,7 @@ Team Cabby`,
 
     const mailMessage = generateEmail({
       to: email,
-      subject: 'Your order is confirmed',
+      subject: 'Reservering bevestigd',
       html,
       attachments,
     });
