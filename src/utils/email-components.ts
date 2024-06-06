@@ -43,11 +43,11 @@ password</a></td>`;
 };
 
 export const generateEmailTemplate = async ({
-  subject,
-  text,
+  subject = '',
+  text = '',
 }: {
-  subject: string;
-  text: string;
+  subject?: string;
+  text?: string;
   // email: string;
   // html: string;
 }) => {
