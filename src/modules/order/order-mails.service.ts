@@ -8,7 +8,11 @@ type Options = Omit<MailDataRequired, 'from'>;
 const generateEmail = (data: Options) => data;
 
 export default class OrderMailService {
-  async orderConfirmedMailSender(email: string, papers: string[]) {
+  async orderConfirmedMailSender(
+    email: string,
+    name: string = '',
+    papers: string[]
+  ) {
     const attachments = await Promise.all(
       papers.map(async (paper, index) => {
         const raw = await urlToBase64(paper);
@@ -25,8 +29,13 @@ export default class OrderMailService {
     );
 
     const html = await generateEmailTemplate({
-      subject: 'Your order is confirmed',
-      text: 'Your order is confirmed',
+      text: `Beste ${name},
+
+Geweldig! Je reservering is door ons bevestigd. De autopapieren zijn bijgevoegd in de bijlage.
+
+We zien je binnenkort. Veel rijplezier!
+
+Team Cabby`,
     });
 
     const mailMessage = generateEmail({
