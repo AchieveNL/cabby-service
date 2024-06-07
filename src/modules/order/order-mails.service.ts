@@ -29,11 +29,13 @@ export default class OrderMailService {
     );
 
     const html = await generateEmailTemplate({
-      text: `Beste ${name},
+      title: 'Reservering',
+      subtitle: 'Bevestigd',
+      content: `Beste ${name},<br/><br/>
 
-Geweldig! Je reservering is door ons bevestigd. De autopapieren zijn bijgevoegd in de bijlage.
+Geweldig! Je reservering is door ons bevestigd. De autopapieren zijn bijgevoegd in de bijlage.<br/><br/>
 
-We zien je binnenkort. Veel rijplezier!
+We zien je binnenkort. Veel rijplezier!<br/><br/>
 
 Team Cabby`,
     });
