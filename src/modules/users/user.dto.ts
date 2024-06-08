@@ -79,3 +79,19 @@ export class FetchUsersByStatusDto {
   @IsNotEmpty()
   status: UserStatus;
 }
+
+export class sendEmailOtp {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+}
+
+export class changeEmail {
+  @IsString()
+  @IsNotEmpty()
+  otp: string;
+
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+}
