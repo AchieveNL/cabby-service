@@ -4,6 +4,9 @@ import { type UserStatus, type user } from '@prisma/client';
 import UserMailService from '../notifications/user-mails.service';
 import { type ChangeUserStatusDto } from './user.dto';
 import prisma from '@/lib/prisma';
+import { generateOtp } from '@/utils/text';
+import dayjsExtended from '@/utils/date';
+import { ApiError } from '@/lib/errors';
 
 export default class UserService {
   private readonly userMailService = new UserMailService();
@@ -22,7 +25,7 @@ export default class UserService {
       return user;
     } catch (error) {
       console.log(error);
-      throw new Error('Error creating user');
+      throw new ApiError(400, 'Error creating user');
     }
   }
 
@@ -150,5 +153,56 @@ export default class UserService {
       },
     });
     return user;
+  }
+
+  public async sendEmailOtp({
+    email,
+    userId,
+  }: {
+    email: string;
+    userId: string;
+  }) {
+    // look for new email exist on db
+    const emailExist = await prisma.user.findUnique({ where: { email } });
+    if (emailExist) throw new ApiError(400, 'Email exist!');
+    // create otp value
+    const otp = generateOtp();
+    // save otp value on user table
+    const emailOtpExpiry = dayjsExtended().add(1, 'h').toDate();
+    await prisma.user.update({
+      where: { id: userId },
+      data: { emailOtp: otp, emailOtpExpiry },
+    });
+    // send otp to new email
+    await this.userMailService.mailOtpMailSender(email, otp);
+  }
+
+  public async changeEmail({
+    email,
+    otp,
+    userId,
+  }: {
+    email: string;
+    otp: string;
+    userId: string;
+  }) {
+    // verify otp value
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('No user found!');
+
+    const emailOtp = user.emailOtp;
+    const emailOtpExpiry = user.emailOtpExpiry;
+
+    const notValidOtp =
+      !emailOtpExpiry ||
+      !emailOtp ||
+      emailOtp !== otp ||
+      emailOtpExpiry < new Date();
+
+    if (notValidOtp) {
+      throw new Error('Wrong otp value!');
+    }
+    // change user email
+    await prisma.user.update({ where: { id: userId }, data: { email } });
   }
 }

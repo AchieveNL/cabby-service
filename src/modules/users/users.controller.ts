@@ -3,7 +3,14 @@ import { HttpStatusCode } from 'axios';
 import bcrypt from 'bcrypt';
 import { type Response, type NextFunction, type Request } from 'express';
 import ProfileService from '../profile/profile.service';
-import { type LoginDto, type CreateUserDto } from './user.dto';
+import {
+  type LoginDto,
+  type CreateUserDto,
+  type sendEmailOtp,
+  type changeEmail,
+  type RequestPasswordResetDto,
+  type ResetPasswordDto,
+} from './user.dto';
 import UserService from './users.service';
 import { UserStatus } from './types';
 import { type CustomResponse } from '@/types/common.type';
@@ -24,9 +31,9 @@ export default class UserController extends Api {
     next: NextFunction
   ) => {
     try {
-      const emailExists = await this.userService.emailExists(
-        req.query.email as string
-      );
+      const email = req.query.email as string;
+      const lowerCase = email?.toLowerCase();
+      const emailExists = await this.userService.emailExists(lowerCase);
       this.send(res, { emailExists }, HttpStatusCode.Ok, 'Email exists');
     } catch (e) {
       next(e);
@@ -58,8 +65,10 @@ export default class UserController extends Api {
 
       const hashedPassword: string = await bcrypt.hash(userData.password, 10);
 
+      const email = userData.email.toLowerCase();
       const user = await this.userService.createUser({
         ...userData,
+        email,
         password: hashedPassword,
         status: UserStatus.PENDING,
       });
@@ -80,8 +89,9 @@ export default class UserController extends Api {
     try {
       const { email, password } = req.body as LoginDto;
 
+      const emailLowerCase = email.toLowerCase();
       const user = await this.userService.validateUserCredentials(
-        email,
+        emailLowerCase,
         password
       );
 
@@ -123,7 +133,7 @@ export default class UserController extends Api {
       const { email, password } = req.body as LoginDto;
 
       const user = await this.userService.validateUserCredentials(
-        email,
+        email.toLowerCase(),
         password
       );
 
@@ -219,7 +229,9 @@ export default class UserController extends Api {
 
   public requestPasswordReset = async (req, res, next) => {
     try {
-      await this.userService.sendOtpToUser(req.body.email);
+      const body = req.body as RequestPasswordResetDto;
+      const email = body.email?.toLowerCase();
+      await this.userService.sendOtpToUser(email);
       this.send(res, {}, HttpStatusCode.Ok, 'OTP sent to email');
     } catch (e) {
       next(e);
@@ -244,10 +256,11 @@ export default class UserController extends Api {
   };
 
   public resetPassword = async (req, res, next) => {
+    const body = req.body as ResetPasswordDto;
     try {
       await this.userService.resetPassword(
-        req.body.email,
-        req.body.newPassword
+        body.email.toLowerCase(),
+        body.newPassword
       );
       this.send(res, {}, HttpStatusCode.Ok, 'Password updated successfully');
     } catch (e) {
@@ -330,6 +343,41 @@ export default class UserController extends Api {
     try {
       const users = await this.userService.fetchUserById(req.params.id);
       this.send(res, users, HttpStatusCode.Ok, `user fetched successfully`);
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  public sendEmailOtp = async (
+    req: Request,
+    res: CustomResponse<user>,
+    next: NextFunction
+  ) => {
+    try {
+      const body = req.body as sendEmailOtp;
+      const email = body.email.toLowerCase();
+      const userId = req.user?.id;
+      await this.userService.sendEmailOtp({ email, userId });
+      this.send(res, 'Done', HttpStatusCode.Ok, `Otp sent successfully`);
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  public changeEmail = async (
+    req: Request,
+    res: CustomResponse<user>,
+    next: NextFunction
+  ) => {
+    try {
+      const { email, otp } = req.body as changeEmail;
+      const userId = req.user?.id;
+      await this.userService.changeEmail({
+        email: email.toLowerCase(),
+        userId,
+        otp,
+      });
+      this.send(res, 'Done', HttpStatusCode.Ok, `Email changed successfully`);
     } catch (e) {
       next(e);
     }

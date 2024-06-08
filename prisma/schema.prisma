@@ -35,6 +35,8 @@ model user {
   passwordResetTokens           passwordResetToken[]
   otp                           String? // Store hashed OTP for security.
   otpExpiry                     DateTime? // OTP validity check.
+  emailOtp                      String?
+  emailOtpExpiry                DateTime? // OTP validity check.
   payments                      payment[]
   orders                        order[]
   damageReports                 damageReport[]
