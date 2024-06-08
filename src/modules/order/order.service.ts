@@ -884,8 +884,6 @@ export default class OrderService {
     });
     if (!vehicle) throw new Error('Vehicle not found.');
 
-    // const startDate = new Date(rentStarts);
-    // const endDate = new Date(rentEnds);
     const timeframes = (vehicle?.timeframes ?? []) as number[][];
 
     const total = calculateOrderPrice(rentStarts, rentEnds, timeframes);

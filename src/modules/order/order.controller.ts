@@ -371,9 +371,7 @@ export default class OrderController extends Api {
       const startDate = new Date(rentStarts as string);
       const endDate = new Date(rentEnds?.toString().trim() as string);
 
-      console.log(startDate, endDate, 'checkVehicleAvailabilityForTimeslot');
-
-      // console.log(startDate, endDate);
+      // console.log(startDate, endDate, 'checkVehicleAvailabilityForTimeslot');
 
       const isAvailable = await this.orderService.isVehicleAvailableForTimeslot(
         vehicleId,
