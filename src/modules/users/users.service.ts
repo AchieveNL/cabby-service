@@ -203,6 +203,9 @@ export default class UserService {
       throw new Error('Wrong otp value!');
     }
     // change user email
-    await prisma.user.update({ where: { id: userId }, data: { email } });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { email, emailOtp: null, emailOtpExpiry: null },
+    });
   }
 }
