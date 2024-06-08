@@ -1,4 +1,4 @@
-import dayjsExtended from '@/utils/date';
+import dayjsExtended, { getUtcOffset } from '@/utils/date';
 
 const timeframes = [
   [0, 6],
@@ -72,9 +72,10 @@ export function calculateOrderPrice(
   endDate: Date,
   pricing: number[][]
 ) {
-  startDate = new Date(startDate);
-  endDate = new Date(endDate);
+  startDate = dayjsExtended(startDate).add(getUtcOffset(), 'm').toDate();
+  endDate = dayjsExtended(endDate).add(getUtcOffset(), 'm').toDate();
 
+  // console.log(startDate, endDate);
   const timeframes = calculateTimeframes(startDate, endDate);
   // console.log({ pricing, timeframes });
   let price = 0;
