@@ -253,7 +253,11 @@ export class FileService {
       {
         quantity: 1,
         description: `${
-          [order.vehicle?.model, order.vehicle.licensePlate].join(' ') ?? ''
+          [
+            order.vehicle.companyName,
+            order.vehicle?.model,
+            order.vehicle.licensePlate,
+          ].join(' ') ?? ''
         }`,
         price: order.totalAmount.toFixed(2),
         priceExclVat: exclPrice,
