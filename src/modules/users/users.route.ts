@@ -8,6 +8,8 @@ import {
   RequestPasswordResetDto,
   ResetPasswordDto,
   VerifyOtpDto,
+  changeEmail,
+  sendEmailOtp,
 } from '@/modules/users/user.dto';
 import RequestValidator from '@/middlewares/request-validator';
 import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
@@ -82,6 +84,22 @@ users.get(
   verifyAuthToken,
   requireAuth,
   controller.fetchCurrentUser
+);
+
+users.post(
+  '/send-email-otp',
+  verifyAuthToken,
+  requireAuth,
+  RequestValidator.validate(sendEmailOtp),
+  controller.sendEmailOtp
+);
+
+users.post(
+  '/change-email',
+  verifyAuthToken,
+  requireAuth,
+  RequestValidator.validate(changeEmail),
+  controller.changeEmail
 );
 
 users.get('/:id', verifyAuthToken, requireAuth, controller.fetchUserById);
