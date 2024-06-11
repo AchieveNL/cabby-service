@@ -2,9 +2,10 @@ import sgMail from '@sendgrid/mail';
 
 export const mailSender = async (otpMessage) => {
   try {
+    // console.log(otpMessage);
     sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);
     // Determine the recipient based on the environment
-    let recipient = otpMessage.to;
+    let recipient = otpMessage?.to;
     if (process.env.NODE_ENV !== 'production') {
       recipient = process.env.TEST_EMAIL ?? 'no-reply@cabbyrentals.nl'; // Override recipient for non-production environments
     }
