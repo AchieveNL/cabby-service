@@ -205,7 +205,7 @@ export default class PaymentService {
       data: { status: payment.status.toUpperCase() as PaymentStatus },
     });
 
-    await prisma.registrationOrder.update({
+    const { invoiceUrl } = await prisma.registrationOrder.update({
       where: {
         id: payment.metadata.registrationOrderId,
       },
@@ -224,7 +224,11 @@ export default class PaymentService {
       const email = userProfile.user.email;
       const fullName = userProfile.fullName;
       await this.adminMailService.newRegistrationMailSender(email, fullName);
-      await this.userMailService.newRegistrationMailSender(email, fullName);
+      await this.userMailService.newRegistrationMailSender(
+        email,
+        fullName,
+        invoiceUrl as string
+      );
     }
 
     return true;
