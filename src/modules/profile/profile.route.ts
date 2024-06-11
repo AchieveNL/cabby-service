@@ -55,7 +55,7 @@ profile.get(
 );
 
 profile.patch(
-  '/edit',
+  '/edit/:id',
   verifyAuthToken,
   requireAuth,
   RequestValidator.validate(EditUserProfileDto),
