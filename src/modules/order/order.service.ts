@@ -500,6 +500,7 @@ export default class OrderService {
     console.log('Completing order:', orderId);
 
     const now = new Date();
+    // const isOverdue = order.rentalEndDate < now
 
     const updateData: Prisma.orderUpdateInput = {
       stopRentDate: now,
@@ -672,7 +673,7 @@ export default class OrderService {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        user: { select: { email: true } },
+        user: { include: { profile: true } },
         vehicle: { select: { papers: true } },
       },
     });
@@ -686,6 +687,7 @@ export default class OrderService {
 
     await this.orderMailService.orderConfirmedMailSender(
       order.user.email,
+      order.user.profile?.fullName,
       order.vehicle.papers
     );
   };
@@ -875,8 +877,6 @@ export default class OrderService {
     });
     if (!vehicle) throw new Error('Vehicle not found.');
 
-    // const startDate = new Date(rentStarts);
-    // const endDate = new Date(rentEnds);
     const timeframes = (vehicle?.timeframes ?? []) as number[][];
 
     const total = calculateOrderPrice(rentStarts, rentEnds, timeframes);

@@ -1,36 +1,50 @@
 import { type MailDataRequired } from '@sendgrid/mail';
 import { mailSender } from '@/config/mailer.config';
 import { generateEmailTemplate } from '@/utils/email-components';
+import { urlToBase64 } from '@/utils/file';
 
 type Options = Omit<MailDataRequired, 'from'>;
 
 const generateEmail = (data: Options) => data;
 
 export default class OrderMailService {
-  async orderConfirmedMailSender(email: string, papers: string[]) {
-    // const papersBase64 = await papers.map((paper) =>
-    //   fetch(paper)
-    //     .then((r) => r.buffer())
-    //     .then((buf) => `data:image/png;base64,` + buf.toString('base64'))
-    // );
+  async orderConfirmedMailSender(
+    email: string,
+    name: string = '',
+    papers: string[]
+  ) {
+    const attachments = await Promise.all(
+      papers.map(async (paper, index) => {
+        const raw = await urlToBase64(paper);
+        const words = paper.split('/');
+        const filename = words[words.length - 1];
+
+        return {
+          content: raw,
+          filename,
+          // type: 'application/pdf',
+          disposition: 'attachment',
+        };
+      })
+    );
 
     const html = await generateEmailTemplate({
-      subject: 'Your order is confirmed',
-      text: 'Your order is confirmed',
+      title: 'Reservering',
+      subtitle: 'Bevestigd',
+      content: `Beste ${name},<br/><br/>
+
+Geweldig! Je reservering is door ons bevestigd. De autopapieren zijn bijgevoegd in de bijlage.<br/><br/>
+
+We zien je binnenkort. Veel rijplezier!<br/><br/>
+
+Team Cabby`,
     });
 
     const mailMessage = generateEmail({
       to: email,
-      subject: 'Your order is confirmed',
+      subject: 'Reservering bevestigd',
       html,
-      // attachments: papers.map((paper, index) => {
-      //   const paperArray = paper.split('/');
-      //   const filename = paperArray[paperArray.length - 1];
-      //   return {
-      //     content: papersBase64[index],
-      //     filename,
-      //   };
-      // }),
+      attachments,
     });
     console.log('Order confirmation email sent successfully.', papers);
 
