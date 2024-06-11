@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises';
 import path from 'path';
-import axios from 'axios';
 import { mailSender } from '@/config/mailer.config';
+import { urlToBase64 } from '@/utils/file';
 
 const generateEmail = async (
   email: string,
@@ -59,6 +59,24 @@ export default class UserMailService {
     await mailSender(mailMessage);
   }
 
+  async mailOtpMailSender(email: string, otp: string) {
+    const mailMessage = await generateEmail(
+      email,
+      'Your OTP for Cabby Rentals',
+      `Your OTP for Cabby Rentals is: ${otp}. It will expire in 1 hour.`,
+      `
+        <strong>Your OTP for Cabby Rentals is:</strong> 
+        </br></br>
+        <h2>${otp}</h2>
+        </br></br>
+        <p>This OTP will expire in 1 hour.</p>
+      `
+    );
+    console.log('OTP email sent successfully.', mailMessage);
+
+    await mailSender(mailMessage);
+  }
+
   /// beste user or $P{name}
   async accountDeletedMailSender(email: string, name: string) {
     const mailMessage = await generateEmail(
@@ -80,8 +98,7 @@ export default class UserMailService {
   }
 
   async newRegistrationMailSender(email: string, name: string, url: string) {
-    const image = await axios.get(url, { responseType: 'arraybuffer' });
-    const raw = Buffer.from(image.data).toString('base64');
+    const raw = await urlToBase64(url);
     const attachments = [
       {
         content: raw,

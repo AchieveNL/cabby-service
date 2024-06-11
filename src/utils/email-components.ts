@@ -43,18 +43,20 @@ password</a></td>`;
 };
 
 export const generateEmailTemplate = async ({
-  subject,
-  text,
+  title = '',
+  content = '',
+  subtitle = '',
 }: {
-  subject: string;
-  text: string;
+  title?: string;
+  subtitle?: string;
+  content?: string;
   // email: string;
   // html: string;
 }) => {
   const appDir = dirname(require?.main?.filename as string);
   const templatePath = path.join(
     appDir,
-    '../public/templates/email_template.html'
+    '../public/templates/email_template_improved.html'
   );
 
   try {
@@ -65,8 +67,9 @@ export const generateEmailTemplate = async ({
 
     // Replace placeholders in the HTML template
     const replacedHtml = template
-      .replace('{{title}}', subject)
-      .replace('{{content}}', text)
+      .replace('{{title}}', title)
+      .replace('{{subtitle}}', subtitle)
+      .replace('{{content}}', content)
       .replace('{{subcontent}}', '')
       .replace('{{action}}', '');
 
