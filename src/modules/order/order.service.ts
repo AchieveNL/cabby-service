@@ -1,8 +1,8 @@
 import { Prisma, UserRole, type user, type order } from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
-import { differenceInHours } from 'date-fns';
 // eslint-disable-next-line
 import fetch, { Headers } from 'node-fetch';
+import { HttpStatusCode } from 'axios';
 import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
@@ -13,6 +13,7 @@ import { OrderStatus } from './types';
 import { calculateOrderPrice } from './functions';
 import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
+import { ApiError } from '@/lib/errors';
 
 const weakTheVehicleUp = async (vehicleTag: string, token: string) => {
   const myHeaders = new Headers();
@@ -56,7 +57,10 @@ export default class OrderService {
     });
 
     if (activeOrPendingOrdersCount >= 2) {
-      return { error: 'You can have only 2 active or pending orders at max.' };
+      throw new ApiError(
+        400,
+        'You can have only 2 active or pending orders at max.'
+      );
     }
 
     const vehicle = await prisma.vehicle.findUnique({
@@ -631,18 +635,10 @@ export default class OrderService {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
 
     if (!order) throw new Error('Order not found');
-
-    const now = new Date();
-    const rentalStartDate = new Date(order.rentalStartDate);
-
     const isAdmin = userSender.role === UserRole.ADMIN;
 
-    // const lessThanDay = dayjs(dayjs()).diff(rentalStartDate, 'h') <= 24;
-    if (!isAdmin && differenceInHours(rentalStartDate, now) <= 24) {
-      throw new Error(
-        'Cannot cancel order less than 24 hours before rental start date'
-      );
-    }
+    if (!isAdmin && userSender.id !== order.userId)
+      throw new ApiError(HttpStatusCode.Unauthorized, 'User not authorized');
 
     await prisma.order.update({
       where: { id: orderId },
