@@ -634,7 +634,7 @@ export default class OrderService {
   public cancelOrder = async (orderId: string, userSender: user) => {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
 
-    if (!order) throw new Error('Order not found');
+    if (!order) throw new ApiError(HttpStatusCode.NotFound, 'Order not found');
     const isAdmin = userSender.role === UserRole.ADMIN;
 
     if (!isAdmin && userSender.id !== order.userId)
