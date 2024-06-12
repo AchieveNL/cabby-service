@@ -81,7 +81,7 @@ export class FileService {
       include: {
         user: {
           include: {
-            profile: true,
+            profile: { include: { permitDetails: true } },
           },
         },
         payment: true,
@@ -151,11 +151,12 @@ export class FileService {
     const fullAddress = user.profile?.fullAddress;
     const zip = user.profile?.zip?.toUpperCase() ?? 'N/A';
     const city = user.profile?.city ?? 'N/A';
+    const companyName = user.profile?.permitDetails?.companyName ?? 'N/A';
     const customerAdress = {
       x: 50,
       y: 620,
       lines: [
-        `${'<companyName>' ?? 'N/A'}`,
+        `${companyName}`,
         `${fullAddress ? capitalizeFirstLetter(fullAddress) : 'N/A'}`,
         `${zip} ${city}`,
       ],
