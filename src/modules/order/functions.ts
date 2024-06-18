@@ -13,7 +13,7 @@ function durationInMilli(start: Date, end: Date) {
   return dayjsExtended(end).diff(start) / milliInHours;
 }
 
-function calculateTimeframes(startDate: Date, endDate: Date) {
+export function calculateTimeframes(startDate: Date, endDate: Date) {
   const values = [
     [0, 0, 0, 0],
     [0, 0, 0, 0],
@@ -26,8 +26,8 @@ function calculateTimeframes(startDate: Date, endDate: Date) {
 
   let start = startDate;
   const end = endDate;
-
   while (start <= end) {
+    // console.log({ start, end, res: start <= end });
     const day = dayjsExtended.utc(start).get('day');
     const row = day - 1;
     const trueRow = row >= 0 ? row : 6;
@@ -61,7 +61,12 @@ function calculateTimeframes(startDate: Date, endDate: Date) {
       }
     }
 
-    start = dayjsExtended.utc(start).add(1, 'day').toDate();
+    start = dayjsExtended
+      .utc(start)
+      .add(1, 'day')
+      .set('h', 0)
+      .set('m', 0)
+      .toDate();
   }
 
   return values;
@@ -74,6 +79,7 @@ export function calculateOrderPrice(
 ) {
   startDate = dayjsExtended(startDate).add(getUtcOffset(), 'm').toDate();
   endDate = dayjsExtended(endDate).add(getUtcOffset(), 'm').toDate();
+  console.log(startDate, endDate);
 
   // console.log(startDate, endDate);
   const timeframes = calculateTimeframes(startDate, endDate);
