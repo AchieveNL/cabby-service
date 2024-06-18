@@ -5,7 +5,7 @@ import { PDFDocument, rgb } from 'pdf-lib';
 import { bucketName, gStorage } from '@/utils/storage';
 import prisma from '@/lib/prisma';
 import { capitalizeFirstLetter } from '@/utils/text';
-import { dayjsExtended } from '@/utils/date';
+import { dayjsExtended, getUtcOffset } from '@/utils/date';
 
 export class FileService {
   private readonly storage = gStorage;
@@ -179,10 +179,15 @@ export class FileService {
       },
     });
 
-    const startDate = dayjsExtended(order.rentalStartDate)
-      .tz()
-      .format('L HH:mm');
-    const endDate = dayjsExtended(order.rentalEndDate).tz().format('L HH:mm');
+    const netherlandsOffset = ' GMT+' + (getUtcOffset() / 60).toString();
+
+    const startDate =
+      dayjsExtended(order.rentalStartDate).tz().format('L HH:mm') +
+      netherlandsOffset;
+    const endDate =
+      dayjsExtended(order.rentalEndDate).tz().format('L HH:mm') +
+      netherlandsOffset;
+
     const invoiceDates = {
       x: 400,
       y: 620,
