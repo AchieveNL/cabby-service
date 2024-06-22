@@ -8,8 +8,10 @@ export const logsMiddleware = async (
 ) => {
   const userId = req.user?.id || null;
   const { headers, body, query, params, method, url, hostname, ip } = req;
+  const ipAddress =
+    req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? ip;
 
-  const data = { hostname, ip, headers };
+  const data = { hostname, ip, ipAddress, headers };
   prisma.logs
     .create({
       data: { userId, data, method, url, body, params, query },
