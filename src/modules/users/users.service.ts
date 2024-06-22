@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { type UserStatus, type user } from '@prisma/client';
+import { HttpStatusCode } from 'axios';
 import UserMailService from '../notifications/user-mails.service';
 import { type ChangeUserStatusDto } from './user.dto';
 import prisma from '@/lib/prisma';
@@ -84,26 +85,42 @@ export default class UserService {
   public async deleteAccount(userId: string): Promise<void> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        profile: {
-          select: {
-            fullName: true,
-          },
-        },
-      },
+      select: { email: true, profile: { select: { fullName: true } } },
     });
 
-    await prisma.damageReport.deleteMany({ where: { userId } });
-    await prisma.order.deleteMany({ where: { userId } });
-    await prisma.payment.deleteMany({ where: { userId } });
-    await prisma.message.deleteMany({
-      where: { OR: [{ senderId: userId }, { recipientId: userId }] },
-    });
-    await prisma.passwordResetToken.deleteMany({ where: { userId } });
-    await prisma.registrationOrder.deleteMany({ where: { userId } });
+    if (!user) throw new ApiError(HttpStatusCode.BadRequest, 'User not found');
 
-    await prisma.userProfile.delete({ where: { userId } });
-    await prisma.user.delete({ where: { id: userId } });
+    // const userProfileId = user?.profile?.id ?? null;
+
+    // await prisma.damageReport.deleteMany({ where: { userId } });
+    // await prisma.order.deleteMany({ where: { userId } });
+    // await prisma.payment.deleteMany({ where: { userId } });
+    // await prisma.message.deleteMany({
+    //   where: { OR: [{ senderId: userId }, { recipientId: userId }] },
+    // });
+    // await prisma.passwordResetToken.deleteMany({ where: { userId } });
+    // await prisma.registrationOrder.deleteMany({ where: { userId } });
+
+    // await prisma.userVerification.deleteMany({
+    //   where: { userProfileId },
+    // });
+    // await prisma.userTokens.deleteMany({
+    //   where: { userId },
+    // });
+    // await prisma.driverLicense.deleteMany({
+    //   where: { userProfileId },
+    // });
+    // await prisma.permitDetails.deleteMany({
+    //   where: { userProfileId },
+    // });
+    // await prisma.driverLicense.deleteMany({
+    //   where: { userProfileId },
+    // });
+    // await prisma.userProfile.deleteMany({ where: { userId } });
+
+    await prisma.user.delete({
+      where: { id: userId },
+    });
 
     await this.userMailService.accountDeletedMailSender(
       user?.email!,
