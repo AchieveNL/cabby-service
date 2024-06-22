@@ -45,6 +45,7 @@ model user {
   registrationOrder             registrationOrder?
   CustomerSupportRepresentative CustomerSupportRepresentative?
   userTokens                    userTokens?
+  logs                          Logs[]
 }
 
 model passwordResetToken {
@@ -52,7 +53,7 @@ model passwordResetToken {
   token     String   @unique
   expiry    DateTime
   userId    String
-  user      user     @relation(fields: [userId], references: [id])
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }
 
@@ -81,7 +82,7 @@ model userProfile {
   zip              String?
   dateOfBirth      String?
   status           UserProfileStatus @default(REQUIRE_REGISTRATION_FEE)
-  user             user              @relation(fields: [userId], references: [id])
+  user             user              @relation(fields: [userId], references: [id], onDelete: Cascade)
   driverLicense    driverLicense?
   permitDetails    permitDetails?
   userVerification userVerification?
@@ -97,7 +98,7 @@ model driverLicense {
   driverLicenseFront  String?
   driverLicense       String?
   userProfileId       String      @unique
-  userProfile         userProfile @relation(fields: [userProfileId], references: [id])
+  userProfile         userProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
 }
 
 model permitDetails {
@@ -109,7 +110,7 @@ model permitDetails {
   taxiPermitPicture String?
   companyName       String?
   userProfileId     String      @unique
-  userProfile       userProfile @relation(fields: [userProfileId], references: [id])
+  userProfile       userProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
 }
 
 model userVerification {
@@ -136,7 +137,7 @@ model userVerification {
   isDateOfBirthMatch Boolean
   createdAt          DateTime @default(now())
 
-  userProfile userProfile @relation(fields: [userProfileId], references: [id])
+  userProfile userProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
 }
 
 model driverRejection {
@@ -144,7 +145,7 @@ model driverRejection {
   userProfileId String      @unique
   reason        String
   date          DateTime    @default(now())
-  userProfile   userProfile @relation(fields: [userProfileId], references: [id])
+  userProfile   userProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
 }
 
 enum VehicleStatus {
@@ -209,7 +210,7 @@ model payment {
   registrationOrderId String?            @unique
   product             PaymentProduct     @default(RENT)
   status              PaymentStatus      @default(PAID)
-  user                user               @relation(fields: [userId], references: [id])
+  user                user               @relation(fields: [userId], references: [id], onDelete: Cascade)
   order               order?             @relation(fields: [orderId], references: [id], onDelete: Cascade)
   registrationOrder   registrationOrder? @relation(fields: [registrationOrderId], references: [id], onDelete: Cascade)
   invoiceUrl          String?
@@ -236,7 +237,7 @@ model registrationOrder {
   note        String? // Any additional notes
   invoiceUrl  String?
 
-  user    user     @relation(fields: [userId], references: [id])
+  user    user     @relation(fields: [userId], references: [id], onDelete: Cascade)
   payment payment?
 
   @@index([userId], name: "idx_registrationOrder_userId")
@@ -268,7 +269,7 @@ model order {
   overdueEmailSentDate DateTime?
 
   vehicle   vehicle         @relation(fields: [vehicleId], references: [id])
-  user      user            @relation(fields: [userId], references: [id])
+  user      user            @relation(fields: [userId], references: [id], onDelete: Cascade)
   payment   payment?
   rejection orderRejection?
 
@@ -308,7 +309,7 @@ model damageReport {
   userId      String
   images      String[]     @default([])
   vehicle     vehicle      @relation(fields: [vehicleId], references: [id])
-  user        user         @relation(fields: [userId], references: [id])
+  user        user         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum ReportStatus {
@@ -324,15 +325,15 @@ model message {
   createdAt   DateTime @default(now())
 
   // Relations
-  sender    user @relation("MessageSender", fields: [senderId], references: [id])
-  recipient user @relation("MessageRecipient", fields: [recipientId], references: [id])
+  sender    user @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient user @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
 }
 
 model CustomerSupportRepresentative {
   id     String @id @default(uuid())
   userId String
 
-  user user @relation(fields: [userId], references: [id])
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId])
 }
@@ -342,7 +343,7 @@ model userTokens {
   userId String
   token  String
 
-  user user @relation(fields: [userId], references: [id])
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId])
 }
@@ -359,7 +360,7 @@ model Refunds {
   id            Int         @id @default(autoincrement())
   amount        Decimal     @db.Decimal(6, 2)
   userProfileId String
-  userProfile   userProfile @relation(fields: [userProfileId], references: [id])
+  userProfile   userProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
@@ -368,4 +369,18 @@ model Settings {
   id    Int    @id @default(autoincrement())
   key   String @unique
   value String
+}
+
+model Logs {
+  id        Int      @id @default(autoincrement())
+  url       String
+  method    String
+  body      Json
+  query     Json
+  params    Json
+  createdAt DateTime @default(now())
+  userId    String?
+  user      user?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  data Json
 }
