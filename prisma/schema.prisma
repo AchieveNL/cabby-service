@@ -378,6 +378,7 @@ model Logs {
   body      Json
   query     Json
   params    Json
+  ip        String?
   createdAt DateTime @default(now())
   userId    String?
   user      user?    @relation(fields: [userId], references: [id], onDelete: Cascade)
