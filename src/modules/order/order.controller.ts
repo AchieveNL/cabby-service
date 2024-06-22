@@ -125,7 +125,7 @@ export default class OrderController extends Api {
       );
     } catch (error) {
       console.log(error);
-      next();
+      next(error);
     }
   };
 

@@ -330,7 +330,7 @@ export default class OrderService {
     });
 
     if (!order) {
-      throw new Error('Order not found.');
+      throw new ApiError(HttpStatusCode.BadRequest, 'Order not found.');
     }
 
     const currentDate = new Date();
