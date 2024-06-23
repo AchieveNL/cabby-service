@@ -230,26 +230,34 @@ export default class OrderService {
       throw new Error('Vehicle VIN not found.');
     }
 
-    await weakTheVehicleUp(order.vehicle.vin, teslaToken.token);
+    if (process.env.NODE_ENV === 'production') {
+      await weakTheVehicleUp(order.vehicle.vin, teslaToken.token);
 
-    const result = await this.unlockTeslaVehicle(
-      order.vehicle.vin,
-      teslaToken?.token,
-      teslaToken?.refreshToken
-    );
+      const result = await this.unlockTeslaVehicle(
+        order.vehicle.vin,
+        teslaToken?.token,
+        teslaToken?.refreshToken
+      );
 
-    if (!result) {
-      throw new Error('Error unlocking Tesla vehicle.');
-    }
+      if (!result) {
+        throw new Error('Error unlocking Tesla vehicle.');
+      }
 
-    if (result?.response?.result) {
-      // await this.notificationService.sendNotificationToUser(
-      //   userId,
-      //   'Je Tesla is ontgrendeld.',
-      //   'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
-      //   JSON.stringify({ type: 'event' })
-      // );
-      // Update the database indicating the vehicle is unlocked
+      if (result?.response?.result) {
+        // await this.notificationService.sendNotificationToUser(
+        //   userId,
+        //   'Je Tesla is ontgrendeld.',
+        //   'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
+        //   JSON.stringify({ type: 'event' })
+        // );
+        // Update the database indicating the vehicle is unlocked
+        const data = await prisma.order.update({
+          where: { id: orderId },
+          data: { isVehicleUnlocked: true },
+        });
+        return data;
+      }
+    } else {
       const data = await prisma.order.update({
         where: { id: orderId },
         data: { isVehicleUnlocked: true },
@@ -289,20 +297,21 @@ export default class OrderService {
     }
 
     // const teslaApiToken = await getTeslaApiToken(orderId);
+    if (process.env.NODE_ENV === 'production') {
+      const result = await this.lockTeslaVehicle(
+        order.vehicle.vin,
+        teslaToken?.token,
+        teslaToken?.refreshToken
+      );
 
-    const result = await this.lockTeslaVehicle(
-      order.vehicle.vin,
-      teslaToken?.token,
-      teslaToken?.refreshToken
-    );
-
-    if (result.response.result) {
-      // await this.notificationService.sendNotificationToUser(
-      //   userId,
-      //   'Heel goed!',
-      //   'Je Tesla is nu vergrendeld. 🔐',
-      //   JSON.stringify({ type: 'event' })
-      // );
+      if (result.response.result) {
+        // await this.notificationService.sendNotificationToUser(
+        //   userId,
+        //   'Heel goed!',
+        //   'Je Tesla is nu vergrendeld. 🔐',
+        //   JSON.stringify({ type: 'event' })
+        // );
+      }
     }
 
     // Update the database indicating the vehicle is locked
