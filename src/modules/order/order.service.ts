@@ -614,7 +614,7 @@ export default class OrderService {
 
     await prisma.order.update({
       where: { id: orderId },
-      data: { status: OrderStatus.COMPLETED },
+      data: { status: OrderStatus.COMPLETED, stopRentDate: new Date() },
     });
   };
 
