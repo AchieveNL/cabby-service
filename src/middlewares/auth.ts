@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { UserRole } from '@prisma/client';
 import { generateRefreshToken, generateToken } from './token-manager';
 import { setAuthCookies } from './cookies';
+import { logsMiddleware } from './logs';
 
 export const verifyAuthToken = async (
   req: Request,
@@ -24,10 +25,11 @@ export const verifyAuthToken = async (
       jwt.verify(
         token,
         process.env.JWT_SECRET_KEY as string,
-        (err, decoded) => {
+        async (err, decoded) => {
           // Valid token
           if (!err) {
             req.user = decoded.user;
+            await logsMiddleware(req, res, next);
             next();
           }
           // Token expired and refresh token exists
