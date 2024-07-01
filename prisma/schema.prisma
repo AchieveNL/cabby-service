@@ -105,6 +105,7 @@ model permitDetails {
   id                String      @id @default(uuid())
   kiwaDocument      String?
   kvkDocument       String?
+  kvkNumber         String?
   taxiPermitId      String?
   taxiPermitExpiry  String?
   taxiPermitPicture String?
