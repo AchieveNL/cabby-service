@@ -1,5 +1,5 @@
 // permit.dto.ts
-import { IsString, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class CreatePermitDto {
   @IsString()
@@ -10,9 +10,9 @@ export class CreatePermitDto {
   @IsOptional()
   kvkDocument?: string;
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  kvkNumber?: number;
+  kvkNumber?: string;
 
   @IsString()
   @IsOptional()
@@ -40,9 +40,9 @@ export class UpdatePermitDto {
   @IsOptional()
   kvkDocumentId?: string;
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  kvkNumber?: number;
+  kvkNumber?: string;
 
   @IsString()
   @IsOptional()
