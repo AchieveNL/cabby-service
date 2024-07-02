@@ -105,7 +105,7 @@ model permitDetails {
   id                String      @id @default(uuid())
   kiwaDocument      String?
   kvkDocument       String?
-  kvkNumber         String?
+  kvkNumber         Int?
   taxiPermitId      String?
   taxiPermitExpiry  String?
   taxiPermitPicture String?
@@ -156,18 +156,26 @@ enum VehicleStatus {
   BLOCKED
 }
 
+enum VehicleEngineType {
+  BENZINE
+  HYBRIDE_BENZINE
+  DIESEL
+  HYBRIDE_DIESEL
+  ELEKTRISCH
+}
+
 model vehicle {
-  id                   String        @id @default(uuid())
+  id                   String             @id @default(uuid())
   logo                 String?
   companyName          String?
   model                String?
   rentalDuration       String?
-  licensePlate         String?       @unique
+  licensePlate         String?            @unique
   category             String?
   manufactureYear      String?
-  engineType           String?
+  engineType           VehicleEngineType?
   seatingCapacity      String?
-  batteryCapacity      String?
+  batteryCapacity      Int?
   uniqueFeature        String?
   streetName           String?
   streetNumber         String?
@@ -178,11 +186,13 @@ model vehicle {
   papers               String[]
   availability         String?
   unavailabilityReason String?
-  currency             String?       @default("EUR")
-  pricePerDay          Decimal?      @db.Decimal(6, 2)
-  status               VehicleStatus @default(PENDING)
+  currency             String?            @default("EUR")
+  pricePerDay          Decimal?           @db.Decimal(6, 2)
+  status               VehicleStatus      @default(PENDING)
   vin                  String?
   timeframes           Json?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @default(now()) @updatedAt
 
   orders        order[]
   rejection     vehicleRejection?
@@ -204,6 +214,7 @@ enum PaymentStatus {
 model payment {
   id                  String             @id @default(uuid())
   userId              String
+  mollieId            String?            @unique
   amount              Decimal            @db.Decimal(6, 2)
   currency            String             @default("EUR")
   paymentDate         DateTime           @default(now())
