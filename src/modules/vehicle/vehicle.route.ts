@@ -12,6 +12,14 @@ const router: Router = Router();
 const controller = new VehicleController();
 
 router.get(
+  '/last-details',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  controller.getLastVehicleDetails
+);
+
+router.get(
   '/deposit',
   verifyAuthToken,
   requireAuth,

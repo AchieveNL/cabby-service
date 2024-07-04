@@ -364,4 +364,17 @@ export default class VehicleController extends Api {
       next(error);
     }
   };
+
+  public getLastVehicleDetails = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const details = await this.vehicleService.getLastVehicleDetails();
+      return this.send(res, details, HttpStatusCode.Ok, 'sucess');
+    } catch (error) {
+      next(error);
+    }
+  };
 }

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
 import { type OrderStatus } from './types';
 
 export class CreateOrderDto {
@@ -12,6 +12,24 @@ export class CreateOrderDto {
 
   @IsNotEmpty()
   @IsString()
+  rentalEndDate: string;
+}
+
+export class CreateOrderAdminDto {
+  @IsNotEmpty()
+  @IsString()
+  vehicleId: string;
+
+  @IsNotEmpty()
+  @IsString()
+  userId: string;
+
+  @IsNotEmpty()
+  @IsDateString()
+  rentalStartDate: string;
+
+  @IsNotEmpty()
+  @IsDateString()
   rentalEndDate: string;
 }
 
@@ -51,4 +69,14 @@ export class DeleteOrderDto {
   @IsNotEmpty()
   @IsString()
   orderId: string;
+}
+
+export class getRangeOrdersInvoicesDto {
+  @IsNotEmpty()
+  @IsDateString()
+  start: string;
+
+  @IsNotEmpty()
+  @IsDateString()
+  end: string;
 }

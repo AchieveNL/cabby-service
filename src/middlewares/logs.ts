@@ -1,7 +1,7 @@
 import { type NextFunction, type Request, type Response } from 'express';
 import prisma from '@/lib/prisma';
 
-export const logsMiddleware = async (
+export const logsMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -19,4 +19,6 @@ export const logsMiddleware = async (
     .catch((err) => {
       console.log('Error saving log', err);
     });
+
+  next();
 };
