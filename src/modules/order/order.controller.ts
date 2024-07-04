@@ -39,6 +39,26 @@ export default class OrderController extends Api {
     }
   };
 
+  public createOrderAdmin = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const dto = req.body;
+      const response = await this.orderService.createOrderAdmin(dto);
+      return this.send(
+        res,
+        response,
+        HttpStatusCode.Created,
+        'Order created successfully'
+      );
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  };
+
   public getOrderDetailsWithStatus = async (
     req: Request,
     res: Response,
@@ -121,7 +141,7 @@ export default class OrderController extends Api {
         res,
         unlockResult,
         HttpStatusCode.Ok,
-        'Vehicle unlocked successfully'
+        'Vehicle started successfully'
       );
     } catch (error) {
       console.log(error);
@@ -354,6 +374,28 @@ export default class OrderController extends Api {
         );
 
       return this.send(res, availability);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getRangeOrdersInvoices = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const start = req.query.start as string;
+      const end = req.query.end as string;
+
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      const data = await this.orderService.getRangeOrdersInvoices(
+        startDate,
+        endDate
+      );
+
+      return this.send(res, data);
     } catch (error) {
       next(error);
     }

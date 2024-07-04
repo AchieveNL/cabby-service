@@ -1,4 +1,10 @@
-import { Prisma, UserRole, type user, type order } from '@prisma/client';
+import {
+  Prisma,
+  UserRole,
+  type user,
+  type order,
+  PaymentStatus,
+} from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
 // eslint-disable-next-line
 import fetch, { Headers } from 'node-fetch';
@@ -11,6 +17,7 @@ import { NotificationService } from '../notifications/notification.service';
 import OrderMailService from './order-mails.service';
 import { OrderStatus } from './types';
 import { calculateOrderPrice } from './functions';
+import { type CreateOrderAdminDto } from './order.dto';
 import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
 import { ApiError } from '@/lib/errors';
@@ -92,6 +99,45 @@ export default class OrderService {
       userId: dto.userId,
       amount: totalAmount,
       orderId: order.id,
+    });
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        paymentId: paymentResponse.payment,
+      },
+    });
+
+    return { order, checkoutUrl: paymentResponse.checkoutUrl };
+  };
+
+  public createOrderAdmin = async (dto: CreateOrderAdminDto) => {
+    const { rentalEndDate, rentalStartDate, userId, vehicleId } = dto;
+
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { id: vehicleId },
+    });
+
+    if (!vehicle) throw new Error('No vehicle found!');
+
+    const totalAmount = 0.01;
+
+    const order = await prisma.order.create({
+      data: {
+        rentalEndDate,
+        rentalStartDate,
+        userId,
+        vehicleId,
+        totalAmount,
+        status: OrderStatus.CONFIRMED,
+      },
+    });
+
+    const paymentResponse = await this.paymentService.createOrderPayment({
+      userId,
+      amount: totalAmount,
+      orderId: order.id,
+      status: PaymentStatus.PAID,
     });
 
     await prisma.order.update({
@@ -731,6 +777,7 @@ export default class OrderService {
         },
       },
       vehicle: true,
+      payment: true,
     };
 
     if (status === 'UNPAID') {
@@ -921,5 +968,19 @@ export default class OrderService {
     if (!vehicle || vehicle.status !== VehicleStatus.ACTIVE) return false;
 
     return overlappingOrders === 0;
+  };
+
+  public getRangeOrdersInvoices = async (startDate: Date, endDate: Date) => {
+    const data = await prisma.payment.findMany({
+      select: { invoiceUrl: true },
+      where: {
+        paymentDate: { gte: startDate, lte: endDate },
+        invoiceUrl: { not: null },
+      },
+    });
+
+    const formatedData = data.map((el) => el.invoiceUrl);
+
+    return formatedData;
   };
 }

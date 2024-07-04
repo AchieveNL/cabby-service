@@ -2,10 +2,12 @@ import { Router } from 'express';
 import OrderController from './order.controller';
 import {
   CancelOrderDto,
+  CreateOrderAdminDto,
   CreateOrderDto,
   DeleteOrderDto,
   RejectConfirmOrderDto,
   changeOrderStatusDto,
+  getRangeOrdersInvoicesDto,
 } from './order.dto';
 import RequestValidator from '@/middlewares/request-validator';
 import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
@@ -19,6 +21,24 @@ router.post(
   requireAuth,
   RequestValidator.validate(CreateOrderDto),
   orderController.createOrder
+);
+
+router.post(
+  '/create-admin',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  RequestValidator.validate(CreateOrderAdminDto),
+  orderController.createOrderAdmin
+);
+
+router.get(
+  '/range-invoices',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  RequestValidator.validateQuery(getRangeOrdersInvoicesDto),
+  orderController.getRangeOrdersInvoices
 );
 
 router.get(

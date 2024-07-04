@@ -46,6 +46,7 @@ model user {
   CustomerSupportRepresentative CustomerSupportRepresentative?
   userTokens                    userTokens?
   logs                          Logs[]
+  notifications                 Notification[]
 }
 
 model passwordResetToken {
@@ -396,4 +397,12 @@ model Logs {
   user      user?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   data Json
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  users     user[]
 }

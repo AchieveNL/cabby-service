@@ -229,4 +229,16 @@ export default class VehicleService {
       throw new Error('Failed to upsert deposit');
     }
   };
+
+  public getLastVehicleDetails = async () => {
+    try {
+      const deposit = await prisma.vehicle.findFirst({
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      });
+      return deposit;
+    } catch (error) {
+      throw new Error('Failed to get  last vehicle details');
+    }
+  };
 }

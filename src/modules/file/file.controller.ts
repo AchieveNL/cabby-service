@@ -1,5 +1,5 @@
 import { type Request, type Response, type NextFunction } from 'express';
-import { HttpStatusCode } from 'axios';
+import axios, { HttpStatusCode } from 'axios';
 import FileService from './file.service';
 import Api from '@/lib/api';
 
@@ -53,5 +53,14 @@ export default class FileController extends Api {
     } catch (error) {
       next(error);
     }
+  };
+
+  public downloadFile = async (req: Request, res: Response) => {
+    const url = req.query.url as string;
+    const { data, headers } = await axios.get(url, {
+      responseType: 'arraybuffer',
+    });
+    res.set('Content-Type', headers['content-type']);
+    res.send(data);
   };
 }
