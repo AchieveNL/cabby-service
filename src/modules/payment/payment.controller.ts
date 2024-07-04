@@ -130,10 +130,10 @@ export default class PaymentController extends Api {
   ) => {
     try {
       const { paymentId } = req.params;
-      const checkoutUrl = await this.paymentService.refundPayment(paymentId);
+      const data = await this.paymentService.refundPayment(paymentId);
       return this.send(
         res,
-        { checkoutUrl },
+        data,
         HttpStatusCode.Ok,
         'Payment refunded successfully'
       );

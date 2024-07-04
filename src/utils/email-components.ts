@@ -1,5 +1,10 @@
 import { readFile } from 'fs/promises';
 import path, { dirname } from 'path';
+import { type MailDataRequired } from '@sendgrid/mail';
+
+export type MailOptions = Omit<MailDataRequired, 'from'>;
+
+export const generateNewEmail = (data: MailOptions) => data;
 
 export const emailActionButton = (text: string, url: string) => {
   return `
