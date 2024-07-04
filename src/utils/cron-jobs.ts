@@ -88,7 +88,10 @@ async function confirmOrderAutomatically() {
   const orderMailService = new OrderMailService();
   const orders = await prisma.order.findMany({
     where: {
-      rentalStartDate: { gte: dayjsExtended().subtract(15, 'minute').toDate() },
+      rentalStartDate: {
+        lte: dayjsExtended().add(15, 'minute').toDate(),
+        gte: dayjsExtended().toDate(),
+      },
       status: 'PENDING',
     },
     include: { user: { include: { profile: true } }, vehicle: true },
