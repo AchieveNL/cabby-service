@@ -26,7 +26,12 @@ export default class PaymentService {
 
     const payment = await prisma.payment.findUnique({
       where: { mollieId: paymentId },
-      include: { order: { select: { totalAmount: true } } },
+      select: {
+        order: { select: { totalAmount: true } },
+        user: {
+          select: { profile: { select: { fullName: true } }, email: true },
+        },
+      },
     });
 
     if (!payment) throw new HttpBadRequestError("Payment doesn't exist");
@@ -45,6 +50,11 @@ export default class PaymentService {
       where: { mollieId: paymentId },
       data: { status: 'REFUNDED' },
     });
+
+    const email = payment.user.email;
+    const name = payment.user.profile?.fullName!;
+
+    await this.userMailService.paymentRefundedMailSender(email, name);
 
     return { res, refund };
   }
