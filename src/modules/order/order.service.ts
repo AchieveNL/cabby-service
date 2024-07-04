@@ -559,11 +559,12 @@ export default class OrderService {
     console.log('Completing order:', orderId);
 
     const now = new Date();
-    // const isOverdue = order.rentalEndDate < now
+    const status =
+      order.rentalEndDate < now ? undefined : OrderStatus.COMPLETED;
 
     const updateData: Prisma.orderUpdateInput = {
       stopRentDate: now,
-      status: OrderStatus.COMPLETED,
+      status,
     };
 
     const completedOrder = await prisma.order.update({
