@@ -1,5 +1,5 @@
 import {
-  Prisma,
+  type Prisma,
   UserRole,
   type user,
   type order,
@@ -14,6 +14,7 @@ import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
 import UserMailService from '../notifications/user-mails.service';
 import { NotificationService } from '../notifications/notification.service';
+import { orderConfirmedNotification } from '../notifications/notifications.functions';
 import OrderMailService from './order-mails.service';
 import { OrderStatus } from './types';
 import { calculateOrderPrice } from './functions';
@@ -726,7 +727,7 @@ export default class OrderService {
       where: { id: orderId },
       include: {
         user: { include: { profile: true } },
-        vehicle: { select: { papers: true } },
+        vehicle: { select: { papers: true, companyName: true, model: true } },
       },
     });
 
@@ -735,6 +736,16 @@ export default class OrderService {
     await prisma.order.update({
       where: { id: orderId },
       data: { status: 'CONFIRMED' },
+    });
+
+    const companyName = order.vehicle.companyName ?? '';
+    const model = order.vehicle.model ?? '';
+
+    await orderConfirmedNotification({
+      companyName,
+      model,
+      orderId: order.id,
+      userId: order.userId,
     });
 
     await this.orderMailService.orderConfirmedMailSender(
@@ -780,30 +791,50 @@ export default class OrderService {
       vehicle: true,
       payment: true,
     };
+    const orderBy: Prisma.orderOrderByWithRelationInput = { createdAt: 'desc' };
 
-    if (status === 'UNPAID') {
-      const query = Prisma.sql`SELECT
-                                  *
-                                FROM
-                                  "order"
-                                WHERE ("stopRentDate" > "rentalEndDate"
-                                  OR "rentalEndDate" < now())
-                                AND status = 'CONFIRMED';
-                                      `;
-      const ordersIds = await prisma.$queryRaw<order[]>(query);
+    const where: Prisma.orderWhereInput =
+      status === 'UNPAID'
+        ? {
+            rentalEndDate: { lt: new Date() },
+            status: 'CONFIRMED',
+          }
+        : { status };
 
-      console.log(ordersIds);
+    //     if (status === 'UNPAID') {
+    //       where = {
+    //         rentalEndDate: { lt: new Date() },
+    //         status: 'CONFIRMED',
+    //       };
 
-      orders = await prisma.order.findMany({
-        where: { id: { in: ordersIds.map((el) => el.id) } },
-        include,
-      });
+    //       console.log((await prisma.order.findMany({ where })).length);
+    //       const query = Prisma.sql`SELECT
+    //   *
+    // FROM
+    //   "order"
+    // WHERE
+    //   (
+    //     "stopRentDate" > "rentalEndDate"
+    //     OR "rentalEndDate" < now()
+    //   )
+    //   AND status = 'CONFIRMED'`;
+    //       const ordersIds = await prisma.$queryRaw<order[]>(query);
 
-      return orders;
-    }
+    //       // console.log(ordersIds);
+
+    //       orders = await prisma.order.findMany({
+    //         where: { id: { in: ordersIds.map((el) => el.id) } },
+    //         include,
+    //         orderBy,
+    //       });
+
+    //       return orders;
+    //     }
+
     orders = await prisma.order.findMany({
-      where: { status },
+      where,
       include,
+      orderBy,
     });
     return orders;
   };
