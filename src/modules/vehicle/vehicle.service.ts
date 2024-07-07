@@ -12,8 +12,26 @@ export default class VehicleService {
       const vehicle = await prisma.vehicle.create({
         data,
       });
+      const ids = await prisma.user.findMany({
+        select: { id: true },
+        where: { profile: { permitDetails: { id: {} } } },
+      });
+
+      const companyName = vehicle.companyName ?? '';
+      const model = vehicle.model ?? '';
+
+      await prisma.notification.createMany({
+        data: ids.map((el) => ({
+          event: 'NEW_CAR',
+          title: 'Nieuwe auto toegevoegd!',
+          content: `Er is een nieuwe ${companyName} ${model} beschikbaar. Reserveer hem snel voor jou voorkeurstijden.`,
+          param: vehicle.id,
+          userId: el.id,
+        })),
+      });
       return vehicle;
     } catch (error) {
+      console.log(error);
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         const errorMessages = this.mapPrismaErrorToMessages(error);
         throw new Error(errorMessages.join('; '));

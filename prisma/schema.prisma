@@ -180,9 +180,10 @@ model vehicle {
   uniqueFeature        String?
   streetName           String?
   streetNumber         String?
-  zipcodeNumber        String?
-  zipcodeCharacter     String?
+  zipcode              String?
   state                String?
+  title                String?
+  description          String?
   images               String[]
   papers               String[]
   availability         String?
@@ -399,10 +400,24 @@ model Logs {
   data Json
 }
 
+enum NOTIFICATION_EVENT {
+  NEW_CAR
+  ORDER_CONFIRMED
+  HOLIDAY
+  FREE_HOURS
+  ORDER_WILL_START
+  ORDER_WILL_END
+}
+
 model Notification {
-  id        Int      @id @default(autoincrement())
+  id        Int                @id @default(autoincrement())
+  event     NOTIFICATION_EVENT
   title     String
   content   String
-  createdAt DateTime @default(now())
-  users     user[]
+  param     String?
+  createdAt DateTime           @default(now())
+  closedAt  DateTime?
+
+  user   user   @relation(fields: [userId], references: [id])
+  userId String
 }

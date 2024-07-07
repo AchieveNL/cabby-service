@@ -49,8 +49,8 @@ export class CreateVehicleDto {
   seatingCapacity?: string;
 
   @IsOptional()
-  @IsString()
-  batteryCapacity?: string;
+  @IsNumber()
+  batteryCapacity?: number;
 
   @IsOptional()
   @IsString()
@@ -95,11 +95,7 @@ export class CreateVehicleDto {
 
   @IsOptional()
   @IsString()
-  zipcodeNumber?: string;
-
-  @IsOptional()
-  @IsString()
-  zipcodeCharacter?: string;
+  zipcode?: string;
 
   @IsOptional()
   @IsString()
