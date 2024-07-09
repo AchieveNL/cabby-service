@@ -66,4 +66,26 @@ export class NotificationService {
 
     await axios.post(this.fcmUrl, message, { headers });
   }
+
+  async getUserNotifications(userId: string) {
+    const notifications = await prisma.notification.findMany({
+      where: { userId, closedAt: null },
+    });
+    return notifications;
+  }
+
+  async getUserNotificationsCount(userId: string) {
+    const notifications = await prisma.notification.count({
+      where: { userId, closedAt: null },
+    });
+    return notifications;
+  }
+
+  async closeUserNotification(userId: string, id: number) {
+    const notifications = await prisma.notification.update({
+      where: { userId, closedAt: null, id },
+      data: { closedAt: new Date() },
+    });
+    return notifications;
+  }
 }

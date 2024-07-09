@@ -5,6 +5,11 @@ import { fromEmail, isDevelopment, toEmail } from './constants';
 import dayjsExtended from './date';
 import prisma from '@/lib/prisma';
 import OrderMailService from '@/modules/order/order-mails.service';
+import { orderConfirmedNotification } from '@/modules/notifications/notifications.functions';
+import {
+  orderWillEndQuery,
+  orderWillStartQuery,
+} from '@/modules/notifications/notifications.queries';
 
 const query = Prisma.sql`SELECT
     o.id,
@@ -108,6 +113,11 @@ async function confirmOrderAutomatically() {
 
   await Promise.all(
     orders.map(async (order) => {
+      const companyName = order.vehicle.companyName ?? '';
+      const model = order.vehicle.model ?? '';
+      const orderId = order.id;
+      const userId = order.userId;
+      await orderConfirmedNotification({ companyName, model, orderId, userId });
       await orderMailService.orderConfirmedMailSender(
         order.user.email,
         order.user.profile?.fullName,
@@ -117,19 +127,15 @@ async function confirmOrderAutomatically() {
   );
 }
 
-// async function sendNotification() {
-//   const users = await prisma.user.findMany({
-//     select: { id: true },
-//     where: { profile: { permitDetails: {} } },
-//   });
-//   await prisma.notification.create({
-//     data: {
-//       users: { connect: users },
-//       content: 'content',
-//       title: 'title',
-//     },
-//   });
-// }
+async function orderWillStart() {
+  const orders = await orderWillStartQuery();
+  console.log('Orders will start', orders);
+}
+
+async function orderWillEnd() {
+  const orders = await orderWillEndQuery();
+  console.log('Orders will end', orders);
+}
 
 function cronJobs() {
   if (!isDevelopment) {
@@ -137,6 +143,8 @@ function cronJobs() {
       try {
         await updateOverdueOrders();
         await confirmOrderAutomatically();
+        await orderWillStart();
+        await orderWillEnd();
         // console.log('running a task every minute', new Date());
       } catch (error) {
         console.log('Error', error);
