@@ -26,4 +26,54 @@ export class NotificationController extends Api {
       next(error);
     }
   };
+
+  public getUserNotifications = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = req.user?.id as string;
+
+      const data = await this.notificationService.getUserNotifications(userId);
+
+      this.send(res, data, HttpStatusCode.Ok, 'Success');
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getUserNotificationsCount = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = req.user?.id as string;
+
+      const data =
+        await this.notificationService.getUserNotificationsCount(userId);
+
+      this.send(res, data, HttpStatusCode.Ok, 'Success');
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public closeUserNotification = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const id = Number(req.params.id);
+      const userId = req.user?.id as string;
+
+      await this.notificationService.closeUserNotification(userId, id);
+
+      this.send(res, null, HttpStatusCode.Ok, 'Success');
+    } catch (error) {
+      next(error);
+    }
+  };
 }

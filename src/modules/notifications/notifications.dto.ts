@@ -16,3 +16,8 @@ export class CreateNotificationDto {
   @IsOptional()
   metadata: string;
 }
+
+export class closeUserNotificationDto {
+  @IsString()
+  id: string;
+}
