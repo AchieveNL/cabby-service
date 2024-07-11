@@ -1,3 +1,4 @@
+import { type VehicleEngineType } from '@prisma/client';
 import {
   IsNotEmpty,
   IsString,
@@ -42,7 +43,7 @@ export class CreateVehicleDto {
 
   @IsOptional()
   @IsString()
-  engineType?: string;
+  engineType?: VehicleEngineType;
 
   @IsOptional()
   @IsString()
