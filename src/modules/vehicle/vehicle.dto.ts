@@ -50,8 +50,8 @@ export class CreateVehicleDto {
   seatingCapacity?: string;
 
   @IsOptional()
-  @IsNumber()
-  batteryCapacity?: number;
+  @IsString()
+  batteryCapacity?: string;
 
   @IsOptional()
   @IsString()

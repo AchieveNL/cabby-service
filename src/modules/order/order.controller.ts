@@ -401,6 +401,22 @@ export default class OrderController extends Api {
     }
   };
 
+  public getVehicleOrders = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const vehicleId = req.params.vehicleId;
+
+      const data = await this.orderService.getVehicleOrders(vehicleId);
+
+      return this.send(res, data);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public checkVehicleAvailabilityForTimeslot = async (
     req: Request,
     res: Response,

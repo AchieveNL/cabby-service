@@ -176,7 +176,7 @@ model vehicle {
   manufactureYear      String?
   engineType           VehicleEngineType?
   seatingCapacity      String?
-  batteryCapacity      Int?
+  batteryCapacity      String?
   uniqueFeature        String?
   streetName           String?
   streetNumber         String?
