@@ -104,6 +104,13 @@ router.get(
   orderController.checkVehicleAvailabilityForTimeslot
 );
 
+router.get(
+  '/vehicle/:vehicleId',
+  verifyAuthToken,
+  requireAuth,
+  orderController.getVehicleOrders
+);
+
 router.post(
   '/cancel',
   verifyAuthToken,

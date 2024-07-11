@@ -1015,4 +1015,15 @@ export default class OrderService {
 
     return formatedData;
   };
+
+  public getVehicleOrders = async (vehicleId: string) => {
+    const data = await prisma.order.findMany({
+      select: { id: true, rentalEndDate: true, rentalStartDate: true },
+      where: {
+        vehicleId,
+      },
+    });
+
+    return data;
+  };
 }
