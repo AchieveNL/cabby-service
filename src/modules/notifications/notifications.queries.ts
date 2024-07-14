@@ -39,7 +39,9 @@ insert into
 select
   *
 from
-  result;`);
+  result 
+returning
+  *;`);
 
   return orders;
 };
@@ -81,7 +83,9 @@ insert into
 select
   *
 from
-  result;`);
+  result 
+returning
+  *;`);
 
   return orders;
 };
