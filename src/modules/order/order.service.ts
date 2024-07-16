@@ -406,11 +406,16 @@ export default class OrderService {
     teslaApiRefreshToken: string
   ): Promise<any> => {
     const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/door_unlock`;
+    const startDrive = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/remote_start_drive`;
 
     console.log('Unlocking Tesla vehicle:', vehicleVin);
-
     try {
-      let response = await this.httpCallVehicleCommand(url, teslaApiToken);
+      const newToken = await refreshTeslaApiToken(
+        teslaApiToken,
+        teslaApiRefreshToken
+      );
+      let response = await this.httpCallVehicleCommand(url, newToken);
+      await this.httpCallVehicleCommand(startDrive, newToken);
       if (response.status === 401) {
         console.log('Tesla API token expired. Refreshing token...');
         const newToken = await refreshTeslaApiToken(
@@ -442,7 +447,11 @@ export default class OrderService {
     const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/door_lock`;
     console.log('Locking Tesla vehicle:', vehicleVin);
     try {
-      let response = await this.httpCallVehicleCommand(url, teslaApiToken);
+      const newToken = await refreshTeslaApiToken(
+        teslaApiToken,
+        teslaApiRefreshToken
+      );
+      let response = await this.httpCallVehicleCommand(url, newToken);
       if (response.status === 401) {
         console.log('Tesla API token expired. Refreshing token...');
         const newToken = await refreshTeslaApiToken(
