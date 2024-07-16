@@ -89,3 +89,46 @@ returning
 
   return orders;
 };
+
+export const freeHoursQuery = async () => {
+  const result = await prisma.$executeRaw`with
+  result as (
+    SELECT DISTINCT
+      "userId"
+    FROM
+      (
+        SELECT
+          "userId",
+          DATE_TRUNC('week', "rentalStartDate") AS week_start,
+          SUM("rentalEndDate" - "rentalStartDate") AS duration
+        FROM
+          "order"
+        GROUP BY
+          "userId",
+          "vehicleId",
+          DATE_TRUNC('week', "rentalStartDate")
+        HAVING
+          SUM("rentalEndDate" - "rentalStartDate") > interval '20 hours'
+      ) AS subquery
+    where
+      "userId" not in (
+        select
+          "userId"
+        from
+          "Notification" n
+        where
+          n.event = 'FREE_HOURS'
+      )
+  )
+insert into
+  "Notification" ("userId", event, title, content)
+select
+  "userId",
+  'FREE_HOURS',
+  'Gratis 5 uur extra ontvangen?',
+  'Heb je deze week al 20 uur gehuurd? Stuur ons een bericht dan ontvang je 5 uur extra van ons.'
+from
+  result;`;
+
+  return result;
+};
