@@ -7,6 +7,7 @@ import prisma from '@/lib/prisma';
 import OrderMailService from '@/modules/order/order-mails.service';
 import { orderConfirmedNotification } from '@/modules/notifications/notifications.functions';
 import {
+  freeHoursQuery,
   orderWillEndQuery,
   orderWillStartQuery,
 } from '@/modules/notifications/notifications.queries';
@@ -137,6 +138,11 @@ async function orderWillEnd() {
   console.log('Orders will end', orders);
 }
 
+async function freeHours() {
+  const result = await freeHoursQuery();
+  console.log('Free hours', result);
+}
+
 function cronJobs() {
   if (!isDevelopment) {
     return cron.schedule('* * * * *', async () => {
@@ -145,6 +151,7 @@ function cronJobs() {
         await confirmOrderAutomatically();
         await orderWillStart();
         await orderWillEnd();
+        await freeHours();
         // console.log('running a task every minute', new Date());
       } catch (error) {
         console.log('Error', error);
