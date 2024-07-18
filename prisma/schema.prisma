@@ -24,19 +24,20 @@ enum UserRole {
 }
 
 model user {
-  id                            String                         @id @default(uuid())
-  email                         String                         @unique
-  password                      String
-  revokeTokensBefore            DateTime                       @default(now())
-  status                        UserStatus?
-  role                          UserRole                       @default(USER)
-  createdAt                     DateTime                       @default(now())
-  profile                       userProfile?
-  passwordResetTokens           passwordResetToken[]
-  otp                           String? // Store hashed OTP for security.
-  otpExpiry                     DateTime? // OTP validity check.
-  emailOtp                      String?
-  emailOtpExpiry                DateTime? // OTP validity check.
+  id                  String               @id @default(uuid())
+  email               String               @unique
+  password            String
+  revokeTokensBefore  DateTime             @default(now())
+  status              UserStatus?
+  role                UserRole             @default(USER)
+  createdAt           DateTime             @default(now())
+  profile             userProfile?
+  passwordResetTokens passwordResetToken[]
+  otp                 String? // Store hashed OTP for security.
+  otpExpiry           DateTime? // OTP validity check.
+  emailOtp            String?
+  emailOtpExpiry      DateTime? // OTP validity check.
+
   payments                      payment[]
   orders                        order[]
   damageReports                 damageReport[]

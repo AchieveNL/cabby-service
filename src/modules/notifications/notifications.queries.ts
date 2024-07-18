@@ -1,11 +1,34 @@
-import { NOTIFICATION_EVENT } from '@prisma/client';
+import { type Notification, NOTIFICATION_EVENT } from '@prisma/client';
+import { NotificationService } from './notification.service';
 import prisma from '@/lib/prisma';
-import dayjsExtended from '@/utils/date';
+import dayjsExtended, {
+  getChristmas,
+  getEaster,
+  getKingsDay,
+  getNewYearsEve,
+  getWhitsun,
+} from '@/utils/date';
+
+const notificationService = new NotificationService();
+
+async function sendMultipleNotifications(notifications: Notification[]) {
+  await Promise.all(
+    notifications.map(async (el) => {
+      console.log(el);
+      await notificationService.sendNotificationToUser(
+        el.userId || '',
+        el.title || '',
+        el.content || '',
+        JSON.stringify({})
+      );
+    })
+  );
+}
 
 export const orderWillStartQuery = async () => {
   const afterDate = dayjsExtended().add(30, 'minute').toISOString();
   const event = NOTIFICATION_EVENT.ORDER_WILL_START;
-  const orders = await prisma.$executeRawUnsafe(`with
+  const notifications = await prisma.$queryRawUnsafe<Notification[]>(`with
   result as (
     select distinct
       '${event}'::"NOTIFICATION_EVENT" event,
@@ -43,13 +66,15 @@ from
 returning
   *;`);
 
-  return orders;
+  await sendMultipleNotifications(notifications);
+
+  return notifications;
 };
 
 export const orderWillEndQuery = async () => {
   const afterDate = dayjsExtended().add(30, 'minute').toISOString();
   const event = NOTIFICATION_EVENT.ORDER_WILL_END;
-  const orders = await prisma.$executeRawUnsafe(`with
+  const notifications = await prisma.$queryRawUnsafe<Notification[]>(`with
   result as (
     select distinct
       '${event}'::"NOTIFICATION_EVENT" event,
@@ -87,7 +112,9 @@ from
 returning
   *;`);
 
-  return orders;
+  await sendMultipleNotifications(notifications);
+
+  return notifications;
 };
 
 export const freeHoursQuery = async () => {
@@ -131,4 +158,14 @@ from
   result;`;
 
   return result;
+};
+
+export const holidaysQuery = async () => {
+  const easter = getEaster();
+  const christmas = getChristmas();
+  const kingsDay = getKingsDay();
+  const newYearsEve = getNewYearsEve();
+  const whitsun = getWhitsun();
+
+  console.log(easter, christmas, kingsDay, newYearsEve, whitsun);
 };

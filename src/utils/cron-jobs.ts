@@ -129,8 +129,8 @@ async function confirmOrderAutomatically() {
 }
 
 async function orderWillStart() {
-  const orders = await orderWillStartQuery();
-  console.log('Orders will start', orders);
+  const notifications = await orderWillStartQuery();
+  console.log('Orders will start', notifications);
 }
 
 async function orderWillEnd() {

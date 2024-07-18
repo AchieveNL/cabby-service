@@ -15,6 +15,7 @@ import { logsMiddleware } from './middlewares/logs';
 import errorHandler from '@/middlewares/error-handler';
 import routes from '@/modules/index.route';
 import prismaClient from '@/lib/prisma';
+// import { NotificationService } from './modules/notifications/notification.service';
 
 export const determineCorsOrigin = () => {
   switch (process.env.NODE_ENV) {
@@ -85,6 +86,14 @@ class App {
 
   public async connectPrisma(): Promise<void> {
     await prismaClient.$connect();
+
+    // const notif = new NotificationService();
+    // await notif.sendNotificationToUser(
+    //   '8e574289-0c97-4998-8761-dc7f8037c684',
+    //   'new test man',
+    //   'new test man',
+    //   JSON.stringify({})
+    // );
   }
 }
 

@@ -13,6 +13,7 @@ async function getAccessToken() {
     'base64'
   ).toString('ascii');
   const serviceAccount = JSON.parse(serviceAccountJson);
+  // console.log(serviceAccount);
 
   const jwtClient = new google.auth.JWT(
     serviceAccount.client_email,
@@ -22,7 +23,6 @@ async function getAccessToken() {
   );
 
   const tokens = await jwtClient.authorize();
-
   return tokens.access_token as string;
 }
 
@@ -64,7 +64,9 @@ export class NotificationService {
       Authorization: `Bearer ${accessToken}`,
     };
 
-    await axios.post(this.fcmUrl, message, { headers });
+    await axios.post(this.fcmUrl, message, { headers }).catch((err) => {
+      console.log(JSON.stringify(err, null, 2));
+    });
   }
 
   async getUserNotifications(userId: string) {
