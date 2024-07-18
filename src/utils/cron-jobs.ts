@@ -155,16 +155,22 @@ async function freeHours() {
 function cronJobs() {
   if (!isDevelopment) {
     return cron.schedule('* * * * *', async () => {
-      try {
-        await updateOverdueOrders();
-        await confirmOrderAutomatically();
-        await orderWillStart();
-        await orderWillEnd();
-        await freeHours();
-        console.log('running a task every minute', new Date());
-      } catch (error) {
-        console.log('Error', error);
-      }
+      const functions = [
+        updateOverdueOrders,
+        confirmOrderAutomatically,
+        orderWillStart,
+        orderWillEnd,
+        freeHours,
+      ];
+
+      functions.forEach(async (fn) => {
+        try {
+          await fn();
+          console.log('running a task every minute', new Date());
+        } catch (error) {
+          console.log(error);
+        }
+      });
     });
   }
 }
