@@ -217,6 +217,7 @@ export default class ProfileService {
       include: {
         permitDetails: true,
         driverLicense: true,
+        user: { select: { registrationOrder: {} } },
       },
     });
   }

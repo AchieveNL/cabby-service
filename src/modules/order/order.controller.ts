@@ -229,10 +229,7 @@ export default class OrderController extends Api {
       await this.orderService.cancelOrder(orderId, user);
       return this.send(res, null, 204, 'Order cancelled successfully');
     } catch (error) {
-      if (error) {
-        res.status(400).json({ error: error.message });
-      }
-      next();
+      next(error);
     }
   };
 
