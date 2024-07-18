@@ -93,6 +93,14 @@ async function updateOverdueOrders() {
 async function confirmOrderAutomatically() {
   const orderMailService = new OrderMailService();
   const orders = await prisma.order.findMany({
+    select: {
+      id: true,
+      userId: true,
+      user: {
+        select: { profile: { select: { fullName: true } }, email: true },
+      },
+      vehicle: { select: { model: true, companyName: true, papers: true } },
+    },
     where: {
       rentalStartDate: {
         lte: dayjsExtended().add(15, 'minute').toDate(),
@@ -100,9 +108,10 @@ async function confirmOrderAutomatically() {
       },
       status: 'PENDING',
     },
-    include: { user: { include: { profile: true } }, vehicle: true },
   });
-  // console.log({ orders });
+
+  console.log(orders);
+
   const updatedOrders = await prisma.order.updateMany({
     where: {
       id: { in: orders.map((el) => el.id) },
@@ -152,7 +161,7 @@ function cronJobs() {
         await orderWillStart();
         await orderWillEnd();
         await freeHours();
-        // console.log('running a task every minute', new Date());
+        console.log('running a task every minute', new Date());
       } catch (error) {
         console.log('Error', error);
       }
