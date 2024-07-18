@@ -166,7 +166,7 @@ function cronJobs() {
       functions.forEach(async (fn) => {
         try {
           await fn();
-          console.log('running a task every minute', new Date());
+          console.log('running a task every minute ', new Date());
         } catch (error) {
           console.log(error);
         }
