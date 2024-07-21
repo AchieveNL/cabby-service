@@ -46,7 +46,8 @@ export const orderWillStartQuery = async () => {
       "order" o
       join "vehicle" v on v.id = o."vehicleId"
     where
-      o."rentalStartDate" BETWEEN now() and '${afterDate}'
+      o."rentalStartDate" BETWEEN now() and '${afterDate}' 
+      and o.status = 'CONFIRMED'
       and o.id not in (
         select
           o.id
@@ -93,6 +94,7 @@ export const orderWillEndQuery = async () => {
       join "vehicle" v on v.id = o."vehicleId"
     where
       o."rentalEndDate" BETWEEN now() and '${afterDate}'
+      and o.status = 'CONFIRMED'
       and o.id not in (
         select
           o.id
