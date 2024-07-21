@@ -123,6 +123,7 @@ export default class VehicleService {
     try {
       const vehicle = await prisma.vehicle.findUnique({
         where: { id },
+        include: { damageReports: true },
       });
       return vehicle;
     } catch (error) {
