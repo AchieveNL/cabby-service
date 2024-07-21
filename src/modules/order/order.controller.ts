@@ -398,6 +398,34 @@ export default class OrderController extends Api {
     }
   };
 
+  public getRangeOrdersExcel = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const start = req.query.start as string;
+      const end = req.query.end as string;
+
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      const buffer = await this.orderService.getRangeOrdersExcel(
+        startDate,
+        endDate
+      );
+
+      // Send the file
+      res.setHeader('Content-Disposition', 'attachment; filename="data.xlsx"');
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      );
+      return res.send(buffer);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getVehicleOrders = async (
     req: Request,
     res: Response,

@@ -28,6 +28,14 @@ export const formatDateWithoutTimezone = (date) => {
   return dayjs(date).format('YYYY-MM-DDTHH:mm:ss.SSS');
 };
 
+export const dateTimeFormat = (date?: Date | string) =>
+  dayjs(date).isValid() ? dayjs(date).format('DD/MM/YYYY • HH:mm') : '';
+
+export const formatDuration = (start: Date, end: Date) =>
+  dayjs
+    .duration(dayjsExtended(end).diff(dayjsExtended(start)))
+    .format('D [days] HH:mm');
+
 // Function to get New Year's Eve
 export function getNewYearsEve() {
   const year = new Date().getFullYear();
