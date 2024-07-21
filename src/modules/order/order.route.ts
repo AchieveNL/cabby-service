@@ -42,6 +42,15 @@ router.get(
 );
 
 router.get(
+  '/range-excel',
+  verifyAuthToken,
+  requireAuth,
+  requireAdmin,
+  RequestValidator.validateQuery(getRangeOrdersInvoicesDto),
+  orderController.getRangeOrdersExcel
+);
+
+router.get(
   '/:orderId/details',
   verifyAuthToken,
   requireAuth,

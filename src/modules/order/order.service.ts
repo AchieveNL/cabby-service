@@ -9,6 +9,7 @@ import { type Decimal } from '@prisma/client/runtime/library';
 // eslint-disable-next-line
 import fetch, { Headers } from 'node-fetch';
 import { HttpStatusCode } from 'axios';
+import * as XLSX from 'xlsx';
 import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
@@ -22,6 +23,7 @@ import { type CreateOrderAdminDto } from './order.dto';
 import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
 import { ApiError } from '@/lib/errors';
+import { dateTimeFormat, formatDuration } from '@/utils/date';
 
 const weakTheVehicleUp = async (vehicleTag: string, token: string) => {
   const myHeaders = new Headers();
@@ -1015,7 +1017,7 @@ export default class OrderService {
     const data = await prisma.payment.findMany({
       select: { invoiceUrl: true },
       where: {
-        paymentDate: { gte: startDate, lte: endDate },
+        order: { rentalStartDate: { gte: startDate, lte: endDate } },
         invoiceUrl: { not: null },
       },
     });
@@ -1023,6 +1025,48 @@ export default class OrderService {
     const formatedData = data.map((el) => el.invoiceUrl);
 
     return formatedData;
+  };
+
+  public getRangeOrdersExcel = async (startDate: Date, endDate: Date) => {
+    const data = await prisma.order.findMany({
+      where: {
+        rentalStartDate: { gte: startDate, lte: endDate },
+      },
+      include: {
+        payment: true,
+        vehicle: true,
+        user: { include: { profile: true } },
+      },
+    });
+
+    const formatedData = data.map((el) => {
+      const Bestuurders = el.user.profile?.fullName;
+      const Auto = [el.vehicle.model, el.vehicle.companyName].join(' ');
+      const Begin = dateTimeFormat(el.rentalStartDate);
+      const Einde = dateTimeFormat(el.rentalEndDate);
+      const Duur = formatDuration(el.rentalStartDate, el.rentalEndDate);
+      const Prijs =
+        '€ ' + el.totalAmount.toFixed(2) + ` ${el.payment?.status ?? ''}`;
+
+      return { Bestuurders, Auto, Begin, Einde, Duur, Prijs };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(formatedData);
+
+    // Set a uniform column width for all columns
+    const uniformWidth = 20; // Adjust this value as needed
+    const cols = Object.keys(formatedData[0]).map(() => ({
+      wch: uniformWidth,
+    }));
+    worksheet['!cols'] = cols;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+
+    // Generate buffer
+    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+
+    return buffer;
   };
 
   public getVehicleOrders = async (vehicleId: string) => {
