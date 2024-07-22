@@ -85,6 +85,7 @@ class App {
 
   public async connectPrisma(): Promise<void> {
     await prismaClient.$connect();
+    // console.log(await mollie.payments.get('tr_xq8CCfcKKq'));
   }
 }
 

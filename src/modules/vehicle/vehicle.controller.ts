@@ -41,6 +41,7 @@ export default class VehicleController extends Api {
     try {
       const { id } = req.params;
       const vehicleData = req.body;
+      console.log(vehicleData);
       const images: Express.Multer.File[] = req.files as Express.Multer.File[];
 
       if (images) {
