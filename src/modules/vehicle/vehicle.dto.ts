@@ -63,6 +63,16 @@ export class CreateVehicleDto {
   images?: string[];
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  registrationCertificates?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  insuranceCertificates?: string[];
+
+  @IsOptional()
   @IsString()
   availability?: string;
 

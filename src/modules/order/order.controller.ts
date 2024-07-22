@@ -156,7 +156,6 @@ export default class OrderController extends Api {
   ) => {
     const orderId = req.params.orderId;
     const userId = req.user?.id;
-
     try {
       const details = await this.orderService.completeOrder(orderId, userId);
       return this.send(
@@ -175,7 +174,7 @@ export default class OrderController extends Api {
       } else {
         res.status(500).json({ error: 'Internal Server Error.' });
       }
-      next();
+      next(error);
     }
   };
 
