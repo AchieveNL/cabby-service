@@ -217,7 +217,13 @@ export default class ProfileService {
       include: {
         permitDetails: true,
         driverLicense: true,
-        user: { select: { registrationOrder: {} } },
+        user: {
+          select: {
+            email: true,
+            profile: true,
+            registrationOrder: { include: { payment: true } },
+          },
+        },
       },
     });
   }

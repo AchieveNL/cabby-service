@@ -242,6 +242,14 @@ export default class PaymentService {
       },
     });
 
+    await prisma.registrationOrder.update({
+      where: { id: registrationOrder.id },
+      data: {
+        paymentId: id,
+        payment: { update: { mollieId: id } },
+      },
+    });
+
     console.log('id: ', id);
 
     return { payment: id, checkoutUrl: payment.getCheckoutUrl() };
