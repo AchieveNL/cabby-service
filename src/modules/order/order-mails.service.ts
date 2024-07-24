@@ -44,7 +44,7 @@ Team Cabby`,
       html,
       attachments,
     });
-    console.log('Order confirmation email sent successfully.', papers);
+    // console.log('Order confirmation email sent successfully.', papers);
 
     await mailSender(mailMessage);
   }

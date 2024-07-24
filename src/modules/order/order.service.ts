@@ -705,6 +705,8 @@ export default class OrderService {
     if (!order) throw new Error('Order not found');
     const isAdmin = userSender.role === UserRole.ADMIN;
 
+    // TODO: add cancel restriction when rent begins
+
     if (!isAdmin && userSender.id !== order.userId)
       throw new ApiError(HttpStatusCode.Unauthorized, 'User not authorized');
 
@@ -738,7 +740,15 @@ export default class OrderService {
       where: { id: orderId },
       include: {
         user: { include: { profile: true } },
-        vehicle: { select: { papers: true, companyName: true, model: true } },
+        vehicle: {
+          select: {
+            papers: true,
+            companyName: true,
+            model: true,
+            insuranceCertificates: true,
+            registrationCertificates: true,
+          },
+        },
       },
     });
 
@@ -762,7 +772,9 @@ export default class OrderService {
     await this.orderMailService.orderConfirmedMailSender(
       order.user.email,
       order.user.profile?.fullName,
-      order.vehicle.papers
+      order.vehicle.insuranceCertificates.concat(
+        order.vehicle.registrationCertificates
+      )
     );
   };
 
