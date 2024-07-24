@@ -99,7 +99,14 @@ async function confirmOrderAutomatically() {
       user: {
         select: { profile: { select: { fullName: true } }, email: true },
       },
-      vehicle: { select: { model: true, companyName: true, papers: true } },
+      vehicle: {
+        select: {
+          model: true,
+          companyName: true,
+          insuranceCertificates: true,
+          registrationCertificates: true,
+        },
+      },
     },
     where: {
       rentalStartDate: {
@@ -131,7 +138,9 @@ async function confirmOrderAutomatically() {
       await orderMailService.orderConfirmedMailSender(
         order.user.email,
         order.user.profile?.fullName,
-        order.vehicle.papers
+        order.vehicle.insuranceCertificates.concat(
+          order.vehicle.registrationCertificates
+        )
       );
     })
   );
