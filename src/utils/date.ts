@@ -31,6 +31,9 @@ export const formatDateWithoutTimezone = (date) => {
 export const dateTimeFormat = (date?: Date | string) =>
   dayjs(date).isValid() ? dayjs(date).format('DD/MM/YYYY • HH:mm') : '';
 
+export const dateToString = (date?: Date | string) =>
+  dayjs(date).isValid() ? dayjs(date).format('YYYY-MM-DD') : '';
+
 export const formatDuration = (start: Date, end: Date) =>
   dayjs
     .duration(dayjsExtended(end).diff(dayjsExtended(start)))

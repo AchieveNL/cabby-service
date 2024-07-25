@@ -169,5 +169,70 @@ export const holidaysQuery = async () => {
   const newYearsEve = getNewYearsEve();
   const whitsun = getWhitsun();
 
-  console.log(easter, christmas, kingsDay, newYearsEve, whitsun);
+  const datesArray = [
+    { date: easter, param: 'easter' },
+    { date: christmas, param: 'christmas' },
+    { date: kingsDay, param: 'kingsDay' },
+    { date: newYearsEve, param: 'newYearsEve' },
+    { date: whitsun, param: 'whitsun' },
+    // { date: new Date(2024, 6, 28), param: 'new event' },
+  ];
+  // console.log(datesArray);
+  const now = dayjsExtended();
+  datesArray.forEach(async ({ date, param }) => {
+    const dateObject = dayjsExtended(date);
+    if (
+      now.isBefore(dateObject) &&
+      now.isAfter(dateObject.subtract(1, 'week'))
+    ) {
+      // console.log(dateObject.toDate());
+      await holidaySql({
+        date,
+        param,
+        title: 'Fijne feestdagen',
+        content:
+          'Vergeet niet om je auto tijdig te reserveren voor de feestdagen. Zodat je gegarandeerd kunt werken tijdens deze drukke dagen!',
+      });
+    }
+  });
+};
+
+const holidaySql = async ({
+  date,
+  param,
+  content,
+  title,
+}: {
+  date: Date;
+  param: string;
+  title: string;
+  content: string;
+}) => {
+  const formatedDate = date.toISOString();
+
+  const result = await prisma.$executeRawUnsafe(`with result as (
+  select
+  distinct u.id
+from
+  "user" u
+  join "userProfile" up on up."userId" = u.id
+  join "permitDetails" pd on pd."userProfileId" = up.id
+  left join "Notification" n on n."userId" = u.id
+where
+  now() BETWEEN ('${formatedDate}'::date - interval '1 week') and '${formatedDate}'
+),
+notified_users as (
+  select
+  distinct u.id
+from
+  "user" u
+  left join "Notification" n on n."userId" = u.id
+where
+   n.event = 'HOLIDAY' and n.param = '${param}' and n."userId" = u.id and EXTRACT(YEAR FROM n."createdAt") = EXTRACT(YEAR FROM CURRENT_DATE)
+)
+insert into "Notification"(event, param, "userId", title, content) select 'HOLIDAY', '${param}', id, '${title}', '${content}' from result where id not in (select id from notified_users);`);
+
+  console.log(result);
+
+  return result;
 };

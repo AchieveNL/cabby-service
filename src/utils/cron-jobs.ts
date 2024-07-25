@@ -8,6 +8,7 @@ import OrderMailService from '@/modules/order/order-mails.service';
 import { orderConfirmedNotification } from '@/modules/notifications/notifications.functions';
 import {
   freeHoursQuery,
+  holidaysQuery,
   orderWillEndQuery,
   orderWillStartQuery,
 } from '@/modules/notifications/notifications.queries';
@@ -161,6 +162,11 @@ async function freeHours() {
   console.log('Free hours', result);
 }
 
+async function holidays() {
+  await holidaysQuery();
+  console.log('holidays');
+}
+
 function cronJobs() {
   if (!isDevelopment) {
     return cron.schedule('* * * * *', async () => {
@@ -170,6 +176,7 @@ function cronJobs() {
         orderWillStart,
         orderWillEnd,
         freeHours,
+        holidays,
       ];
 
       functions.forEach(async (fn) => {
