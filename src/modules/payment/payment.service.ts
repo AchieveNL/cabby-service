@@ -26,21 +26,22 @@ export default class PaymentService {
 
     const payment = await prisma.payment.findUnique({
       where: { mollieId: paymentId },
-      select: {
-        order: { select: { totalAmount: true } },
+      include: {
         user: {
-          select: { profile: { select: { fullName: true } }, email: true },
+          include: { profile: true },
         },
       },
     });
 
     if (!payment) throw new HttpBadRequestError("Payment doesn't exist");
 
+    const value = payment?.amount.toFixed(2)!;
+    console.log(payment, value);
     const refund = await this.mollie.paymentRefunds.create({
       paymentId,
       amount: {
         currency: 'EUR',
-        value: payment?.order?.totalAmount.toFixed(2)!,
+        value,
       },
     });
 
