@@ -246,8 +246,8 @@ export default class PaymentService {
     await prisma.registrationOrder.update({
       where: { id: registrationOrder.id },
       data: {
-        paymentId: id,
-        payment: { update: { mollieId: id } },
+        paymentId: payment.id,
+        payment: { update: { mollieId: payment.id } },
       },
     });
 
