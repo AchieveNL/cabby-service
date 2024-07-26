@@ -421,6 +421,6 @@ model Notification {
   createdAt DateTime           @default(now())
   closedAt  DateTime?
 
-  user   user   @relation(fields: [userId], references: [id])
+  user   user   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 }

@@ -128,6 +128,7 @@ export const freeHoursQuery = async () => {
       (
         SELECT
           "userId",
+          "vehicleId",
           DATE_TRUNC('week', "rentalStartDate") AS week_start,
           SUM("rentalEndDate" - "rentalStartDate") AS duration
         FROM
@@ -147,6 +148,7 @@ export const freeHoursQuery = async () => {
           "Notification" n
         where
           n.event = 'FREE_HOURS'
+          and date_trunc('week', "createdAt") = date_trunc('week', CURRENT_DATE)
       )
   )
 insert into
