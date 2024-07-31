@@ -364,7 +364,7 @@ export default class OrderService {
       teslaToken?.refreshToken
     );
 
-    if (result.response.result) {
+    if (result?.response?.result) {
       // await this.notificationService.sendNotificationToUser(
       //   userId,
       //   'Heel goed!',
