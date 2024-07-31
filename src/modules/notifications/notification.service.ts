@@ -13,6 +13,7 @@ async function getAccessToken() {
     'base64'
   ).toString('ascii');
   const serviceAccount = JSON.parse(serviceAccountJson);
+  // console.log(serviceAccount);
 
   const jwtClient = new google.auth.JWT(
     serviceAccount.client_email,
@@ -22,7 +23,6 @@ async function getAccessToken() {
   );
 
   const tokens = await jwtClient.authorize();
-
   return tokens.access_token as string;
 }
 
@@ -64,6 +64,30 @@ export class NotificationService {
       Authorization: `Bearer ${accessToken}`,
     };
 
-    await axios.post(this.fcmUrl, message, { headers });
+    await axios.post(this.fcmUrl, message, { headers }).catch((err) => {
+      console.log(JSON.stringify(err, null, 2));
+    });
+  }
+
+  async getUserNotifications(userId: string) {
+    const notifications = await prisma.notification.findMany({
+      where: { userId, closedAt: null },
+    });
+    return notifications;
+  }
+
+  async getUserNotificationsCount(userId: string) {
+    const notifications = await prisma.notification.count({
+      where: { userId, closedAt: null },
+    });
+    return notifications;
+  }
+
+  async closeUserNotification(userId: string, id: number) {
+    const notifications = await prisma.notification.update({
+      where: { userId, closedAt: null, id },
+      data: { closedAt: new Date() },
+    });
+    return notifications;
   }
 }

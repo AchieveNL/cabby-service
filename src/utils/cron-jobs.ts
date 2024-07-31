@@ -2,7 +2,16 @@ import { Prisma, type order } from '@prisma/client';
 import cron from 'node-cron';
 import { mailService } from './mail';
 import { fromEmail, isDevelopment, toEmail } from './constants';
+import dayjsExtended from './date';
 import prisma from '@/lib/prisma';
+import OrderMailService from '@/modules/order/order-mails.service';
+import { orderConfirmedNotification } from '@/modules/notifications/notifications.functions';
+import {
+  freeHoursQuery,
+  holidaysQuery,
+  orderWillEndQuery,
+  orderWillStartQuery,
+} from '@/modules/notifications/notifications.queries';
 
 const query = Prisma.sql`SELECT
     o.id,
@@ -53,32 +62,133 @@ Team Cabby`,
   console.log('Overdue email sent', res);
 }
 
-function cronJobs() {
-  cron.schedule('* * * * *', async () => {
-    try {
-      let mark = 0;
-      // Get overdue orders
-      const orders = await prisma.$queryRaw<OverdueResult[]>(query);
+async function updateOverdueOrders() {
+  let mark = 0;
+  // Get overdue orders
+  // const data = await prisma.order.findMany({
+  //   include: { user: { include: { profile: true } }, vehicle: true },
+  //   where: { overdueEmailSentDate: null, rentalEndDate: { lt: new Date() } },
+  // });
+  const orders = await prisma.$queryRaw<OverdueResult[]>(query);
 
-      if (orders.length > 0 && !isDevelopment) {
-        const ids = orders.map((el) => el.id);
+  if (orders.length > 0 && !isDevelopment) {
+    const ids = orders.map((el) => el.id);
 
-        // Send emails of overdue orders to admin
-        await emailSend(orders);
+    // Send emails of overdue orders to admin
+    await emailSend(orders);
 
-        // Mark overdue orders emails as sent
-        const query2 = Prisma.sql`Update "order" SET "overdueEmailSentDate" = now() where id IN (${Prisma.join(
-          ids
-        )})`;
+    // Mark overdue orders emails as sent
+    // await prisma.order.updateMany({
+    //   where: { id: { in: ids } },
+    //   data: { overdueEmailSentDate: new Date() },
+    // });
+    const query2 = Prisma.sql`Update "order" SET "overdueEmailSentDate" = now() where id IN (${Prisma.join(
+      ids
+    )})`;
 
-        mark = await prisma.$executeRaw(query2);
-      }
-      console.log('Number of overdue orders rows updated', mark);
-      console.log('running a task every minute', new Date());
-    } catch (error) {
-      console.log('Error', error);
-    }
+    mark = await prisma.$executeRaw(query2);
+    console.log('Number of overdue orders rows updated', mark);
+  }
+}
+
+async function confirmOrderAutomatically() {
+  const orderMailService = new OrderMailService();
+  const orders = await prisma.order.findMany({
+    select: {
+      id: true,
+      userId: true,
+      user: {
+        select: { profile: { select: { fullName: true } }, email: true },
+      },
+      vehicle: {
+        select: {
+          model: true,
+          companyName: true,
+          insuranceCertificates: true,
+          registrationCertificates: true,
+        },
+      },
+    },
+    where: {
+      rentalStartDate: {
+        lte: dayjsExtended().add(15, 'minute').toDate(),
+        gte: dayjsExtended().toDate(),
+      },
+      status: 'PENDING',
+    },
   });
+
+  console.log(orders);
+
+  const updatedOrders = await prisma.order.updateMany({
+    where: {
+      id: { in: orders.map((el) => el.id) },
+    },
+    data: { status: 'CONFIRMED' },
+  });
+
+  console.log({ updatedOrders });
+
+  await Promise.all(
+    orders.map(async (order) => {
+      const companyName = order.vehicle.companyName ?? '';
+      const model = order.vehicle.model ?? '';
+      const orderId = order.id;
+      const userId = order.userId;
+      await orderConfirmedNotification({ companyName, model, orderId, userId });
+      await orderMailService.orderConfirmedMailSender(
+        order.user.email,
+        order.user.profile?.fullName,
+        order.vehicle.insuranceCertificates.concat(
+          order.vehicle.registrationCertificates
+        )
+      );
+    })
+  );
+}
+
+async function orderWillStart() {
+  const notifications = await orderWillStartQuery();
+  console.log('Orders will start', notifications);
+}
+
+async function orderWillEnd() {
+  const orders = await orderWillEndQuery();
+  console.log('Orders will end', orders);
+}
+
+async function freeHours() {
+  const result = await freeHoursQuery();
+  console.log('Free hours', result);
+}
+
+async function holidays() {
+  await holidaysQuery();
+  console.log('holidays');
+}
+
+function cronJobs() {
+  if (!isDevelopment) {
+    return cron.schedule('* * * * *', async () => {
+      const functions = [
+        updateOverdueOrders,
+        confirmOrderAutomatically,
+        orderWillStart,
+        orderWillEnd,
+        freeHours,
+        holidays,
+      ];
+
+      functions.forEach(async (fn) => {
+        try {
+          await fn();
+          console.log('running a task every minute ', new Date());
+        } catch (error) {
+          console.log(error);
+        }
+      });
+    });
+  }
 }
 
 export default cronJobs;

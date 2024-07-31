@@ -13,8 +13,12 @@ export default class RequestValidator {
     return RequestValidator.performValidation('query', classInstance);
   };
 
+  static validateParams = <T>(classInstance: ClassConstructor<T>) => {
+    return RequestValidator.performValidation('params', classInstance);
+  };
+
   static performValidation = <T>(
-    type: 'body' | 'query',
+    type: 'body' | 'query' | 'params',
     classInstance: ClassConstructor<T>
   ) => {
     return async (req: Request, _res: Response, next: NextFunction) => {
@@ -22,7 +26,11 @@ export default class RequestValidator {
       try {
         const convertedObject = plainToInstance(
           classInstance,
-          type === 'body' ? req.body : req.query
+          type === 'body'
+            ? req.body
+            : type === 'params'
+            ? req.params
+            : req.query
         );
         const errors = await validate(
           convertedObject as Record<string, unknown>

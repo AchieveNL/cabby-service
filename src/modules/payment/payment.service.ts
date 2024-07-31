@@ -26,16 +26,22 @@ export default class PaymentService {
 
     const payment = await prisma.payment.findUnique({
       where: { mollieId: paymentId },
-      include: { order: { select: { totalAmount: true } } },
+      include: {
+        user: {
+          include: { profile: true },
+        },
+      },
     });
 
     if (!payment) throw new HttpBadRequestError("Payment doesn't exist");
 
+    const value = payment?.amount.toFixed(2)!;
+    console.log(payment, value);
     const refund = await this.mollie.paymentRefunds.create({
       paymentId,
       amount: {
         currency: 'EUR',
-        value: payment?.order?.totalAmount.toFixed(2)!,
+        value,
       },
     });
 
@@ -45,6 +51,11 @@ export default class PaymentService {
       where: { mollieId: paymentId },
       data: { status: 'REFUNDED' },
     });
+
+    const email = payment.user.email;
+    const name = payment.user.profile?.fullName!;
+
+    await this.userMailService.paymentRefundedMailSender(email, name);
 
     return { res, refund };
   }
@@ -229,6 +240,14 @@ export default class PaymentService {
         registrationOrderId: registrationOrder.id,
         product: PaymentProduct.REGISTRATION,
         status: PaymentStatus.PENDING,
+      },
+    });
+
+    await prisma.registrationOrder.update({
+      where: { id: registrationOrder.id },
+      data: {
+        paymentId: payment.id,
+        payment: { update: { mollieId: payment.id } },
       },
     });
 

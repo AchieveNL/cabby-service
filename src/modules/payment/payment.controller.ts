@@ -122,4 +122,23 @@ export default class PaymentController extends Api {
       next(error);
     }
   };
+
+  public refundPayment = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { paymentId } = req.params;
+      const data = await this.paymentService.refundPayment(paymentId);
+      return this.send(
+        res,
+        data,
+        HttpStatusCode.Ok,
+        'Payment refunded successfully'
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
 }

@@ -1,13 +1,17 @@
 import { type NextFunction, type Request, type Response } from 'express';
 import prisma from '@/lib/prisma';
 
-export const logsMiddleware = async (
+export const logsMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   const userId = req.user?.id || null;
   const { headers, body, query, params, method, url, hostname, ip } = req;
+  if (method === 'GET') {
+    next();
+    return;
+  }
   const ipAddress = (req.headers['x-forwarded-for'] ??
     req.socket.remoteAddress) as string;
 
@@ -19,4 +23,6 @@ export const logsMiddleware = async (
     .catch((err) => {
       console.log('Error saving log', err);
     });
+
+  next();
 };
