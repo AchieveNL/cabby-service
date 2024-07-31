@@ -63,6 +63,16 @@ export class CreateVehicleDto {
   images?: string[];
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  registrationCertificates?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  insuranceCertificates?: string[];
+
+  @IsOptional()
   @IsString()
   availability?: string;
 
@@ -96,11 +106,7 @@ export class CreateVehicleDto {
 
   @IsOptional()
   @IsString()
-  zipcodeNumber?: string;
-
-  @IsOptional()
-  @IsString()
-  zipcodeCharacter?: string;
+  zipcode?: string;
 
   @IsOptional()
   @IsString()

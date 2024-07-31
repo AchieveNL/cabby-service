@@ -2,6 +2,10 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 import { mailSender } from '@/config/mailer.config';
 import { urlToBase64 } from '@/utils/file';
+import {
+  generateEmailTemplate,
+  generateNewEmail,
+} from '@/utils/email-components';
 
 const generateEmail = async (
   email: string,
@@ -481,6 +485,29 @@ Soms is het beste avontuur het volgende avontuur
       Team Cabby
   `
     );
+
+    await mailSender(mailMessage);
+  }
+
+  async paymentRefundedMailSender(email: string, name: string) {
+    const html = await generateEmailTemplate({
+      title: 'Terugbetaling',
+      subtitle: 'Verwerkt',
+      content: `Beste ${name},
+
+Goed nieuws! We hebben zojuist een terugbetaling verwerkt voor je recente aanbetaling. Je kunt de details van de terugbetaling in je account bekijken. Bedankt voor je geduld en begrip.
+
+Met vriendelijke groet,
+
+Team Cabby.
+`,
+    });
+
+    const mailMessage = generateNewEmail({
+      to: email,
+      html,
+      subject: 'Terugbetaling Verwerkt',
+    });
 
     await mailSender(mailMessage);
   }

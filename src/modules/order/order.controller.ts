@@ -39,6 +39,26 @@ export default class OrderController extends Api {
     }
   };
 
+  public createOrderAdmin = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const dto = req.body;
+      const response = await this.orderService.createOrderAdmin(dto);
+      return this.send(
+        res,
+        response,
+        HttpStatusCode.Created,
+        'Order created successfully'
+      );
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  };
+
   public getOrderDetailsWithStatus = async (
     req: Request,
     res: Response,
@@ -121,7 +141,7 @@ export default class OrderController extends Api {
         res,
         unlockResult,
         HttpStatusCode.Ok,
-        'Vehicle unlocked successfully'
+        'Vehicle started successfully'
       );
     } catch (error) {
       console.log(error);
@@ -136,7 +156,6 @@ export default class OrderController extends Api {
   ) => {
     const orderId = req.params.orderId;
     const userId = req.user?.id;
-
     try {
       const details = await this.orderService.completeOrder(orderId, userId);
       return this.send(
@@ -155,7 +174,7 @@ export default class OrderController extends Api {
       } else {
         res.status(500).json({ error: 'Internal Server Error.' });
       }
-      next();
+      next(error);
     }
   };
 
@@ -209,10 +228,7 @@ export default class OrderController extends Api {
       await this.orderService.cancelOrder(orderId, user);
       return this.send(res, null, 204, 'Order cancelled successfully');
     } catch (error) {
-      if (error) {
-        res.status(400).json({ error: error.message });
-      }
-      next();
+      next(error);
     }
   };
 
@@ -354,6 +370,72 @@ export default class OrderController extends Api {
         );
 
       return this.send(res, availability);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getRangeOrdersInvoices = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const start = req.query.start as string;
+      const end = req.query.end as string;
+
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      const data = await this.orderService.getRangeOrdersInvoices(
+        startDate,
+        endDate
+      );
+
+      return this.send(res, data);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getRangeOrdersExcel = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const start = req.query.start as string;
+      const end = req.query.end as string;
+
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      const buffer = await this.orderService.getRangeOrdersExcel(
+        startDate,
+        endDate
+      );
+
+      // Send the file
+      res.setHeader('Content-Disposition', 'attachment; filename="data.xlsx"');
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      );
+      return res.send(buffer);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getVehicleOrders = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const vehicleId = req.params.vehicleId;
+
+      const data = await this.orderService.getVehicleOrders(vehicleId);
+
+      return this.send(res, data);
     } catch (error) {
       next(error);
     }

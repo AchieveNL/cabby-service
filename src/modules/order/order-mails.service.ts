@@ -1,11 +1,9 @@
-import { type MailDataRequired } from '@sendgrid/mail';
 import { mailSender } from '@/config/mailer.config';
-import { generateEmailTemplate } from '@/utils/email-components';
+import {
+  generateEmailTemplate,
+  generateNewEmail,
+} from '@/utils/email-components';
 import { urlToBase64 } from '@/utils/file';
-
-type Options = Omit<MailDataRequired, 'from'>;
-
-const generateEmail = (data: Options) => data;
 
 export default class OrderMailService {
   async orderConfirmedMailSender(
@@ -40,13 +38,13 @@ We zien je binnenkort. Veel rijplezier!<br/><br/>
 Team Cabby`,
     });
 
-    const mailMessage = generateEmail({
+    const mailMessage = generateNewEmail({
       to: email,
       subject: 'Reservering bevestigd',
       html,
       attachments,
     });
-    console.log('Order confirmation email sent successfully.', papers);
+    // console.log('Order confirmation email sent successfully.', papers);
 
     await mailSender(mailMessage);
   }

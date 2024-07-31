@@ -41,6 +41,7 @@ export default class VehicleController extends Api {
     try {
       const { id } = req.params;
       const vehicleData = req.body;
+      console.log(vehicleData);
       const images: Express.Multer.File[] = req.files as Express.Multer.File[];
 
       if (images) {
@@ -360,6 +361,19 @@ export default class VehicleController extends Api {
         HttpStatusCode.Ok,
         'Deposit upserted successfully'
       );
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getLastVehicleDetails = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const details = await this.vehicleService.getLastVehicleDetails();
+      return this.send(res, details, HttpStatusCode.Ok, 'sucess');
     } catch (error) {
       next(error);
     }

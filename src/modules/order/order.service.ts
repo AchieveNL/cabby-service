@@ -1,19 +1,29 @@
-import { Prisma, UserRole, type user, type order } from '@prisma/client';
+import {
+  type Prisma,
+  UserRole,
+  type user,
+  type order,
+  PaymentStatus,
+} from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
 // eslint-disable-next-line
 import fetch, { Headers } from 'node-fetch';
 import { HttpStatusCode } from 'axios';
+import * as XLSX from 'xlsx';
 import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
 import UserMailService from '../notifications/user-mails.service';
 import { NotificationService } from '../notifications/notification.service';
+import { orderConfirmedNotification } from '../notifications/notifications.functions';
 import OrderMailService from './order-mails.service';
 import { OrderStatus } from './types';
 import { calculateOrderPrice } from './functions';
+import { type CreateOrderAdminDto } from './order.dto';
 import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
 import { ApiError } from '@/lib/errors';
+import { dateTimeFormat, formatDuration } from '@/utils/date';
 
 const weakTheVehicleUp = async (vehicleTag: string, token: string) => {
   const myHeaders = new Headers();
@@ -92,6 +102,45 @@ export default class OrderService {
       userId: dto.userId,
       amount: totalAmount,
       orderId: order.id,
+    });
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        paymentId: paymentResponse.payment,
+      },
+    });
+
+    return { order, checkoutUrl: paymentResponse.checkoutUrl };
+  };
+
+  public createOrderAdmin = async (dto: CreateOrderAdminDto) => {
+    const { rentalEndDate, rentalStartDate, userId, vehicleId } = dto;
+
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { id: vehicleId },
+    });
+
+    if (!vehicle) throw new Error('No vehicle found!');
+
+    const totalAmount = 0.01;
+
+    const order = await prisma.order.create({
+      data: {
+        rentalEndDate,
+        rentalStartDate,
+        userId,
+        vehicleId,
+        totalAmount,
+        status: OrderStatus.CONFIRMED,
+      },
+    });
+
+    const paymentResponse = await this.paymentService.createOrderPayment({
+      userId,
+      amount: totalAmount,
+      orderId: order.id,
+      status: PaymentStatus.PAID,
     });
 
     await prisma.order.update({
@@ -522,11 +571,12 @@ export default class OrderService {
     console.log('Completing order:', orderId);
 
     const now = new Date();
-    // const isOverdue = order.rentalEndDate < now
+    const status =
+      order.rentalEndDate < now ? undefined : OrderStatus.COMPLETED;
 
     const updateData: Prisma.orderUpdateInput = {
       stopRentDate: now,
-      status: OrderStatus.COMPLETED,
+      status,
     };
 
     const completedOrder = await prisma.order.update({
@@ -655,6 +705,8 @@ export default class OrderService {
     if (!order) throw new Error('Order not found');
     const isAdmin = userSender.role === UserRole.ADMIN;
 
+    // TODO: add cancel restriction when rent begins
+
     if (!isAdmin && userSender.id !== order.userId)
       throw new ApiError(HttpStatusCode.Unauthorized, 'User not authorized');
 
@@ -688,7 +740,15 @@ export default class OrderService {
       where: { id: orderId },
       include: {
         user: { include: { profile: true } },
-        vehicle: { select: { papers: true } },
+        vehicle: {
+          select: {
+            papers: true,
+            companyName: true,
+            model: true,
+            insuranceCertificates: true,
+            registrationCertificates: true,
+          },
+        },
       },
     });
 
@@ -699,10 +759,22 @@ export default class OrderService {
       data: { status: 'CONFIRMED' },
     });
 
+    const companyName = order.vehicle.companyName ?? '';
+    const model = order.vehicle.model ?? '';
+
+    await orderConfirmedNotification({
+      companyName,
+      model,
+      orderId: order.id,
+      userId: order.userId,
+    });
+
     await this.orderMailService.orderConfirmedMailSender(
       order.user.email,
       order.user.profile?.fullName,
-      order.vehicle.papers
+      order.vehicle.insuranceCertificates.concat(
+        order.vehicle.registrationCertificates
+      )
     );
   };
 
@@ -740,31 +812,52 @@ export default class OrderService {
         },
       },
       vehicle: true,
+      payment: true,
     };
+    const orderBy: Prisma.orderOrderByWithRelationInput = { createdAt: 'desc' };
 
-    if (status === 'UNPAID') {
-      const query = Prisma.sql`SELECT
-                                  *
-                                FROM
-                                  "order"
-                                WHERE ("stopRentDate" > "rentalEndDate"
-                                  OR "rentalEndDate" < now())
-                                AND status = 'CONFIRMED';
-                                      `;
-      const ordersIds = await prisma.$queryRaw<order[]>(query);
+    const where: Prisma.orderWhereInput =
+      status === 'UNPAID'
+        ? {
+            rentalEndDate: { lt: new Date() },
+            status: 'CONFIRMED',
+          }
+        : { status };
 
-      console.log(ordersIds);
+    //     if (status === 'UNPAID') {
+    //       where = {
+    //         rentalEndDate: { lt: new Date() },
+    //         status: 'CONFIRMED',
+    //       };
 
-      orders = await prisma.order.findMany({
-        where: { id: { in: ordersIds.map((el) => el.id) } },
-        include,
-      });
+    //       console.log((await prisma.order.findMany({ where })).length);
+    //       const query = Prisma.sql`SELECT
+    //   *
+    // FROM
+    //   "order"
+    // WHERE
+    //   (
+    //     "stopRentDate" > "rentalEndDate"
+    //     OR "rentalEndDate" < now()
+    //   )
+    //   AND status = 'CONFIRMED'`;
+    //       const ordersIds = await prisma.$queryRaw<order[]>(query);
 
-      return orders;
-    }
+    //       // console.log(ordersIds);
+
+    //       orders = await prisma.order.findMany({
+    //         where: { id: { in: ordersIds.map((el) => el.id) } },
+    //         include,
+    //         orderBy,
+    //       });
+
+    //       return orders;
+    //     }
+
     orders = await prisma.order.findMany({
-      where: { status },
+      where,
       include,
+      orderBy,
     });
     return orders;
   };
@@ -930,5 +1023,72 @@ export default class OrderService {
     if (!vehicle || vehicle.status !== VehicleStatus.ACTIVE) return false;
 
     return overlappingOrders === 0;
+  };
+
+  public getRangeOrdersInvoices = async (startDate: Date, endDate: Date) => {
+    const data = await prisma.payment.findMany({
+      select: { invoiceUrl: true },
+      where: {
+        order: { rentalStartDate: { gte: startDate, lte: endDate } },
+        invoiceUrl: { not: null },
+      },
+    });
+
+    const formatedData = data.map((el) => el.invoiceUrl);
+
+    return formatedData;
+  };
+
+  public getRangeOrdersExcel = async (startDate: Date, endDate: Date) => {
+    const data = await prisma.order.findMany({
+      where: {
+        rentalStartDate: { gte: startDate, lte: endDate },
+      },
+      include: {
+        payment: true,
+        vehicle: true,
+        user: { include: { profile: true } },
+      },
+    });
+
+    const formatedData = data.map((el) => {
+      const Bestuurders = el.user.profile?.fullName;
+      const Auto = [el.vehicle.model, el.vehicle.companyName].join(' ');
+      const Begin = dateTimeFormat(el.rentalStartDate);
+      const Einde = dateTimeFormat(el.rentalEndDate);
+      const Duur = formatDuration(el.rentalStartDate, el.rentalEndDate);
+      const Prijs =
+        '€ ' + el.totalAmount.toFixed(2) + ` ${el.payment?.status ?? ''}`;
+
+      return { Bestuurders, Auto, Begin, Einde, Duur, Prijs };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(formatedData);
+
+    // Set a uniform column width for all columns
+    const uniformWidth = 20; // Adjust this value as needed
+    const cols = Object.keys(formatedData[0]).map(() => ({
+      wch: uniformWidth,
+    }));
+    worksheet['!cols'] = cols;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+
+    // Generate buffer
+    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+
+    return buffer;
+  };
+
+  public getVehicleOrders = async (vehicleId: string) => {
+    const data = await prisma.order.findMany({
+      select: { id: true, rentalEndDate: true, rentalStartDate: true },
+      where: {
+        vehicleId,
+      },
+    });
+
+    return data;
   };
 }
