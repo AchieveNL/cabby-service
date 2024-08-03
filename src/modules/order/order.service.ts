@@ -597,12 +597,12 @@ export default class OrderService {
       },
     });
 
-    await this.adminMailService.rentCompletedMailSender(
-      user?.email!,
-      user?.profile?.fullName!,
-      order.vehicle.licensePlate ?? '',
-      order.vehicle.model ?? ''
-    );
+    // await this.adminMailService.rentCompletedMailSender(
+    //   user?.email!,
+    //   user?.profile?.fullName!,
+    //   order.vehicle.licensePlate ?? '',
+    //   order.vehicle.model ?? ''
+    // );
 
     await this.userMailService.rentCompletedMailSender(
       user?.email!,
