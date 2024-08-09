@@ -29,7 +29,7 @@ export const verifyAuthToken = async (
           // Valid token
           if (!err) {
             req.user = decoded.user;
-            await logsMiddleware(req, res, next);
+            // logsMiddleware(req, res, next);
             next();
           }
           // Token expired and refresh token exists

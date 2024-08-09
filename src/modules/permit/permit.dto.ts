@@ -12,6 +12,10 @@ export class CreatePermitDto {
 
   @IsString()
   @IsOptional()
+  kvkNumber?: string;
+
+  @IsString()
+  @IsOptional()
   companyName?: string;
 
   @IsString()
@@ -35,6 +39,10 @@ export class UpdatePermitDto {
   @IsString()
   @IsOptional()
   kvkDocumentId?: string;
+
+  @IsString()
+  @IsOptional()
+  kvkNumber?: string;
 
   @IsString()
   @IsOptional()

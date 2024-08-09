@@ -1,3 +1,4 @@
+import { type VehicleEngineType } from '@prisma/client';
 import {
   IsNotEmpty,
   IsString,
@@ -42,7 +43,7 @@ export class CreateVehicleDto {
 
   @IsOptional()
   @IsString()
-  engineType?: string;
+  engineType?: VehicleEngineType;
 
   @IsOptional()
   @IsString()
@@ -60,6 +61,16 @@ export class CreateVehicleDto {
   @IsArray()
   @IsString({ each: true })
   images?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  registrationCertificates?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  insuranceCertificates?: string[];
 
   @IsOptional()
   @IsString()
@@ -95,11 +106,7 @@ export class CreateVehicleDto {
 
   @IsOptional()
   @IsString()
-  zipcodeNumber?: string;
-
-  @IsOptional()
-  @IsString()
-  zipcodeCharacter?: string;
+  zipcode?: string;
 
   @IsOptional()
   @IsString()

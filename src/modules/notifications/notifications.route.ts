@@ -1,6 +1,9 @@
 import express from 'express';
 import { NotificationController } from './notifications.controllers';
-import { CreateNotificationDto } from './notifications.dto';
+import {
+  CreateNotificationDto,
+  closeUserNotificationDto,
+} from './notifications.dto';
 import { requireAuth, verifyAuthToken } from '@/middlewares/auth';
 import RequestValidator from '@/middlewares/request-validator';
 
@@ -13,6 +16,28 @@ notificationRouter.post(
   requireAuth,
   RequestValidator.validate(CreateNotificationDto),
   controller.sendNotification
+);
+
+notificationRouter.get(
+  '/',
+  verifyAuthToken,
+  requireAuth,
+  controller.getUserNotifications
+);
+
+notificationRouter.get(
+  '/count',
+  verifyAuthToken,
+  requireAuth,
+  controller.getUserNotificationsCount
+);
+
+notificationRouter.patch(
+  '/:id',
+  verifyAuthToken,
+  requireAuth,
+  RequestValidator.validateParams(closeUserNotificationDto),
+  controller.closeUserNotification
 );
 
 // notificationRouter.get('/test-email', async () => {
