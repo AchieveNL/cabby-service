@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { UserRole } from '@prisma/client';
 import { generateRefreshToken, generateToken } from './token-manager';
 import { setAuthCookies } from './cookies';
+import { logsMiddleware } from './logs';
 
 export const verifyAuthToken = async (
   req: Request,
