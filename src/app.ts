@@ -11,16 +11,10 @@ import environment from './lib/environment';
 import expressJSDocSwaggerConfig from './config/express-jsdoc-swagger.config';
 import appConfig from './config/app.config';
 import teslaAuth from './tesla-auth';
+import { logsMiddleware } from './middlewares/logs';
 import errorHandler from '@/middlewares/error-handler';
 import routes from '@/modules/index.route';
 import prismaClient from '@/lib/prisma';
-// import { readFile } from 'fs/promises';
-// import path, { dirname } from 'path';
-// import FileService from './modules/file/file.service';
-// import AdminMailService from './modules/notifications/admin-mails.service';
-// import UserMailService from './modules/notifications/user-mails.service';
-// import { Prisma } from '@prisma/client';
-// import prisma from '@/lib/prisma';
 
 export const determineCorsOrigin = () => {
   switch (process.env.NODE_ENV) {
@@ -73,21 +67,12 @@ class App {
     const {
       api: { version },
     } = appConfig;
+
     const { env } = environment;
+    this.express.use(logsMiddleware);
     this.express.use('/', home);
     this.express.use('/tesla', teslaAuth);
     this.express.use(`/api/${version}/${env}`, routes);
-
-    // const adminEmailService = new AdminMailService();
-    // const userEmailService = new UserMailService();
-    // await adminEmailService.newRegistrationMailSender('test@test.test', 'test');
-    // await userEmailService.newRegistrationMailSender('test@test.test', 'test');
-
-    // pdf testing
-    // const fileService = new FileService();
-    // await fileService.generateAndSaveInvoice(
-    //   'a758800b-1a88-4919-9073-d34f583d241d'
-    // );
   }
 
   private setErrorHandler(): void {

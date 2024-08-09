@@ -19,8 +19,8 @@ export class ApiError extends Error implements IApiError {
 }
 
 export class HttpBadRequestError extends ApiError {
-  constructor(message: string, errors: string[]) {
-    super(HttpStatusCode.BadRequest, message, errors);
+  constructor(message?: string, errors?: string[]) {
+    super(HttpStatusCode.BadRequest, message ?? '', errors);
   }
 }
 

@@ -12,8 +12,26 @@ export default class VehicleService {
       const vehicle = await prisma.vehicle.create({
         data,
       });
+      const ids = await prisma.user.findMany({
+        select: { id: true },
+        where: { profile: { permitDetails: { id: {} } } },
+      });
+
+      const companyName = vehicle.companyName ?? '';
+      const model = vehicle.model ?? '';
+
+      await prisma.notification.createMany({
+        data: ids.map((el) => ({
+          event: 'NEW_CAR',
+          title: 'Nieuwe auto toegevoegd!',
+          content: `Er is een nieuwe ${companyName} ${model} beschikbaar. Reserveer hem snel voor jou voorkeurstijden.`,
+          param: vehicle.id,
+          userId: el.id,
+        })),
+      });
       return vehicle;
     } catch (error) {
+      console.log(error);
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         const errorMessages = this.mapPrismaErrorToMessages(error);
         throw new Error(errorMessages.join('; '));
@@ -105,6 +123,7 @@ export default class VehicleService {
     try {
       const vehicle = await prisma.vehicle.findUnique({
         where: { id },
+        include: { damageReports: true },
       });
       return vehicle;
     } catch (error) {
@@ -227,6 +246,18 @@ export default class VehicleService {
       return deposit;
     } catch (error) {
       throw new Error('Failed to upsert deposit');
+    }
+  };
+
+  public getLastVehicleDetails = async () => {
+    try {
+      const deposit = await prisma.vehicle.findFirst({
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      });
+      return deposit;
+    } catch (error) {
+      throw new Error('Failed to get  last vehicle details');
     }
   };
 }

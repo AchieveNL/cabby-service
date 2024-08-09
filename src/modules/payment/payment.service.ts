@@ -11,6 +11,7 @@ import AdminMailService from '../notifications/admin-mails.service';
 import UserMailService from '../notifications/user-mails.service';
 import prisma from '@/lib/prisma';
 import { REGISTRATION_FEE } from '@/utils/constants';
+import { HttpBadRequestError } from '@/lib/errors';
 
 export default class PaymentService {
   readonly fileService = new FileService();
@@ -20,12 +21,61 @@ export default class PaymentService {
     apiKey: process.env.MOLLIE_API_KEY as string,
   });
 
+  public async refundPayment(paymentId: string) {
+    if (!paymentId) throw new HttpBadRequestError('Must provide payment id');
+
+    const payment = await prisma.payment.findUnique({
+      where: { mollieId: paymentId },
+      include: {
+        user: {
+          include: { profile: true },
+        },
+      },
+    });
+
+    if (!payment) throw new HttpBadRequestError("Payment doesn't exist");
+
+    const value = payment?.amount.toFixed(2)!;
+    console.log(payment, value);
+    const refund = await this.mollie.paymentRefunds.create({
+      paymentId,
+      amount: {
+        currency: 'EUR',
+        value,
+      },
+    });
+
+    console.log(refund);
+
+    const res = await prisma.payment.update({
+      where: { mollieId: paymentId },
+      data: { status: 'REFUNDED' },
+    });
+
+    const email = payment.user.email;
+    const name = payment.user.profile?.fullName!;
+
+    await this.userMailService.paymentRefundedMailSender(email, name);
+
+    return { res, refund };
+  }
+
   public getAllPayments = async () => {
     const payment = await prisma.payment.findMany();
     return payment;
   };
 
-  public async createOrderPayment({ userId, amount, orderId }) {
+  public async createOrderPayment({
+    userId,
+    amount,
+    orderId,
+    status = PaymentStatus.PENDING,
+  }: {
+    userId: string;
+    amount: number;
+    orderId: string;
+    status?: PaymentStatus;
+  }) {
     const parameters = this.generateOrderPaymentParameters(amount, orderId);
     const payment = await this.mollie.payments.create(parameters);
     const checkoutUrl = payment.getCheckoutUrl();
@@ -33,12 +83,13 @@ export default class PaymentService {
 
     const { id } = await prisma.payment.create({
       data: {
+        mollieId: payment.id,
         userId,
         amount: parseFloat(payment.amount.value),
         currency: payment.amount.currency,
         orderId,
         product: PaymentProduct.RENT,
-        status: PaymentStatus.PENDING,
+        status,
       },
     });
 
@@ -189,6 +240,14 @@ export default class PaymentService {
         registrationOrderId: registrationOrder.id,
         product: PaymentProduct.REGISTRATION,
         status: PaymentStatus.PENDING,
+      },
+    });
+
+    await prisma.registrationOrder.update({
+      where: { id: registrationOrder.id },
+      data: {
+        paymentId: payment.id,
+        payment: { update: { mollieId: payment.id } },
       },
     });
 

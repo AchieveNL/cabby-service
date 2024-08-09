@@ -212,7 +212,7 @@ export default class ProfileController extends Api {
   public getAllDrivers = async (req, res, next) => {
     try {
       const drivers = await this.userProfileService.getAllDrivers();
-      console.log('drivers: ', drivers);
+      // console.log('drivers: ', drivers);
       this.send(
         res,
         drivers,
