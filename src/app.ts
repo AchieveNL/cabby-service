@@ -85,24 +85,6 @@ class App {
 
   public async connectPrisma(): Promise<void> {
     await prismaClient.$connect();
-    // await mollie.payments.iterate({}).forEach(async (payment) => {
-    //   const { amount, amountRefunded, id } = payment;
-    //   const amountValue = amount.value;
-    //   const refundValue = amountRefunded?.value;
-    //   const isRefunded = amountValue === refundValue;
-    //   try {
-    //     if (isRefunded) {
-    //       console.log(id);
-    //       await prisma.payment.update({
-    //         where: { mollieId: id },
-    //         data: { status: 'REFUNDED' },
-    //       });
-    //     }
-    //   } catch (error) {
-    //     console.log('error', error);
-    //   }
-    // });
-    // console.log('done');
   }
 }
 
