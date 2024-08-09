@@ -289,15 +289,15 @@ export default class OrderService {
   private async getTeslaToken() {
     const teslaToken = await prisma.teslaToken.findFirst();
 
-    if (!teslaToken || !teslaToken.refreshToken) {
+    if (!teslaToken?.refreshToken) {
       throw new Error('Tesla API token or refresh token not found.');
     }
 
-    return teslaToken;
+    return { ...teslaToken, refreshToken: teslaToken.refreshToken };
   }
 
   private async updateOrderLockStatus(orderId: string, isUnlocked: boolean) {
-    return prisma.order.update({
+    return await prisma.order.update({
       where: { id: orderId },
       data: { isVehicleUnlocked: isUnlocked },
     });
@@ -308,14 +308,18 @@ export default class OrderService {
     const teslaToken = await this.getTeslaToken();
 
     if (process.env.NODE_ENV === 'production') {
-      await wakeTheVehicleUp(order.vehicle.vin, teslaToken.token);
+      const vin = order.vehicle.vin;
+      if (!vin) {
+        throw new Error('No vin provided.');
+      }
+      await wakeTheVehicleUp(vin, teslaToken.token);
       const result = await this.unlockTeslaVehicle(
-        order.vehicle.vin,
+        vin,
         teslaToken.token,
         teslaToken.refreshToken
       );
 
-      if (!result || !result.response?.result) {
+      if (!result?.response?.result) {
         throw new Error('Error unlocking Tesla vehicle.');
       }
 
@@ -327,7 +331,7 @@ export default class OrderService {
       // );
     }
 
-    return this.updateOrderLockStatus(orderId, true);
+    return await this.updateOrderLockStatus(orderId, true);
   };
 
   public lockVehicle = async (orderId: string, userId: string) => {
@@ -335,13 +339,16 @@ export default class OrderService {
     const teslaToken = await this.getTeslaToken();
 
     if (process.env.NODE_ENV === 'production') {
+      const vin = order.vehicle.vin;
+      if (!vin) throw new Error('No vin provided');
+
       const result = await this.lockTeslaVehicle(
-        order.vehicle.vin,
+        vin,
         teslaToken.token,
         teslaToken.refreshToken
       );
 
-      if (!result || !result.response?.result) {
+      if (!result?.response?.result) {
         throw new Error('Error locking Tesla vehicle.');
       }
 
@@ -353,7 +360,7 @@ export default class OrderService {
       // );
     }
 
-    return this.updateOrderLockStatus(orderId, false);
+    return await this.updateOrderLockStatus(orderId, false);
   };
 
   public startVehicle = async (orderId: string, userId: string) => {
@@ -478,7 +485,9 @@ export default class OrderService {
       throw new Error('Failed to unlock Tesla vehicle after retries');
     } catch (error) {
       console.error('Error unlocking Tesla vehicle:', error);
-      throw new Error(`Failed to unlock Tesla vehicle: ${error.message}`);
+      throw new Error(
+        `Failed to unlock Tesla vehicle: ${error.message as string}`
+      );
     }
   };
 
