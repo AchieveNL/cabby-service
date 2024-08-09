@@ -14,7 +14,7 @@ const teslaAuth: Router = Router();
 export const refreshTeslaApiToken = async (
   currentToken: string,
   teslaApiRefreshToken: string
-) => {
+): Promise<string> => {
   try {
     const refreshResponse = await axios.post(
       'https://auth.tesla.com/oauth2/v3/token',
@@ -29,23 +29,21 @@ export const refreshTeslaApiToken = async (
     console.log('Tesla API token refresh response:', refreshResponse.data);
 
     const newAccessToken = refreshResponse.data.access_token;
-    // Update the stored tokens with the new access token and optionally the new refresh token
+    const newRefreshToken =
+      refreshResponse.data.refresh_token || teslaApiRefreshToken;
 
     await prisma.teslaToken.updateMany({
       where: { token: currentToken },
       data: {
         token: newAccessToken,
-        refreshToken: teslaApiRefreshToken,
+        refreshToken: newRefreshToken,
       },
     });
 
     return newAccessToken;
-
-    // Retry the unlock request with the new access token
-    // Make sure to update the request headers with the new token
   } catch (refreshError) {
     console.error('Error refreshing Tesla API token:', refreshError);
-    // Handle refresh token error (e.g., also expired, network issues, etc.)
+    throw new Error('Failed to refresh Tesla API token');
   }
 };
 
@@ -126,13 +124,12 @@ teslaAuth.get('/auth/callback', async (req, res) => {
       }
     );
 
-    const teslaApiToken = tokenResponse.data.access_token;
-    const teslaRefreshToken = tokenResponse.data.refresh_token;
+    const { access_token: teslaApiToken, refresh_token: teslaRefreshToken } =
+      tokenResponse.data;
 
     console.log('tokenResponse.data', tokenResponse.data);
 
     await prisma.teslaToken.deleteMany();
-
     await prisma.teslaToken.create({
       data: {
         token: teslaApiToken,
