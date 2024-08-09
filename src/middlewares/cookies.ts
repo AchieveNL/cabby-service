@@ -18,7 +18,7 @@ export const setAuthCookies = (
 
   res.cookie('token', newToken, {
     ...cookieOptions,
-    maxAge: 3600000,
+    maxAge: 3600000 * 24,
   });
 
   res.cookie('refreshToken', newRefreshToken, {
