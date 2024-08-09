@@ -7,7 +7,7 @@ import {
 } from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
 // eslint-disable-next-line
-import fetch, { Headers } from 'node-fetch';
+import fetch, { Headers, Response } from 'node-fetch';
 import { HttpStatusCode } from 'axios';
 import * as XLSX from 'xlsx';
 import PaymentService from '../payment/payment.service';
@@ -25,7 +25,7 @@ import { refreshTeslaApiToken } from '@/tesla-auth';
 import { ApiError } from '@/lib/errors';
 import { dateTimeFormat, formatDuration } from '@/utils/date';
 
-const weakTheVehicleUp = async (vehicleTag: string, token: string) => {
+const wakeTheVehicleUp = async (vehicleTag: string, token: string) => {
   const myHeaders = new Headers();
   myHeaders.append('Content-Type', 'application/json');
   myHeaders.append('Authorization', `Bearer ${token}`);
@@ -45,6 +45,25 @@ const weakTheVehicleUp = async (vehicleTag: string, token: string) => {
     console.log('Error waking up vehicle:', error);
     throw new Error('Error waking up vehicle' + JSON.stringify(error));
   }
+};
+
+const httpCallVehicleCommand = async (
+  url: string,
+  token: string
+): Promise<Response> => {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok && response.status !== 401) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response;
 };
 
 export default class OrderService {
@@ -245,7 +264,7 @@ export default class OrderService {
     };
   };
 
-  public unlockVehicle = async (orderId: string, userId: string) => {
+  private async validateOrderAndRental(orderId: string) {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { vehicle: true },
@@ -256,120 +275,85 @@ export default class OrderService {
     }
 
     const currentDate = new Date();
-    console.log('currentDate:', currentDate);
-    console.log('order.rentalStartDate:', order.rentalStartDate);
-    console.log('start date :', new Date(order.rentalStartDate));
     if (currentDate < order.rentalStartDate) {
       throw new Error('Rental period has not started yet.');
-    }
-
-    const teslaToken = await prisma.teslaToken.findFirst();
-
-    if (!teslaToken) {
-      console.log('Tesla API token not found.');
-      throw new Error('Tesla API token not found.');
-    }
-
-    if (!teslaToken.refreshToken) {
-      console.log('Tesla API refresh token not found.');
-      throw new Error('Tesla API refresh token not found.');
     }
 
     if (!order.vehicle.vin) {
       throw new Error('Vehicle VIN not found.');
     }
 
-    if (process.env.NODE_ENV === 'production') {
-      await weakTheVehicleUp(order.vehicle.vin, teslaToken.token);
+    return order;
+  }
 
+  private async getTeslaToken() {
+    const teslaToken = await prisma.teslaToken.findFirst();
+
+    if (!teslaToken || !teslaToken.refreshToken) {
+      throw new Error('Tesla API token or refresh token not found.');
+    }
+
+    return teslaToken;
+  }
+
+  private async updateOrderLockStatus(orderId: string, isUnlocked: boolean) {
+    return prisma.order.update({
+      where: { id: orderId },
+      data: { isVehicleUnlocked: isUnlocked },
+    });
+  }
+
+  public unlockVehicle = async (orderId: string, userId: string) => {
+    const order = await this.validateOrderAndRental(orderId);
+    const teslaToken = await this.getTeslaToken();
+
+    if (process.env.NODE_ENV === 'production') {
+      await wakeTheVehicleUp(order.vehicle.vin, teslaToken.token);
       const result = await this.unlockTeslaVehicle(
         order.vehicle.vin,
-        teslaToken?.token,
-        teslaToken?.refreshToken
+        teslaToken.token,
+        teslaToken.refreshToken
       );
 
-      if (!result) {
+      if (!result || !result.response?.result) {
         throw new Error('Error unlocking Tesla vehicle.');
       }
 
-      if (result?.response?.result) {
-        // await this.notificationService.sendNotificationToUser(
-        //   userId,
-        //   'Je Tesla is ontgrendeld.',
-        //   'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
-        //   JSON.stringify({ type: 'event' })
-        // );
-        // Update the database indicating the vehicle is unlocked
-        const data = await prisma.order.update({
-          where: { id: orderId },
-          data: { isVehicleUnlocked: true },
-        });
-        return data;
-      }
-    } else {
-      const data = await prisma.order.update({
-        where: { id: orderId },
-        data: { isVehicleUnlocked: true },
-      });
-      return data;
+      // await this.notificationService.sendNotificationToUser(
+      //   userId,
+      //   'Je Tesla is ontgrendeld.',
+      //   'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
+      //   JSON.stringify({ type: 'event' })
+      // );
     }
+
+    return this.updateOrderLockStatus(orderId, true);
   };
 
   public lockVehicle = async (orderId: string, userId: string) => {
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: { vehicle: true },
-    });
+    const order = await this.validateOrderAndRental(orderId);
+    const teslaToken = await this.getTeslaToken();
 
-    if (!order) {
-      throw new Error('Order not found.');
-    }
-
-    const currentDate = new Date();
-    if (currentDate < order.rentalStartDate) {
-      throw new Error('Rental period has not started yet.');
-    }
-
-    const teslaToken = await prisma.teslaToken.findFirst();
-
-    if (!teslaToken) {
-      console.log('Tesla API token not found.');
-      throw new Error('Tesla API token not found.');
-    }
-    if (!teslaToken.refreshToken) {
-      console.log('Tesla API refresh token not found.');
-      throw new Error('Tesla API refresh token not found.');
-    }
-
-    if (!order.vehicle.vin) {
-      throw new Error('Vehicle VIN not found.');
-    }
-
-    // const teslaApiToken = await getTeslaApiToken(orderId);
     if (process.env.NODE_ENV === 'production') {
       const result = await this.lockTeslaVehicle(
         order.vehicle.vin,
-        teslaToken?.token,
-        teslaToken?.refreshToken
+        teslaToken.token,
+        teslaToken.refreshToken
       );
 
-      if (result.response.result) {
-        // await this.notificationService.sendNotificationToUser(
-        //   userId,
-        //   'Heel goed!',
-        //   'Je Tesla is nu vergrendeld. 🔐',
-        //   JSON.stringify({ type: 'event' })
-        // );
+      if (!result || !result.response?.result) {
+        throw new Error('Error locking Tesla vehicle.');
       }
+
+      // await this.notificationService.sendNotificationToUser(
+      //   userId,
+      //   'Heel goed!',
+      //   'Je Tesla is nu vergrendeld. 🔐',
+      //   JSON.stringify({ type: 'event' })
+      // );
     }
 
-    // Update the database indicating the vehicle is locked
-    const data = await prisma.order.update({
-      where: { id: orderId },
-      data: { isVehicleUnlocked: false },
-    });
-
-    return data;
+    return this.updateOrderLockStatus(orderId, false);
   };
 
   public startVehicle = async (orderId: string, userId: string) => {
@@ -458,32 +442,43 @@ export default class OrderService {
     const startDrive = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/remote_start_drive`;
 
     console.log('Unlocking Tesla vehicle:', vehicleVin);
+
     try {
-      const newToken = await refreshTeslaApiToken(
-        teslaApiToken,
-        teslaApiRefreshToken
-      );
-      let response = await this.httpCallVehicleCommand(url, newToken);
-      await this.httpCallVehicleCommand(startDrive, newToken);
-      if (response.status === 401) {
-        console.log('Tesla API token expired. Refreshing token...');
-        const newToken = await refreshTeslaApiToken(
-          teslaApiToken,
-          teslaApiRefreshToken
-        );
-        console.log('Token refreshed. Retrying...');
-        response = await this.httpCallVehicleCommand(url, newToken);
+      let currentToken = teslaApiToken;
+      let response: Response;
+
+      for (let attempts = 0; attempts < 2; attempts++) {
+        try {
+          response = await httpCallVehicleCommand(url, currentToken);
+          await httpCallVehicleCommand(startDrive, currentToken);
+
+          if (response.status === 200) {
+            const result = await response.json();
+            console.log('Unlocking Tesla vehicle result:', result);
+            return result;
+          }
+
+          if (response.status === 401 && attempts === 0) {
+            console.log('Tesla API token expired. Refreshing token...');
+            currentToken = await refreshTeslaApiToken(
+              currentToken,
+              teslaApiRefreshToken
+            );
+            console.log('Token refreshed. Retrying...');
+            continue;
+          }
+
+          throw new Error(`Unexpected response status: ${response.status}`);
+        } catch (error) {
+          if (attempts === 1) throw error;
+          console.error('Error in unlock attempt, will retry:', error);
+        }
       }
-      const result = await response.json();
 
-      console.log('unLocking Tesla vehicle result:', result);
-
-      return result;
+      throw new Error('Failed to unlock Tesla vehicle after retries');
     } catch (error) {
       console.error('Error unlocking Tesla vehicle:', error);
-      throw new Error(
-        `Failed to unlock Tesla vehicle, error: ${JSON.stringify(error)}`
-      );
+      throw new Error(`Failed to unlock Tesla vehicle: ${error.message}`);
     }
   };
 

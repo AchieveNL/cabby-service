@@ -98,8 +98,13 @@ export default class OrderController extends Api {
         'Vehicle unlocked successfully'
       );
     } catch (error) {
-      console.log(error);
-      next();
+      console.error('Error unlocking vehicle:', error);
+      return this.send(
+        res,
+        null,
+        HttpStatusCode.InternalServerError,
+        'Failed to unlock vehicle'
+      );
     }
   };
 
@@ -110,19 +115,24 @@ export default class OrderController extends Api {
   ) => {
     try {
       const { orderId } = req.params;
-      const unlockResult = await this.orderService.lockVehicle(
+      const lockResult = await this.orderService.lockVehicle(
         orderId,
         req.user?.id
       );
       return this.send(
         res,
-        unlockResult,
+        lockResult,
         HttpStatusCode.Ok,
-        'Vehicle unlocked successfully'
+        'Vehicle locked successfully'
       );
     } catch (error) {
-      console.log(error);
-      next();
+      console.error('Error locking vehicle:', error);
+      return this.send(
+        res,
+        null,
+        HttpStatusCode.InternalServerError,
+        'Failed to lock vehicle'
+      );
     }
   };
 
