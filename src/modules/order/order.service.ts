@@ -302,7 +302,7 @@ export default class OrderService {
   }
 
   private async updateOrderLockStatus(orderId: string, isUnlocked: boolean) {
-    return prisma.order.update({
+    return await prisma.order.update({
       where: { id: orderId },
       data: { isVehicleUnlocked: isUnlocked },
     });
@@ -313,30 +313,30 @@ export default class OrderService {
       const order = await this.validateOrderAndRental(orderId);
       const teslaToken = await this.getTeslaToken();
 
-      // if (process.env.NODE_ENV === 'production') {
-      // await wakeTheVehicleUp(order.vehicle.vin, teslaToken.token);
-      if (!order.vehicle.vin) {
-        throw new Error('Vehicle VIN not found.');
+      if (process.env.NODE_ENV === 'production') {
+        // await wakeTheVehicleUp(order.vehicle.vin, teslaToken.token);
+        if (!order.vehicle.vin) {
+          throw new Error('Vehicle VIN not found.');
+        }
+        const result = await this.unlockTeslaVehicle(
+          order.vehicle.vin,
+          teslaToken.token,
+          teslaToken.refreshToken
+        );
+
+        if (!result?.response?.result) {
+          throw new Error('Error unlocking Tesla vehicle.');
+        }
+
+        // await this.notificationService.sendNotificationToUser(
+        //   userId,
+        //   'Je Tesla is ontgrendeld.',
+        //   'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
+        //   JSON.stringify({ type: 'event' })
+        // );
       }
-      const result = await this.unlockTeslaVehicle(
-        order.vehicle.vin,
-        teslaToken.token,
-        teslaToken.refreshToken
-      );
 
-      if (!result || !result.response?.result) {
-        throw new Error('Error unlocking Tesla vehicle.');
-      }
-
-      // await this.notificationService.sendNotificationToUser(
-      //   userId,
-      //   'Je Tesla is ontgrendeld.',
-      //   'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
-      //   JSON.stringify({ type: 'event' })
-      // );
-      // }
-
-      return this.updateOrderLockStatus(orderId, true);
+      return await this.updateOrderLockStatus(orderId, true);
     } catch (error) {
       console.log('Error unlocking vehicle:', error);
       throw new Error('Error unlocking vehicle.');
@@ -348,29 +348,29 @@ export default class OrderService {
       const order = await this.validateOrderAndRental(orderId);
       const teslaToken = await this.getTeslaToken();
 
-      // if (process.env.NODE_ENV === 'production') {
-      if (!order.vehicle.vin) {
-        throw new Error('Vehicle VIN not found.');
+      if (process.env.NODE_ENV === 'production') {
+        if (!order.vehicle.vin) {
+          throw new Error('Vehicle VIN not found.');
+        }
+        const result = await this.lockTeslaVehicle(
+          order.vehicle.vin,
+          teslaToken.token,
+          teslaToken.refreshToken
+        );
+
+        if (!result?.response?.result) {
+          throw new Error('Error locking Tesla vehicle.');
+        }
+
+        // await this.notificationService.sendNotificationToUser(
+        //   userId,
+        //   'Heel goed!',
+        //   'Je Tesla is nu vergrendeld. 🔐',
+        //   JSON.stringify({ type: 'event' })
+        // );
       }
-      const result = await this.lockTeslaVehicle(
-        order.vehicle.vin,
-        teslaToken.token,
-        teslaToken.refreshToken
-      );
 
-      if (!result || !result.response?.result) {
-        throw new Error('Error locking Tesla vehicle.');
-      }
-
-      // await this.notificationService.sendNotificationToUser(
-      //   userId,
-      //   'Heel goed!',
-      //   'Je Tesla is nu vergrendeld. 🔐',
-      //   JSON.stringify({ type: 'event' })
-      // );
-      // }
-
-      return this.updateOrderLockStatus(orderId, false);
+      return await this.updateOrderLockStatus(orderId, false);
     } catch (error) {
       console.log('Error locking vehicle:', error);
       throw new Error('Error locking vehicle.');
@@ -500,7 +500,7 @@ export default class OrderService {
       throw new Error('Failed to unlock Tesla vehicle after retries');
     } catch (error) {
       console.error('Error unlocking Tesla vehicle:', error);
-      throw new Error(`Failed to unlock Tesla vehicle: ${error.message}`);
+      throw new Error(`Failed to unlock Tesla vehicle: ${error}`);
     }
   };
 
@@ -551,7 +551,7 @@ export default class OrderService {
       throw new Error('Failed to lock Tesla vehicle after retries');
     } catch (error) {
       console.error('Error locking Tesla vehicle:', error);
-      throw new Error(`Failed to lock Tesla vehicle: ${error.message}`);
+      throw new Error(`Failed to lock Tesla vehicle: ${error}`);
     }
   };
 
