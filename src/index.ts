@@ -1,12 +1,12 @@
 import { config as configDotenv } from 'dotenv';
+import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import server from './server';
 import { printAppInfo } from './utils/print-app-info';
 import appConfig from './config/app.config';
 import cronJobs from './utils/cron-jobs';
 import prismaClient from '@/lib/prisma';
 import environment from '@/lib/environment';
-import * as Sentry from '@sentry/node';
-import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 Sentry.init({
   dsn: environment.sentryDsn,

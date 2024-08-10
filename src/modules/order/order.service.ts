@@ -10,6 +10,7 @@ import { type Decimal } from '@prisma/client/runtime/library';
 import fetch, { Headers, Response } from 'node-fetch';
 import { HttpStatusCode } from 'axios';
 import * as XLSX from 'xlsx';
+import * as Sentry from '@sentry/node';
 import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
@@ -24,7 +25,6 @@ import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
 import { ApiError } from '@/lib/errors';
 import { dateTimeFormat, formatDuration } from '@/utils/date';
-import * as Sentry from '@sentry/node';
 
 // const wakeTheVehicleUp = async (vehicleTag: string, token: string) => {
 //   const myHeaders = new Headers();

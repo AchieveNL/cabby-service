@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Router } from 'express';
-import prisma from './lib/prisma';
 import * as Sentry from '@sentry/node';
+import prisma from './lib/prisma';
 
 const TESLA_CLIENT_ID = process.env.TESLA_CLIENT_ID;
 const TESLA_CLIENT_SECRET = process.env.TESLA_CLIENT_SECRET;
