@@ -1,4 +1,5 @@
 import { type Request, type Response, type NextFunction } from 'express';
+import * as Sentry from '@sentry/node';
 import { HttpStatusCode } from 'axios';
 import { type user } from '@prisma/client';
 import OrderService from './order.service';
@@ -99,6 +100,7 @@ export default class OrderController extends Api {
       );
     } catch (error) {
       console.error('Error unlocking vehicle:', error);
+      Sentry.captureException(error);
       return this.send(
         res,
         null,
@@ -126,7 +128,8 @@ export default class OrderController extends Api {
         'Vehicle locked successfully'
       );
     } catch (error) {
-      // console.error('Error locking vehicle:', error);
+      console.error('Error locking vehicle:', error);
+      Sentry.captureException(error);
       return this.send(
         res,
         null,

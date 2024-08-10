@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Router } from 'express';
+import * as Sentry from '@sentry/node';
 import prisma from './lib/prisma';
 
 const TESLA_CLIENT_ID = process.env.TESLA_CLIENT_ID;
@@ -45,6 +46,7 @@ export const refreshTeslaApiToken = async (
       'Error refreshing Tesla API token:',
       refreshError.response.data
     );
+    Sentry.captureException(refreshError);
     throw new Error('Failed to refresh Tesla API token');
   }
 };

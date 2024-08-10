@@ -10,6 +10,7 @@ const envValidationConfig = {
   PORT: num({ default: appConfig.defaultPort }),
   APP_BASE_URL: str(),
   DATABASE_URL: str(),
+  SENTRY_DSN: str(),
 };
 
 export default envValidationConfig;
