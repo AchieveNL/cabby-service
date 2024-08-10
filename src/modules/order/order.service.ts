@@ -294,7 +294,7 @@ export default class OrderService {
       },
     });
 
-    if (!teslaToken || !teslaToken.refreshToken) {
+    if (!teslaToken?.refreshToken) {
       throw new Error('Tesla API token or refresh token not found.');
     }
 
