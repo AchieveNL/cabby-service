@@ -17,6 +17,7 @@ class Environment implements IEnvironment {
   private _port: number;
   private _env: Environments;
   private _appUrl: string;
+  private _sentryDsn: string;
 
   constructor() {
     this.port = +process.env.PORT ?? appConfig.defaultPort;
@@ -47,10 +48,19 @@ class Environment implements IEnvironment {
     this._appUrl = value;
   }
 
+  get sentryDsn() {
+    return this._sentryDsn;
+  }
+
+  set sentryDsn(value) {
+    this._sentryDsn = value;
+  }
+
   private validateEnvValues() {
     const env = cleanEnv(process.env, envValidationConfig);
     this.port = env.PORT;
     this.appUrl = env.APP_BASE_URL;
+    this.sentryDsn = env.SENTRY_DSN;
   }
 
   public setEnvironment(env = Environments.DEV): void {

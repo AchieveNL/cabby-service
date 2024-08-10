@@ -24,6 +24,7 @@ import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
 import { ApiError } from '@/lib/errors';
 import { dateTimeFormat, formatDuration } from '@/utils/date';
+import * as Sentry from '@sentry/node';
 
 // const wakeTheVehicleUp = async (vehicleTag: string, token: string) => {
 //   const myHeaders = new Headers();
@@ -295,6 +296,7 @@ export default class OrderService {
     });
 
     if (!teslaToken?.refreshToken) {
+      Sentry.captureException(new Error('Tesla API refresh token not found.'));
       throw new Error('Tesla API token or refresh token not found.');
     }
 
@@ -338,6 +340,7 @@ export default class OrderService {
 
       return await this.updateOrderLockStatus(orderId, true);
     } catch (error) {
+      Sentry.captureException(error);
       console.log('Error unlocking vehicle:', error);
       throw new Error('Error unlocking vehicle.');
     }
@@ -373,6 +376,7 @@ export default class OrderService {
       return await this.updateOrderLockStatus(orderId, false);
     } catch (error) {
       console.log('Error locking vehicle:', error);
+      Sentry.captureException(error);
       throw new Error('Error locking vehicle.');
     }
   };
@@ -496,10 +500,13 @@ export default class OrderService {
           console.error('Error in unlock attempt, will retry:', error);
         }
       }
-
+      Sentry.captureException(
+        new Error('Failed to unlock Tesla vehicle after retries')
+      );
       throw new Error('Failed to unlock Tesla vehicle after retries');
     } catch (error) {
       console.error('Error unlocking Tesla vehicle:', error);
+      Sentry.captureException(new Error('Failed to unlock Tesla vehicle.'));
       throw new Error('Failed to unlock Tesla vehicle.');
     }
   };
@@ -541,9 +548,13 @@ export default class OrderService {
             continue;
           }
 
+          Sentry.captureException(
+            new Error(`Unexpected response status: ${response.status}`)
+          );
           throw new Error(`Unexpected response status: ${response.status}`);
         } catch (error) {
           if (attempts === 1) throw error;
+          Sentry.captureException(error);
           console.error('Error in lock attempt, will retry:', error);
         }
       }
@@ -551,6 +562,7 @@ export default class OrderService {
       throw new Error('Failed to lock Tesla vehicle after retries');
     } catch (error) {
       console.error('Error locking Tesla vehicle:', error);
+      Sentry.captureException(new Error('Failed to lock Tesla vehicle.'));
       throw new Error('Failed to lock Tesla vehicle.');
     }
   };
