@@ -25,27 +25,27 @@ import { refreshTeslaApiToken } from '@/tesla-auth';
 import { ApiError } from '@/lib/errors';
 import { dateTimeFormat, formatDuration } from '@/utils/date';
 
-const wakeTheVehicleUp = async (vehicleTag: string, token: string) => {
-  const myHeaders = new Headers();
-  myHeaders.append('Content-Type', 'application/json');
-  myHeaders.append('Authorization', `Bearer ${token}`);
+// const wakeTheVehicleUp = async (vehicleTag: string, token: string) => {
+//   const myHeaders = new Headers();
+//   myHeaders.append('Content-Type', 'application/json');
+//   myHeaders.append('Authorization', `Bearer ${token}`);
 
-  const requestOptions = {
-    method: 'POST',
-    headers: myHeaders,
-  };
+//   const requestOptions = {
+//     method: 'POST',
+//     headers: myHeaders,
+//   };
 
-  try {
-    await fetch(
-      `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleTag}/wake_up`,
-      requestOptions
-    );
-    console.log('Vehicle woken up successfully.');
-  } catch (error) {
-    console.log('Error waking up vehicle:', error);
-    throw new Error('Error waking up vehicle' + JSON.stringify(error));
-  }
-};
+//   try {
+//     await fetch(
+//       `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleTag}/wake_up`,
+//       requestOptions
+//     );
+//     console.log('Vehicle woken up successfully.');
+//   } catch (error) {
+//     console.log('Error waking up vehicle:', error);
+//     throw new Error('Error waking up vehicle' + JSON.stringify(error));
+//   }
+// };
 
 const httpCallVehicleCommand = async (
   url: string,
@@ -286,8 +286,13 @@ export default class OrderService {
     return order;
   }
 
+  // Get the Tesla API tokens from the database (token and refresh token)
   private async getTeslaToken() {
-    const teslaToken = await prisma.teslaToken.findFirst();
+    const teslaToken = await prisma.teslaToken.findFirst({
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
     if (!teslaToken || !teslaToken.refreshToken) {
       throw new Error('Tesla API token or refresh token not found.');
@@ -303,12 +308,16 @@ export default class OrderService {
     });
   }
 
-  public unlockVehicle = async (orderId: string, userId: string) => {
-    const order = await this.validateOrderAndRental(orderId);
-    const teslaToken = await this.getTeslaToken();
+  public unlockVehicleService = async (orderId: string, userId: string) => {
+    try {
+      const order = await this.validateOrderAndRental(orderId);
+      const teslaToken = await this.getTeslaToken();
 
-    if (process.env.NODE_ENV === 'production') {
-      await wakeTheVehicleUp(order.vehicle.vin, teslaToken.token);
+      // if (process.env.NODE_ENV === 'production') {
+      // await wakeTheVehicleUp(order.vehicle.vin, teslaToken.token);
+      if (!order.vehicle.vin) {
+        throw new Error('Vehicle VIN not found.');
+      }
       const result = await this.unlockTeslaVehicle(
         order.vehicle.vin,
         teslaToken.token,
@@ -325,16 +334,24 @@ export default class OrderService {
       //   'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
       //   JSON.stringify({ type: 'event' })
       // );
-    }
+      // }
 
-    return this.updateOrderLockStatus(orderId, true);
+      return this.updateOrderLockStatus(orderId, true);
+    } catch (error) {
+      console.log('Error unlocking vehicle:', error);
+      throw new Error('Error unlocking vehicle.');
+    }
   };
 
-  public lockVehicle = async (orderId: string, userId: string) => {
-    const order = await this.validateOrderAndRental(orderId);
-    const teslaToken = await this.getTeslaToken();
+  public lockVehicleService = async (orderId: string, userId: string) => {
+    try {
+      const order = await this.validateOrderAndRental(orderId);
+      const teslaToken = await this.getTeslaToken();
 
-    if (process.env.NODE_ENV === 'production') {
+      // if (process.env.NODE_ENV === 'production') {
+      if (!order.vehicle.vin) {
+        throw new Error('Vehicle VIN not found.');
+      }
       const result = await this.lockTeslaVehicle(
         order.vehicle.vin,
         teslaToken.token,
@@ -351,9 +368,13 @@ export default class OrderService {
       //   'Je Tesla is nu vergrendeld. 🔐',
       //   JSON.stringify({ type: 'event' })
       // );
-    }
+      // }
 
-    return this.updateOrderLockStatus(orderId, false);
+      return this.updateOrderLockStatus(orderId, false);
+    } catch (error) {
+      console.log('Error locking vehicle:', error);
+      throw new Error('Error locking vehicle.');
+    }
   };
 
   public startVehicle = async (orderId: string, userId: string) => {
@@ -439,23 +460,24 @@ export default class OrderService {
     teslaApiRefreshToken: string
   ): Promise<any> => {
     const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/door_unlock`;
-    const startDrive = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/remote_start_drive`;
-
-    console.log('Unlocking Tesla vehicle:', vehicleVin);
+    // const startDrive = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/remote_start_drive`;
 
     try {
       let currentToken = teslaApiToken;
-      let response: Response;
 
       for (let attempts = 0; attempts < 2; attempts++) {
         try {
-          response = await httpCallVehicleCommand(url, currentToken);
-          await httpCallVehicleCommand(startDrive, currentToken);
+          const response = await httpCallVehicleCommand(url, currentToken);
+          const responseData = await response.json();
+          console.log(
+            'Unlocking Tesla vehicle response: (httpCallVehicleCommand)',
+            response.status,
+            responseData
+          );
 
           if (response.status === 200) {
-            const result = await response.json();
-            console.log('Unlocking Tesla vehicle result:', result);
-            return result;
+            console.log('Tesla vehicle unlocked successfully.');
+            return responseData;
           }
 
           if (response.status === 401 && attempts === 0) {
@@ -489,30 +511,47 @@ export default class OrderService {
     teslaApiRefreshToken: string
   ): Promise<any> => {
     const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleVin}/command/door_lock`;
-    console.log('Locking Tesla vehicle:', vehicleVin);
+
     try {
-      const newToken = await refreshTeslaApiToken(
-        teslaApiToken,
-        teslaApiRefreshToken
-      );
-      let response = await this.httpCallVehicleCommand(url, newToken);
-      if (response.status === 401) {
-        console.log('Tesla API token expired. Refreshing token...');
-        const newToken = await refreshTeslaApiToken(
-          teslaApiToken,
-          teslaApiRefreshToken
-        );
-        console.log('Token refreshed. Retrying...');
-        response = await this.httpCallVehicleCommand(url, newToken);
+      let currentToken = teslaApiToken;
+
+      for (let attempts = 0; attempts < 2; attempts++) {
+        try {
+          const response = await httpCallVehicleCommand(url, currentToken);
+          const responseData = await response.json();
+
+          console.log(
+            'Locking Tesla vehicle response: (httpCallVehicleCommand)',
+            response.status,
+            responseData
+          );
+
+          if (response.status === 200) {
+            console.log('Tesla vehicle locked successfully.');
+            return responseData;
+          }
+
+          if (response.status === 401 && attempts === 0) {
+            console.log('Tesla API token expired. Refreshing token...');
+            currentToken = await refreshTeslaApiToken(
+              currentToken,
+              teslaApiRefreshToken
+            );
+            console.log('Token refreshed. Retrying...');
+            continue;
+          }
+
+          throw new Error(`Unexpected response status: ${response.status}`);
+        } catch (error) {
+          if (attempts === 1) throw error;
+          console.error('Error in lock attempt, will retry:', error);
+        }
       }
-      const result = await response.json();
 
-      console.log('Locking Tesla vehicle result:', result);
-
-      return result;
+      throw new Error('Failed to lock Tesla vehicle after retries');
     } catch (error) {
       console.error('Error locking Tesla vehicle:', error);
-      throw new Error('Failed to lock Tesla vehicle.');
+      throw new Error(`Failed to lock Tesla vehicle: ${error.message}`);
     }
   };
 

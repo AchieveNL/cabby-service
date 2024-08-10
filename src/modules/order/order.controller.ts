@@ -87,7 +87,7 @@ export default class OrderController extends Api {
   ) => {
     try {
       const { orderId } = req.params;
-      const unlockResult = await this.orderService.unlockVehicle(
+      const unlockResult = await this.orderService.unlockVehicleService(
         orderId,
         req.user?.id
       );
@@ -115,7 +115,7 @@ export default class OrderController extends Api {
   ) => {
     try {
       const { orderId } = req.params;
-      const lockResult = await this.orderService.lockVehicle(
+      const lockResult = await this.orderService.lockVehicleService(
         orderId,
         req.user?.id
       );
@@ -126,7 +126,7 @@ export default class OrderController extends Api {
         'Vehicle locked successfully'
       );
     } catch (error) {
-      console.error('Error locking vehicle:', error);
+      // console.error('Error locking vehicle:', error);
       return this.send(
         res,
         null,
