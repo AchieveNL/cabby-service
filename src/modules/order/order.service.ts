@@ -500,7 +500,7 @@ export default class OrderService {
       throw new Error('Failed to unlock Tesla vehicle after retries');
     } catch (error) {
       console.error('Error unlocking Tesla vehicle:', error);
-      throw new Error(`Failed to unlock Tesla vehicle: ${error}`);
+      throw new Error('Failed to unlock Tesla vehicle.');
     }
   };
 
@@ -551,7 +551,7 @@ export default class OrderService {
       throw new Error('Failed to lock Tesla vehicle after retries');
     } catch (error) {
       console.error('Error locking Tesla vehicle:', error);
-      throw new Error(`Failed to lock Tesla vehicle: ${error}`);
+      throw new Error('Failed to lock Tesla vehicle.');
     }
   };
 

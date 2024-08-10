@@ -135,7 +135,7 @@ teslaAuth.get('/auth/callback', async (req, res) => {
       data: {
         token: teslaApiToken,
         refreshToken: teslaRefreshToken,
-        authorizationCode: authorizationCode,
+        authorizationCode,
       },
     });
 
