@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Router } from 'express';
+import * as Sentry from '@sentry/node';
 import prisma from './lib/prisma';
 
 const TESLA_CLIENT_ID = process.env.TESLA_CLIENT_ID;
@@ -26,11 +27,8 @@ export const refreshTeslaApiToken = async (
       }
     );
 
-    console.log('Tesla API token refresh response:', refreshResponse.data);
-
     const newAccessToken = refreshResponse.data.access_token;
-    const newRefreshToken =
-      refreshResponse.data.refresh_token || teslaApiRefreshToken;
+    const newRefreshToken = refreshResponse.data.refresh;
 
     await prisma.teslaToken.updateMany({
       where: { token: currentToken },
@@ -40,9 +38,15 @@ export const refreshTeslaApiToken = async (
       },
     });
 
+    console.log('Tesla API token refreshed successfully.');
+
     return newAccessToken;
   } catch (refreshError) {
-    console.error('Error refreshing Tesla API token:', refreshError);
+    console.error(
+      'Error refreshing Tesla API token:',
+      refreshError.response.data
+    );
+    Sentry.captureException(refreshError);
     throw new Error('Failed to refresh Tesla API token');
   }
 };
@@ -119,7 +123,7 @@ teslaAuth.get('/auth/callback', async (req, res) => {
         client_secret: TESLA_CLIENT_SECRET,
         code: authorizationCode,
         redirect_uri: REDIRECT_URI,
-        scope: 'openid vehicle_cmds',
+        scope: 'openid vehicle_cmds offline_access',
         audience: 'https://fleet-api.prd.eu.vn.cloud.tesla.com',
       }
     );
@@ -129,12 +133,11 @@ teslaAuth.get('/auth/callback', async (req, res) => {
 
     console.log('tokenResponse.data', tokenResponse.data);
 
-    await prisma.teslaToken.deleteMany();
     await prisma.teslaToken.create({
       data: {
         token: teslaApiToken,
-        authorizationCode,
         refreshToken: teslaRefreshToken,
+        authorizationCode,
       },
     });
 

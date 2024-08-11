@@ -46,3 +46,5 @@ secrets.json
 # Test reports
 /test-reports
 .DS_Store
+# Sentry Config File
+.sentryclirc

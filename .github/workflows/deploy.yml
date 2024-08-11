@@ -85,6 +85,7 @@ jobs:
             FIREBASE_SERVICE_ACCOUNT_BASE64=${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
             TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
             TESLA_CLIENT_SECRET=${{ secrets.TESLA_CLIENT_SECRET }}
+            SENTRY_DSN=${{ secrets.SENTRY_DSN }}
 
   build-and-deploy-production:
     environment:
@@ -139,3 +140,4 @@ jobs:
             FIREBASE_SERVICE_ACCOUNT_BASE64=${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
             TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
             TESLA_CLIENT_SECRET=${{ secrets.TESLA_CLIENT_SECRET }}
+            SENTRY_DSN=${{ secrets.SENTRY_DSN }}
