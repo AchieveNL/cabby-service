@@ -766,13 +766,6 @@ export default class OrderService {
     const companyName = order.vehicle.companyName ?? '';
     const model = order.vehicle.model ?? '';
 
-    await orderConfirmedNotification({
-      companyName,
-      model,
-      orderId: order.id,
-      userId: order.userId,
-    });
-
     await this.orderMailService.orderConfirmedMailSender(
       order.user.email,
       order.user.profile?.fullName,
@@ -780,6 +773,13 @@ export default class OrderService {
         order.vehicle.registrationCertificates
       )
     );
+
+    await orderConfirmedNotification({
+      companyName,
+      model,
+      orderId: order.id,
+      userId: order.userId,
+    });
   };
 
   public deleteOrder = async (orderId: string) => {
