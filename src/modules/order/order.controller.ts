@@ -17,6 +17,35 @@ import Api from '@/lib/api';
 export default class OrderController extends Api {
   readonly orderService = new OrderService();
 
+  private readonly handleControllerError = (error, res) => {
+    Sentry.captureException(error);
+
+    if (error instanceof Error) {
+      switch (error.message) {
+        case 'Order not found.':
+          return this.send(res, null, HttpStatusCode.NotFound, error.message);
+        case 'Rental period has not started yet.':
+          return this.send(res, null, HttpStatusCode.BadRequest, error.message);
+        case 'Vehicle VIN not found.':
+          return this.send(res, null, HttpStatusCode.BadRequest, error.message);
+        case 'Tesla API token or refresh token not found.':
+          return this.send(
+            res,
+            null,
+            HttpStatusCode.BadRequest,
+            'Please contact the system administrator for Tesla API configuration.'
+          );
+        case 'Error unlocking Tesla vehicle.':
+          return this.send(
+            res,
+            null,
+            HttpStatusCode.InternalServerError,
+            error.message
+          );
+      }
+    }
+  };
+
   public createOrder = async (
     req: Request,
     res: Response,
@@ -99,14 +128,7 @@ export default class OrderController extends Api {
         'Vehicle unlocked successfully'
       );
     } catch (error) {
-      console.error('Error unlocking vehicle:', error);
-      Sentry.captureException(error);
-      return this.send(
-        res,
-        null,
-        HttpStatusCode.InternalServerError,
-        'Failed to unlock vehicle'
-      );
+      return this.handleControllerError(error, res);
     }
   };
 
@@ -128,14 +150,7 @@ export default class OrderController extends Api {
         'Vehicle locked successfully'
       );
     } catch (error) {
-      console.error('Error locking vehicle:', error);
-      Sentry.captureException(error);
-      return this.send(
-        res,
-        null,
-        HttpStatusCode.InternalServerError,
-        'Failed to lock vehicle'
-      );
+      return this.handleControllerError(error, res);
     }
   };
 

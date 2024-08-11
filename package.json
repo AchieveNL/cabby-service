@@ -25,7 +25,8 @@
     "test": "jest",
     "test:e2e": "jest -c jest.config.e2e.ts",
     "test:integration": "jest -c jest.config.integration.ts",
-    "test:unit": "jest -c jest.config.unit.ts"
+    "test:unit": "jest -c jest.config.unit.ts",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org achieve-c7 --project node ./dist && sentry-cli sourcemaps upload --org achieve-c7 --project node ./dist"
   },
   "prisma": {
     "seed": "ts-node-dev -r tsconfig-paths/register --transpile-only prisma/seed.ts"
@@ -45,6 +46,7 @@
     "@mollie/api-client": "^3.7.0",
     "@prisma/client": "^5.14.0",
     "@sendgrid/mail": "^7.7.0",
+    "@sentry/cli": "^2.33.1",
     "@sentry/node": "^8.25.0",
     "@sentry/profiling-node": "^8.25.0",
     "axios": "^1.6.2",

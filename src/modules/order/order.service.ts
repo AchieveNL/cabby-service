@@ -313,74 +313,62 @@ export default class OrderService {
   }
 
   public unlockVehicleService = async (orderId: string, userId: string) => {
-    try {
-      const order = await this.validateOrderAndRental(orderId);
-      const teslaToken = await this.getTeslaToken();
+    const order = await this.validateOrderAndRental(orderId);
+    const teslaToken = await this.getTeslaToken();
 
-      if (process.env.NODE_ENV === 'production') {
-        // await wakeTheVehicleUp(order.vehicle.vin, teslaToken.token);
-        if (!order.vehicle.vin) {
-          throw new Error('Vehicle VIN not found.');
-        }
-        const result = await this.unlockTeslaVehicle(
-          order.vehicle.vin,
-          teslaToken.token,
-          teslaToken.refreshToken
-        );
+    if (process.env.NODE_ENV === 'production') {
+      // await wakeTheVehicleUp(order.vehicle.vin, teslaToken.token);
+      if (!order.vehicle.vin) {
+        throw new Error('Vehicle VIN not found.');
+      }
+      const result = await this.unlockTeslaVehicle(
+        order.vehicle.vin,
+        teslaToken.token,
+        teslaToken.refreshToken
+      );
 
-        if (!result?.response?.result) {
-          throw new Error('Error unlocking Tesla vehicle.');
-        }
-
-        // await this.notificationService.sendNotificationToUser(
-        //   userId,
-        //   'Je Tesla is ontgrendeld.',
-        //   'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
-        //   JSON.stringify({ type: 'event' })
-        // );
+      if (!result?.response?.result) {
+        throw new Error('Error unlocking Tesla vehicle.');
       }
 
-      return await this.updateOrderLockStatus(orderId, true);
-    } catch (error) {
-      Sentry.captureException(error);
-      console.log('Error unlocking vehicle:', error);
-      throw new Error('Error unlocking vehicle.');
+      // await this.notificationService.sendNotificationToUser(
+      //   userId,
+      //   'Je Tesla is ontgrendeld.',
+      //   'Gefeliciteerd! Je Tesla is ontgrendeld en klaar om te gebruiken. 🚗',
+      //   JSON.stringify({ type: 'event' })
+      // );
     }
+
+    return await this.updateOrderLockStatus(orderId, true);
   };
 
   public lockVehicleService = async (orderId: string, userId: string) => {
-    try {
-      const order = await this.validateOrderAndRental(orderId);
-      const teslaToken = await this.getTeslaToken();
+    const order = await this.validateOrderAndRental(orderId);
+    const teslaToken = await this.getTeslaToken();
 
-      if (process.env.NODE_ENV === 'production') {
-        if (!order.vehicle.vin) {
-          throw new Error('Vehicle VIN not found.');
-        }
-        const result = await this.lockTeslaVehicle(
-          order.vehicle.vin,
-          teslaToken.token,
-          teslaToken.refreshToken
-        );
+    if (process.env.NODE_ENV === 'production') {
+      if (!order.vehicle.vin) {
+        throw new Error('Vehicle VIN not found.');
+      }
+      const result = await this.lockTeslaVehicle(
+        order.vehicle.vin,
+        teslaToken.token,
+        teslaToken.refreshToken
+      );
 
-        if (!result?.response?.result) {
-          throw new Error('Error locking Tesla vehicle.');
-        }
-
-        // await this.notificationService.sendNotificationToUser(
-        //   userId,
-        //   'Heel goed!',
-        //   'Je Tesla is nu vergrendeld. 🔐',
-        //   JSON.stringify({ type: 'event' })
-        // );
+      if (!result?.response?.result) {
+        throw new Error('Error locking Tesla vehicle.');
       }
 
-      return await this.updateOrderLockStatus(orderId, false);
-    } catch (error) {
-      console.log('Error locking vehicle:', error);
-      Sentry.captureException(error);
-      throw new Error('Error locking vehicle.');
+      // await this.notificationService.sendNotificationToUser(
+      //   userId,
+      //   'Heel goed!',
+      //   'Je Tesla is nu vergrendeld. 🔐',
+      //   JSON.stringify({ type: 'event' })
+      // );
     }
+
+    return await this.updateOrderLockStatus(orderId, false);
   };
 
   public startVehicle = async (orderId: string, userId: string) => {

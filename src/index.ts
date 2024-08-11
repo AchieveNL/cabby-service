@@ -1,6 +1,7 @@
 import { config as configDotenv } from 'dotenv';
 import * as Sentry from '@sentry/node';
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
+// import './instrument';
 import server from './server';
 import { printAppInfo } from './utils/print-app-info';
 import appConfig from './config/app.config';
