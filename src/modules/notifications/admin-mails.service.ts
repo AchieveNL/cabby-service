@@ -79,14 +79,14 @@ export default class AdminMailService {
       'Nieuwe Registratie - Actie Vereist',
       `Nieuwe Registratie - Actie Vereist`,
       `
-      Beste Admin,
+        Beste Admin,
 
-      Er heeft zich zojuist een nieuwe gebruiker geregistreerd op het Cabby-platform. De naam van de nieuwe gebruiker is ${name} en ze hebben succesvol hun registratieproces voltooid.
+        Er heeft zich zojuist een nieuwe gebruiker geregistreerd op het Cabby-platform. De naam van de nieuwe gebruiker is ${name} en ze hebben succesvol hun registratieproces voltooid.
 
-      We willen je op de hoogte stellen van deze nieuwe registratie zodat je actie kunt ondernemen om hun registratie te verifiëren en goed te keuren. Controleer de ingediende gegevens om ervoor te zorgen dat alles in orde is.
-      
-      Als je vragen hebt of verdere informatie nodig hebt, laat het ons dan weten.
-      Team Cabby
+        We willen je op de hoogte stellen van deze nieuwe registratie zodat je actie kunt ondernemen om hun registratie te verifiëren en goed te keuren. Controleer de ingediende gegevens om ervoor te zorgen dat alles in orde is.
+        
+        Als je vragen hebt of verdere informatie nodig hebt, laat het ons dan weten.
+        Team Cabby
   `
     );
 

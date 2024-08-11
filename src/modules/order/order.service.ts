@@ -709,7 +709,12 @@ export default class OrderService {
     if (!order) throw new Error('Order not found');
     const isAdmin = userSender.role === UserRole.ADMIN;
 
-    // TODO: add cancel restriction when rent begins
+    if (userSender.role === 'USER' && order.rentalStartDate > new Date()) {
+      throw new ApiError(
+        HttpStatusCode.Unauthorized,
+        'Rental has alreay started!'
+      );
+    }
 
     if (!isAdmin && userSender.id !== order.userId)
       throw new ApiError(HttpStatusCode.Unauthorized, 'User not authorized');
