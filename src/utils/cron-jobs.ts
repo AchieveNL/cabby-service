@@ -73,10 +73,6 @@ async function updateOverdueOrders() {
 
   if (orders.length > 0 && !isDevelopment) {
     const ids = orders.map((el) => el.id);
-
-    // Send emails of overdue orders to admin
-    await emailSend(orders);
-
     // Mark overdue orders emails as sent
     // await prisma.order.updateMany({
     //   where: { id: { in: ids } },
@@ -85,6 +81,9 @@ async function updateOverdueOrders() {
     const query2 = Prisma.sql`Update "order" SET "overdueEmailSentDate" = now() where id IN (${Prisma.join(
       ids
     )})`;
+
+    // Send emails of overdue orders to admin
+    await emailSend(orders);
 
     mark = await prisma.$executeRaw(query2);
     console.log('Number of overdue orders rows updated', mark);
