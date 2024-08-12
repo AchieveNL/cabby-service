@@ -321,6 +321,9 @@ export default class OrderService {
       if (!order.vehicle.vin) {
         throw new Error('Vehicle VIN not found.');
       }
+      if (!teslaToken.refreshToken) {
+        throw new Error('Refresh token not found.');
+      }
       const result = await this.unlockTeslaVehicle(
         order.vehicle.vin,
         teslaToken.token,
@@ -349,6 +352,9 @@ export default class OrderService {
     if (process.env.NODE_ENV === 'production') {
       if (!order.vehicle.vin) {
         throw new Error('Vehicle VIN not found.');
+      }
+      if (!teslaToken.refreshToken) {
+        throw new Error('Refresh token not found.');
       }
       const result = await this.lockTeslaVehicle(
         order.vehicle.vin,
@@ -741,7 +747,12 @@ export default class OrderService {
     if (!order) throw new Error('Order not found');
     const isAdmin = userSender.role === UserRole.ADMIN;
 
-    // TODO: add cancel restriction when rent begins
+    if (userSender.role === 'USER' && order.rentalStartDate > new Date()) {
+      throw new ApiError(
+        HttpStatusCode.Unauthorized,
+        'Rental has alreay started!'
+      );
+    }
 
     if (!isAdmin && userSender.id !== order.userId)
       throw new ApiError(HttpStatusCode.Unauthorized, 'User not authorized');
@@ -798,13 +809,6 @@ export default class OrderService {
     const companyName = order.vehicle.companyName ?? '';
     const model = order.vehicle.model ?? '';
 
-    await orderConfirmedNotification({
-      companyName,
-      model,
-      orderId: order.id,
-      userId: order.userId,
-    });
-
     await this.orderMailService.orderConfirmedMailSender(
       order.user.email,
       order.user.profile?.fullName,
@@ -812,6 +816,13 @@ export default class OrderService {
         order.vehicle.registrationCertificates
       )
     );
+
+    await orderConfirmedNotification({
+      companyName,
+      model,
+      orderId: order.id,
+      userId: order.userId,
+    });
   };
 
   public deleteOrder = async (orderId: string) => {
