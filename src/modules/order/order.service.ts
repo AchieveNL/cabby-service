@@ -745,17 +745,17 @@ export default class OrderService {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
 
     if (!order) throw new Error('Order not found');
-    const isAdmin = userSender.role === UserRole.ADMIN;
+    // const isAdmin = userSender.role === UserRole.ADMIN;
 
-    if (userSender.role === 'USER' && order.rentalStartDate > new Date()) {
+    if (order.rentalStartDate < new Date()) {
       throw new ApiError(
-        HttpStatusCode.Unauthorized,
-        'Rental has alreay started!'
+        HttpStatusCode.BadRequest,
+        'You cannot cancel a rental that has already starte'
       );
     }
 
-    if (!isAdmin && userSender.id !== order.userId)
-      throw new ApiError(HttpStatusCode.Unauthorized, 'User not authorized');
+    // if (!isAdmin && userSender.id !== order.userId)
+    //   throw new ApiError(HttpStatusCode.Unauthorized, 'Unauthorized');
 
     await prisma.order.update({
       where: { id: orderId },
