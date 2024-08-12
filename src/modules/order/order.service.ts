@@ -1,6 +1,5 @@
 import {
   type Prisma,
-  UserRole,
   type user,
   type order,
   PaymentStatus,
