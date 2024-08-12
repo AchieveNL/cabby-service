@@ -24,6 +24,7 @@ import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
 import { ApiError } from '@/lib/errors';
 import { dateTimeFormat, formatDuration } from '@/utils/date';
+import { UserRole } from '../users/types';
 
 // const wakeTheVehicleUp = async (vehicleTag: string, token: string) => {
 //   const myHeaders = new Headers();
@@ -744,7 +745,7 @@ export default class OrderService {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
 
     if (!order) throw new Error('Order not found');
-    // const isAdmin = userSender.role === UserRole.ADMIN;
+    const isAdmin = userSender.role === UserRole.ADMIN;
 
     if (order.rentalStartDate < new Date()) {
       throw new ApiError(
@@ -753,8 +754,8 @@ export default class OrderService {
       );
     }
 
-    // if (!isAdmin && userSender.id !== order.userId)
-    //   throw new ApiError(HttpStatusCode.Unauthorized, 'Unauthorized');
+    if (order.userId !== userSender.id && !isAdmin)
+      throw new ApiError(HttpStatusCode.Unauthorized, 'Unauthorized');
 
     await prisma.order.update({
       where: { id: orderId },
