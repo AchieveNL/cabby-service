@@ -3,6 +3,7 @@ import {
   type user,
   type order,
   PaymentStatus,
+  UserRole,
 } from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
 // eslint-disable-next-line
@@ -24,7 +25,6 @@ import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
 import { ApiError } from '@/lib/errors';
 import { dateTimeFormat, formatDuration } from '@/utils/date';
-import { UserRole } from '../users/types';
 
 // const wakeTheVehicleUp = async (vehicleTag: string, token: string) => {
 //   const myHeaders = new Headers();
