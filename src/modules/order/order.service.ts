@@ -750,7 +750,7 @@ export default class OrderService {
     if (order.rentalStartDate < new Date()) {
       throw new ApiError(
         HttpStatusCode.BadRequest,
-        'You cannot cancel a rental that has already starte'
+        'You cannot cancel a rental that has already started'
       );
     }
 
