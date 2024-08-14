@@ -369,7 +369,6 @@ model TeslaToken {
   id                Int      @id @default(autoincrement())
   token             String
   refreshToken      String
-  authorizationCode String
   createdAt         DateTime @default(now())
 }
 
