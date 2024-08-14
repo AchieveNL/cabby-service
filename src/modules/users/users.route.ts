@@ -32,7 +32,7 @@ users.post(
   controller.mobileLogin
 );
 
-users.get('/email-exists', controller.emailExists);
+users.get('/check-email', controller.checkEmailAvailability);
 
 users.get('/status', verifyAuthToken, requireAuth, controller.userStatus);
 

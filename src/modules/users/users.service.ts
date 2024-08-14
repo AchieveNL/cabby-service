@@ -11,9 +11,11 @@ import { ApiError } from '@/lib/errors';
 
 export default class UserService {
   private readonly userMailService = new UserMailService();
+
   public async emailExists(email: string): Promise<boolean> {
     const user = await prisma.user.findUnique({
       where: { email },
+      select: { id: true },
     });
     return !!user;
   }

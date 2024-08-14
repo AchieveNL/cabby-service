@@ -20,23 +20,33 @@ import {
   generateToken,
 } from '@/middlewares/token-manager';
 import { setAuthCookies } from '@/middlewares/cookies';
+import { emailSchema } from '@/schemas';
+import { z } from 'zod';
 
 export default class UserController extends Api {
   private readonly userService = new UserService();
   private readonly userProfileService = new ProfileService();
 
-  public emailExists = async (
+  public checkEmailAvailability = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      const email = req.query.email as string;
-      const lowerCase = email?.toLowerCase();
-      const emailExists = await this.userService.emailExists(lowerCase);
-      this.send(res, { emailExists }, HttpStatusCode.Ok, 'Email exists');
-    } catch (e) {
-      next(e);
+      const email = emailSchema.parse(req.query.email);
+      const isAvailable = await this.userService.emailExists(email);
+      this.send(
+        res,
+        { isAvailable },
+        HttpStatusCode.Ok,
+        isAvailable ? 'Email is available' : 'Email is not available'
+      );
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        this.send(res, null, HttpStatusCode.BadRequest, 'Invalid email');
+      } else {
+        this.send(res, null, HttpStatusCode.BadRequest, 'Error checking email');
+      }
     }
   };
 
