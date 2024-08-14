@@ -467,7 +467,6 @@ export default class OrderService {
 
     try {
       let currentToken = teslaApiToken;
-      let currentRefreshToken = teslaApiRefreshToken;
 
       for (let attempts = 0; attempts < 2; attempts++) {
         try {
@@ -485,10 +484,9 @@ export default class OrderService {
           }
 
           if (response.status === 401 && attempts === 0) {
-            const { newAccessToken, newRefreshToken } =
-              await refreshTeslaApiToken(currentToken, currentRefreshToken);
+            const newAccessToken =
+              await refreshTeslaApiToken(teslaApiRefreshToken);
             currentToken = newAccessToken;
-            currentRefreshToken = newRefreshToken;
             continue;
           }
 
@@ -519,7 +517,6 @@ export default class OrderService {
 
     try {
       let currentToken = teslaApiToken;
-      let currentRefreshToken = teslaApiRefreshToken;
 
       for (let attempts = 0; attempts < 2; attempts++) {
         try {
@@ -539,10 +536,9 @@ export default class OrderService {
 
           if (response.status === 401 && attempts === 0) {
             console.log('Tesla API token expired. Refreshing token...');
-            const { newAccessToken, newRefreshToken } =
-              await refreshTeslaApiToken(currentToken, teslaApiRefreshToken);
+            const newAccessToken =
+              await refreshTeslaApiToken(teslaApiRefreshToken);
             currentToken = newAccessToken;
-            currentRefreshToken = newRefreshToken;
             continue;
           }
 
@@ -576,7 +572,7 @@ export default class OrderService {
       let response = await this.httpCallVehicleCommand(url, teslaApiToken);
       if (response.status === 401) {
         console.log('Tesla API token expired. Refreshing token...');
-        const { newAccessToken, newRefreshToken } = await refreshTeslaApiToken(
+        const { newAccessToken } = await refreshTeslaApiToken(
           teslaApiToken,
           teslaApiRefreshToken
         );

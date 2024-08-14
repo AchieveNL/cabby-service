@@ -2,6 +2,7 @@ import { UserRole, type user } from '@prisma/client';
 import { HttpStatusCode } from 'axios';
 import bcrypt from 'bcrypt';
 import { type Response, type NextFunction, type Request } from 'express';
+import { z } from 'zod';
 import ProfileService from '../profile/profile.service';
 import {
   type LoginDto,
@@ -21,7 +22,6 @@ import {
 } from '@/middlewares/token-manager';
 import { setAuthCookies } from '@/middlewares/cookies';
 import { emailSchema } from '@/schemas';
-import { z } from 'zod';
 
 export default class UserController extends Api {
   private readonly userService = new UserService();
