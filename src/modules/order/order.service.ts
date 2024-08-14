@@ -572,10 +572,7 @@ export default class OrderService {
       let response = await this.httpCallVehicleCommand(url, teslaApiToken);
       if (response.status === 401) {
         console.log('Tesla API token expired. Refreshing token...');
-        const { newAccessToken } = await refreshTeslaApiToken(
-          teslaApiToken,
-          teslaApiRefreshToken
-        );
+        const newAccessToken = await refreshTeslaApiToken(teslaApiRefreshToken);
         console.log('Token refreshed. Retrying...');
         response = await this.httpCallVehicleCommand(url, newAccessToken);
       }
