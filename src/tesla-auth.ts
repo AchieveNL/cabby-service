@@ -141,6 +141,7 @@ teslaAuth.get('/auth/callback', async (req, res) => {
     res.send('Tesla API token obtained and stored successfully.');
   } catch (error) {
     console.error('Error during Tesla token exchange:', error);
+    Sentry.captureException(error);
     res.status(500).send('Failed to obtain Tesla API token.');
   }
 });
