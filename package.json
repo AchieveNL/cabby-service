@@ -26,7 +26,7 @@
     "test:e2e": "jest -c jest.config.e2e.ts",
     "test:integration": "jest -c jest.config.integration.ts",
     "test:unit": "jest -c jest.config.unit.ts",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org cabby --project node-express ./dist && sentry-cli sourcemaps upload --org cabby --project node-express ./dist"
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org cabby --project cabby-backend ./dist && sentry-cli sourcemaps upload --org cabby --project cabby-backend ./dist"
   },
   "prisma": {
     "seed": "ts-node-dev -r tsconfig-paths/register --transpile-only prisma/seed.ts"
