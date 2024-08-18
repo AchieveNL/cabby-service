@@ -48,6 +48,8 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v0
@@ -103,6 +105,10 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+
+
 
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v0
