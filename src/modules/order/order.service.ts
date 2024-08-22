@@ -61,7 +61,9 @@ const httpCallVehicleCommand = async (
   });
 
   if (!response.ok && response.status !== 401) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    throw new Error(
+      `HTTP error! status: ${response.status}, body: ${await response.text()}`
+    );
   }
 
   return response;
@@ -317,7 +319,6 @@ export default class OrderService {
     const teslaToken = await this.getTeslaToken();
 
     if (process.env.NODE_ENV === 'production') {
-      // await wakeTheVehicleUp(order.vehicle.vin, teslaToken.token);
       if (!order.vehicle.vin) {
         throw new Error('Vehicle VIN not found.');
       }
@@ -346,6 +347,8 @@ export default class OrderService {
   };
 
   public lockVehicleService = async (orderId: string, userId: string) => {
+    const tokens = await prisma.teslaToken.findFirst();
+    console.log('tokens:', tokens);
     const order = await this.validateOrderAndRental(orderId);
     const teslaToken = await this.getTeslaToken();
 
@@ -470,7 +473,7 @@ export default class OrderService {
           const response = await httpCallVehicleCommand(url, currentToken);
           const responseData = await response.json();
           console.log(
-            'Unlocking Tesla vehicle response: (httpCallVehicleCommand)',
+            'Unlocking Tesla vehicle response:',
             response.status,
             responseData
           );
@@ -481,12 +484,9 @@ export default class OrderService {
           }
 
           if (response.status === 401 && attempts === 0) {
-            console.log('Tesla API token expired. Refreshing token...');
-            currentToken = await refreshTeslaApiToken(
-              currentToken,
-              teslaApiRefreshToken
-            );
-            console.log('Token refreshed. Retrying...');
+            const newAccessToken =
+              await refreshTeslaApiToken(teslaApiRefreshToken);
+            currentToken = newAccessToken;
             continue;
           }
 
@@ -497,7 +497,7 @@ export default class OrderService {
         }
       }
       Sentry.captureException(
-        new Error('Failed to unlock Tesla vehicle after retries')
+        new Error(`Failed to unlock Tesla vehicle after retries at ${url}`)
       );
       throw new Error('Failed to unlock Tesla vehicle after retries');
     } catch (error) {
@@ -536,11 +536,9 @@ export default class OrderService {
 
           if (response.status === 401 && attempts === 0) {
             console.log('Tesla API token expired. Refreshing token...');
-            currentToken = await refreshTeslaApiToken(
-              currentToken,
-              teslaApiRefreshToken
-            );
-            console.log('Token refreshed. Retrying...');
+            const newAccessToken =
+              await refreshTeslaApiToken(teslaApiRefreshToken);
+            currentToken = newAccessToken;
             continue;
           }
 
@@ -574,21 +572,17 @@ export default class OrderService {
       let response = await this.httpCallVehicleCommand(url, teslaApiToken);
       if (response.status === 401) {
         console.log('Tesla API token expired. Refreshing token...');
-        const newToken = await refreshTeslaApiToken(
-          teslaApiToken,
-          teslaApiRefreshToken
-        );
+        const newAccessToken = await refreshTeslaApiToken(teslaApiRefreshToken);
         console.log('Token refreshed. Retrying...');
-        response = await this.httpCallVehicleCommand(url, newToken);
+        response = await this.httpCallVehicleCommand(url, newAccessToken);
       }
       const result = await response.json();
 
-      console.log('Locking Tesla vehicle result:', result);
-
       return result;
     } catch (error) {
-      console.error('Error locking Tesla vehicle:', error);
-      throw new Error('Failed to lock Tesla vehicle.');
+      console.error('Error starting Tesla vehicle:', error);
+      // Sentry.captureException(new Error('Failed to start Tesla vehicle.'));
+      throw new Error('Failed to start Tesla vehicle.');
     }
   };
 
@@ -747,7 +741,7 @@ export default class OrderService {
     if (!order) throw new Error('Order not found');
     const isAdmin = userSender.role === UserRole.ADMIN;
 
-    if (order.rentalStartDate < new Date()) {
+    if (!isAdmin && order.rentalStartDate < new Date()) {
       throw new ApiError(
         HttpStatusCode.BadRequest,
         'You cannot cancel a rental that has already started'

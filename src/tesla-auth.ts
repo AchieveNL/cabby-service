@@ -13,7 +13,6 @@ const audience = 'https://fleet-api.prd.eu.vn.cloud.tesla.com';
 const teslaAuth: Router = Router();
 
 export const refreshTeslaApiToken = async (
-  currentToken: string,
   teslaApiRefreshToken: string
 ): Promise<string> => {
   try {
@@ -28,10 +27,9 @@ export const refreshTeslaApiToken = async (
     );
 
     const newAccessToken = refreshResponse.data.access_token;
-    const newRefreshToken = refreshResponse.data.refresh;
+    const newRefreshToken = refreshResponse.data.refresh_token;
 
-    await prisma.teslaToken.updateMany({
-      where: { token: currentToken },
+    await prisma.teslaToken.create({
       data: {
         token: newAccessToken,
         refreshToken: newRefreshToken,
@@ -44,7 +42,7 @@ export const refreshTeslaApiToken = async (
   } catch (refreshError) {
     console.error(
       'Error refreshing Tesla API token:',
-      refreshError.response.data
+      refreshError.response?.data || refreshError
     );
     Sentry.captureException(refreshError);
     throw new Error('Failed to refresh Tesla API token');
@@ -137,13 +135,13 @@ teslaAuth.get('/auth/callback', async (req, res) => {
       data: {
         token: teslaApiToken,
         refreshToken: teslaRefreshToken,
-        authorizationCode,
       },
     });
 
     res.send('Tesla API token obtained and stored successfully.');
   } catch (error) {
     console.error('Error during Tesla token exchange:', error);
+    Sentry.captureException(error);
     res.status(500).send('Failed to obtain Tesla API token.');
   }
 });

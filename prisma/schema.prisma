@@ -366,11 +366,10 @@ model userTokens {
 }
 
 model TeslaToken {
-  id                Int      @id @default(autoincrement())
-  token             String
-  refreshToken      String
-  authorizationCode String
-  createdAt         DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  token        String
+  refreshToken String
+  createdAt    DateTime @default(now())
 }
 
 model Refunds {
