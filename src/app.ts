@@ -6,8 +6,6 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import expressJSDocSwagger from 'express-jsdoc-swagger';
-import * as Sentry from '@sentry/node';
-import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import home from './home';
 import environment from './lib/environment';
 import expressJSDocSwaggerConfig from './config/express-jsdoc-swagger.config';
@@ -36,25 +34,11 @@ class App {
 
   constructor() {
     this.express = express();
-    this.initializeSentry();
     this.setMiddlewares();
     this.disableSettings();
     this.setRoutes();
-    this.setSentryErrorHandler();
     this.setErrorHandler();
     this.initializeDocs();
-  }
-
-  private initializeSentry(): void {
-    Sentry.init({
-      dsn: process.env.SENTRY_DSN,
-      integrations: [nodeProfilingIntegration()],
-      // Tracing
-      tracesSampleRate: 1.0, //  Capture 100% of the transactions
-
-      // Set sampling rate for profiling - this is relative to tracesSampleRate
-      profilesSampleRate: 1.0,
-    });
   }
 
   private setMiddlewares(): void {
@@ -73,10 +57,6 @@ class App {
 
     this.express.use(cors(corsOptions));
     this.express.options('*', cors(corsOptions));
-  }
-
-  private setSentryErrorHandler(): void {
-    Sentry.setupExpressErrorHandler(this.express);
   }
 
   private disableSettings(): void {

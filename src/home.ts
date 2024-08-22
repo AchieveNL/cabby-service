@@ -55,8 +55,4 @@ home.get(
   }
 );
 
-home.get('/debug-sentry', function mainHandler(req, res) {
-  throw new Error('Sentry error test');
-});
-
 export default home;

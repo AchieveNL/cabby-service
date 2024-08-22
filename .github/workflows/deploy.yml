@@ -48,8 +48,6 @@ jobs:
 
       - name: Build
         run: npm run build
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v0
@@ -61,10 +59,9 @@ jobs:
       - name: Build and push Docker image to GCR
         env:
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           echo "$GCP_CREDENTIALS" | docker login -u _json_key --password-stdin https://gcr.io
-          docker build -t ${{ env.IMAGE_URL }}:staging-${{ github.sha }} --build-arg SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN .
+          docker build -t ${{ env.IMAGE_URL }}:staging-${{ github.sha }} .
           docker push ${{ env.IMAGE_URL }}:staging-${{ github.sha }}
 
       - name: Deploy to Cloud Run (Staging)
@@ -106,8 +103,6 @@ jobs:
 
       - name: Build
         run: npm run build
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v0
@@ -119,10 +114,9 @@ jobs:
       - name: Build and push Docker image to GCR
         env:
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           echo "$GCP_CREDENTIALS" | docker login -u _json_key --password-stdin https://gcr.io
-          docker build -t ${{ env.IMAGE_URL }}:production-${{ github.sha }} --build-arg SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN .
+          docker build -t ${{ env.IMAGE_URL }}:production-${{ github.sha }} .
           docker push ${{ env.IMAGE_URL }}:production-${{ github.sha }}
 
       - name: Deploy to Cloud Run (Production)
@@ -147,4 +141,3 @@ jobs:
             TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
             TESLA_CLIENT_SECRET=${{ secrets.TESLA_CLIENT_SECRET }}
             SENTRY_DSN=${{ secrets.SENTRY_DSN }}
-            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}

@@ -741,10 +741,10 @@ export default class OrderService {
     if (!order) throw new Error('Order not found');
     const isAdmin = userSender.role === UserRole.ADMIN;
 
-    if (order.rentalStartDate < new Date()) {
+    if (!isAdmin && order.rentalStartDate < new Date()) {
       throw new ApiError(
         HttpStatusCode.BadRequest,
-        'You cannot cancel a rental that has already starte'
+        'You cannot cancel a rental that has already started'
       );
     }
 
