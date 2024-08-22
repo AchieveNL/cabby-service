@@ -1,5 +1,4 @@
 import { config as configDotenv } from 'dotenv';
-import './instrument';
 import server from './server';
 import { printAppInfo } from './utils/print-app-info';
 import appConfig from './config/app.config';

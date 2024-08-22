@@ -6,7 +6,7 @@
   "scripts": {
     "prepare": "is-ci || husky install",
     "prebuild": "npm run clean:build",
-    "build": "npm run prisma:generate && tsc --build --verbose tsconfig.build.json && tsc-alias -p tsconfig.json",
+    "build": "npm run prisma:generate && tsc --build --verbose tsconfig.build.json && tsc-alias -p tsconfig.json && npm run sentry:sourcemaps",
     "start": "FORCE_COLOR=2 node ./dist/index.js",
     "dev": "npm run prisma:generate && NODE_ENV=development ts-node-dev --project tsconfig.dev.json -r tsconfig-paths/register --transpile-only --respawn --exit-child src/index.ts",
     "prod": "npm run build && npm run start",
@@ -26,7 +26,7 @@
     "test:e2e": "jest -c jest.config.e2e.ts",
     "test:integration": "jest -c jest.config.integration.ts",
     "test:unit": "jest -c jest.config.unit.ts",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org achieve-c7 --project node ./dist && sentry-cli sourcemaps upload --org achieve-c7 --project node ./dist"
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org cabby --project cabby-backend ./dist && sentry-cli sourcemaps upload --org cabby --project cabby-backend ./dist"
   },
   "prisma": {
     "seed": "ts-node-dev -r tsconfig-paths/register --transpile-only prisma/seed.ts"
