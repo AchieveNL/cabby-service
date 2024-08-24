@@ -319,7 +319,7 @@ model damageReport {
   id          Int          @id @default(autoincrement())
   reportedAt  DateTime     @default(now())
   description String
-  status      ReportStatus @default(UNDERPAID)
+  status      ReportStatus @default(DAMAGED)
   amount      Float?
   repairedAt  DateTime?
   vehicleId   String
@@ -330,7 +330,7 @@ model damageReport {
 }
 
 enum ReportStatus {
-  UNDERPAID
+  DAMAGED
   REPAIRED
 }
 
@@ -366,10 +366,10 @@ model userTokens {
 }
 
 model TeslaToken {
-  id                Int      @id @default(autoincrement())
-  token             String
-  refreshToken      String
-  createdAt         DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  token        String
+  refreshToken String
+  createdAt    DateTime @default(now())
 }
 
 model Refunds {
