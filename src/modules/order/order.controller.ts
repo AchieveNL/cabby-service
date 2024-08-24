@@ -186,8 +186,6 @@ export default class OrderController extends Api {
     const userId = req.user?.id;
     try {
       const details = await this.orderService.completeOrder(orderId, userId);
-      await this.orderService.lockVehicleService(orderId, userId);
-
       return this.send(
         res,
         details,
