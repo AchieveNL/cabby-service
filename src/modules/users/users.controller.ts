@@ -22,6 +22,7 @@ import {
 } from '@/middlewares/token-manager';
 import { setAuthCookies } from '@/middlewares/cookies';
 import { emailSchema } from '@/schemas';
+import prisma from '@/lib/prisma';
 
 export default class UserController extends Api {
   private readonly userService = new UserService();
@@ -141,6 +142,31 @@ export default class UserController extends Api {
   ) => {
     try {
       const { email, password } = req.body as LoginDto;
+      // console all users:
+      // create a user:
+      // const hashedPassword: string = await bcrypt.hash('Foundever@2024', 10);
+      // await prisma.user.update({
+      //   where: {
+      //     email: 'naziha.bahraoui@gmail.com',
+      //   },
+      //   data: {
+      //     // email: 'test@test.com',
+      //     // password: hashedPassword,
+      //     role: 'USER',
+      //     status: 'ACTIVE',
+      //     profile: {
+      //       create: {
+      //         fullName: 'Naziha Bahraoui',
+      //         lastName: 'Bahraoui',
+      //         firstName: 'Naziha',
+      //         phoneNumber: '1234567890',
+      //         fullAddress: '1234 Main St, New York, NY 10001',
+      //         city: 'New York',
+      //         status: 'ACTIVE',
+      //       },
+      //     },
+      //   },
+      // });
 
       const user = await this.userService.validateUserCredentials(
         email.toLowerCase(),

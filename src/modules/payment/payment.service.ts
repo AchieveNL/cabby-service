@@ -93,20 +93,20 @@ export default class PaymentService {
       },
     });
 
-    const invoiceUrl = await this.fileService.generateAndSaveInvoice(
-      orderId,
-      userId,
-      id
-    );
+    // const invoiceUrl = await this.fileService.generateAndSaveInvoice(
+    //   orderId,
+    //   userId,
+    //   id
+    // );
 
-    await prisma.payment.update({
-      where: {
-        id,
-      },
-      data: {
-        invoiceUrl,
-      },
-    });
+    // await prisma.payment.update({
+    //   where: {
+    //     id,
+    //   },
+    //   data: {
+    //     invoiceUrl,
+    //   },
+    // });
 
     return { payment: id, checkoutUrl };
   }
