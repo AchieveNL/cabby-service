@@ -267,21 +267,27 @@ export default class OrderService {
     };
   };
 
-  private async validateOrderAndRental(orderId: string) {
+  private async validateOrderAndRental(orderId: string, userId: string) {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { vehicle: true },
+      include: { vehicle: true, user: true },
     });
 
     if (!order) {
       throw new Error('Order not found.');
     }
 
+    if (order.user.id !== userId) {
+      throw new Error('User not authorized for this order.');
+    }
+
+    const rentalEndDate = new Date(order.rentalEndDate);
+
     const currentDate = new Date();
     const rentalStartDate = new Date(order.rentalStartDate);
 
-    if (currentDate.getTime() < rentalStartDate.getTime()) {
-      throw new Error('Rental period has not started yet.');
+    if (currentDate < rentalStartDate || currentDate > rentalEndDate) {
+      throw new Error('Action not allowed outside rental period.');
     }
 
     if (!order.vehicle.vin) {
@@ -315,7 +321,7 @@ export default class OrderService {
   }
 
   public unlockVehicleService = async (orderId: string, userId: string) => {
-    const order = await this.validateOrderAndRental(orderId);
+    const order = await this.validateOrderAndRental(orderId, userId);
     const teslaToken = await this.getTeslaToken();
 
     if (process.env.NODE_ENV === 'production') {
@@ -349,7 +355,7 @@ export default class OrderService {
   public lockVehicleService = async (orderId: string, userId: string) => {
     const tokens = await prisma.teslaToken.findFirst();
     console.log('tokens:', tokens);
-    const order = await this.validateOrderAndRental(orderId);
+    const order = await this.validateOrderAndRental(orderId, userId);
     const teslaToken = await this.getTeslaToken();
 
     if (process.env.NODE_ENV === 'production') {
