@@ -48,3 +48,6 @@ secrets.json
 .DS_Store
 # Sentry Config File
 .sentryclirc
+
+# Custom
+/pentest
