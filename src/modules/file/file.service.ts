@@ -1,12 +1,12 @@
 import { Readable } from 'stream';
 import fs from 'fs';
 import path from 'path';
+import { randomUUID } from 'crypto';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { bucketName, gStorage } from '@/utils/storage';
 import prisma from '@/lib/prisma';
 import { capitalizeFirstLetter } from '@/utils/text';
 import { dayjsExtended, getUtcOffset } from '@/utils/date';
-import { randomUUID } from 'crypto';
 
 export class FileService {
   private readonly storage = gStorage;
