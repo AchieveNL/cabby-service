@@ -7,6 +7,7 @@ import { bucketName, gStorage } from '@/utils/storage';
 import prisma from '@/lib/prisma';
 import { capitalizeFirstLetter } from '@/utils/text';
 import { dayjsExtended, getUtcOffset } from '@/utils/date';
+import { randomUUID } from 'crypto';
 
 export class FileService {
   private readonly storage = gStorage;
@@ -19,9 +20,9 @@ export class FileService {
     fileType: 'IMAGE' | 'PDF' | 'VIDEO'
   ): Promise<string> {
     const folder = this.getFolderByFileType(fileType);
-    const newFileName = `${fileType.toLowerCase()}-${randomUUID()}.${
-      fileName.split('.').pop() as string
-    }`;
+      
+    const newFileName = `${randomUUID()}.${fileName.split('.').pop()}`;
+      
     const filePath = `${folder}/${newFileName}`;
 
     const file = this.bucket.file(filePath);

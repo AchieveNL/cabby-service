@@ -6,8 +6,7 @@ import {
   UserRole,
 } from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
-// eslint-disable-next-line
-import fetch, { Headers, Response } from 'node-fetch';
+import fetch, { Headers } from 'node-fetch';
 import { HttpStatusCode } from 'axios';
 import * as XLSX from 'xlsx';
 import * as Sentry from '@sentry/node';
@@ -48,26 +47,26 @@ import { dateTimeFormat, formatDuration } from '@/utils/date';
 //   }
 // };
 
-const httpCallVehicleCommand = async (
-  url: string,
-  token: string
-): Promise<Response> => {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
+// const httpCallVehicleCommand = async (
+//   url: string,
+//   token: string
+// ): Promise<Response> => {
+//   const response = await fetch(url, {
+//     method: 'POST',
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//       'Content-Type': 'application/json',
+//     },
+//   });
 
-  if (!response.ok && response.status !== 401) {
-    throw new Error(
-      `HTTP error! status: ${response.status}, body: ${await response.text()}`
-    );
-  }
+//   if (!response.ok && response.status !== 401) {
+//     throw new Error(
+//       `HTTP error! status: ${response.status}, body: ${await response.text()}`
+//     );
+//   }
 
-  return response;
-};
+//   return response;
+// };
 
 export default class OrderService {
   private readonly paymentService = new PaymentService();
@@ -267,21 +266,31 @@ export default class OrderService {
     };
   };
 
-  private async validateOrderAndRental(orderId: string) {
+  private async validateOrderAndRental(orderId: string, userId: string) {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { vehicle: true },
+      include: { vehicle: true, user: true },
     });
 
     if (!order) {
       throw new Error('Order not found.');
     }
 
+    if (order.status !== 'CONFIRMED') {
+      throw new Error('Order is not confirmed.');
+    }
+
+    if (order.user.id !== userId) {
+      throw new Error('User not authorized for this order.');
+    }
+
+    const rentalEndDate = new Date(order.rentalEndDate);
+
     const currentDate = new Date();
     const rentalStartDate = new Date(order.rentalStartDate);
 
-    if (currentDate.getTime() < rentalStartDate.getTime()) {
-      throw new Error('Rental period has not started yet.');
+    if (currentDate < rentalStartDate || currentDate > rentalEndDate) {
+      throw new Error('Action not allowed outside rental period.');
     }
 
     if (!order.vehicle.vin) {
@@ -300,7 +309,6 @@ export default class OrderService {
     });
 
     if (!teslaToken?.refreshToken) {
-      Sentry.captureException(new Error('Tesla API refresh token not found.'));
       throw new Error('Tesla API token or refresh token not found.');
     }
 
@@ -315,7 +323,7 @@ export default class OrderService {
   }
 
   public unlockVehicleService = async (orderId: string, userId: string) => {
-    const order = await this.validateOrderAndRental(orderId);
+    const order = await this.validateOrderAndRental(orderId, userId);
     const teslaToken = await this.getTeslaToken();
 
     if (process.env.NODE_ENV === 'production') {
@@ -349,7 +357,7 @@ export default class OrderService {
   public lockVehicleService = async (orderId: string, userId: string) => {
     const tokens = await prisma.teslaToken.findFirst();
     console.log('tokens:', tokens);
-    const order = await this.validateOrderAndRental(orderId);
+    const order = await this.validateOrderAndRental(orderId, userId);
     const teslaToken = await this.getTeslaToken();
 
     if (process.env.NODE_ENV === 'production') {
@@ -454,6 +462,13 @@ export default class OrderService {
     };
 
     const response = await fetch(url, requestOptions);
+
+    if (!response.ok && response.status !== 401) {
+      throw new Error(
+        `HTTP error! status: ${response.status}, body: ${await response.text()}`
+      );
+    }
+
     return response;
   };
 
@@ -470,7 +485,7 @@ export default class OrderService {
 
       for (let attempts = 0; attempts < 2; attempts++) {
         try {
-          const response = await httpCallVehicleCommand(url, currentToken);
+          const response = await this.httpCallVehicleCommand(url, currentToken);
           const responseData = await response.json();
           console.log(
             'Unlocking Tesla vehicle response:',
@@ -520,7 +535,7 @@ export default class OrderService {
 
       for (let attempts = 0; attempts < 2; attempts++) {
         try {
-          const response = await httpCallVehicleCommand(url, currentToken);
+          const response = await this.httpCallVehicleCommand(url, currentToken);
           const responseData = await response.json();
 
           console.log(
