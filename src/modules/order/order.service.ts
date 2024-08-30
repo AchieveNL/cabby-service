@@ -6,7 +6,7 @@ import {
   UserRole,
 } from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
-import fetch, { Headers, Response } from 'node-fetch';
+import fetch, { Headers } from 'node-fetch';
 import { HttpStatusCode } from 'axios';
 import * as XLSX from 'xlsx';
 import * as Sentry from '@sentry/node';
