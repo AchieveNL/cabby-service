@@ -101,7 +101,7 @@ teslaAuth.get('/auth', (req, res) => {
     TESLA_CLIENT_ID as string
   }&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
-  )}&response_type=code&scope=openid vehicle_cmds offline_access`;
+  )}&response_type=code&scope=openid vehicle_cmds offline_access vehicle_device_data`;
   res.redirect(teslaAuthUrl);
 });
 
@@ -121,7 +121,7 @@ teslaAuth.get('/auth/callback', async (req, res) => {
         client_secret: TESLA_CLIENT_SECRET,
         code: authorizationCode,
         redirect_uri: REDIRECT_URI,
-        scope: 'openid vehicle_cmds offline_access',
+        scope: 'openid vehicle_cmds offline_access vehicle_device_data',
         audience: 'https://fleet-api.prd.eu.vn.cloud.tesla.com',
       }
     );
