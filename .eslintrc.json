@@ -3,14 +3,8 @@
     "node": true,
     "es2021": true
   },
-  "plugins": [
-    "unicorn",
-    "prettier"
-  ],
-  "extends": [
-    "standard-with-typescript",
-    "plugin:prettier/recommended"
-  ],
+  "plugins": ["unicorn", "prettier"],
+  "extends": ["standard-with-typescript", "plugin:prettier/recommended"],
   "overrides": [],
   "parserOptions": {
     "ecmaVersion": "latest",
@@ -18,9 +12,7 @@
     "project": "./tsconfig.eslint.json"
   },
   "rules": {
-    "prettier/prettier": [
-      "error"
-    ],
+    "prettier/prettier": ["error", { "endOfLine": "auto" }],
     "unicorn/filename-case": [
       "warn",
       {
