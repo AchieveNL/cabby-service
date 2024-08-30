@@ -25,49 +25,6 @@ import { refreshTeslaApiToken } from '@/tesla-auth';
 import { ApiError } from '@/lib/errors';
 import { dateTimeFormat, formatDuration } from '@/utils/date';
 
-// const wakeTheVehicleUp = async (vehicleTag: string, token: string) => {
-//   const myHeaders = new Headers();
-//   myHeaders.append('Content-Type', 'application/json');
-//   myHeaders.append('Authorization', `Bearer ${token}`);
-
-//   const requestOptions = {
-//     method: 'POST',
-//     headers: myHeaders,
-//   };
-
-//   try {
-//     await fetch(
-//       `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleTag}/wake_up`,
-//       requestOptions
-//     );
-//     console.log('Vehicle woken up successfully.');
-//   } catch (error) {
-//     console.log('Error waking up vehicle:', error);
-//     throw new Error('Error waking up vehicle' + JSON.stringify(error));
-//   }
-// };
-
-// const httpCallVehicleCommand = async (
-//   url: string,
-//   token: string
-// ): Promise<Response> => {
-//   const response = await fetch(url, {
-//     method: 'POST',
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//       'Content-Type': 'application/json',
-//     },
-//   });
-
-//   if (!response.ok && response.status !== 401) {
-//     throw new Error(
-//       `HTTP error! status: ${response.status}, body: ${await response.text()}`
-//     );
-//   }
-
-//   return response;
-// };
-
 export default class OrderService {
   private readonly paymentService = new PaymentService();
   private readonly adminMailService = new AdminMailService();
@@ -296,6 +253,7 @@ export default class OrderService {
     if (!order.vehicle.vin) {
       throw new Error('Vehicle VIN not found.');
     }
+    console.log('vehicle vin:', order.vehicle.vin);
 
     return order;
   }
@@ -322,6 +280,29 @@ export default class OrderService {
     });
   }
 
+  private async wakeUpVehicle(vehicleId: string, token: string) {
+    const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleId}/wake_up`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Error waking up Tesla vehicle.');
+    }
+
+    const responseData = await response.json();
+
+    if (!responseData?.response?.state) {
+      throw new Error('Error waking up Tesla vehicle.');
+    }
+
+    return responseData;
+  }
+
   public unlockVehicleService = async (orderId: string, userId: string) => {
     const order = await this.validateOrderAndRental(orderId, userId);
     const teslaToken = await this.getTeslaToken();
@@ -333,6 +314,7 @@ export default class OrderService {
       if (!teslaToken.refreshToken) {
         throw new Error('Refresh token not found.');
       }
+
       const result = await this.unlockTeslaVehicle(
         order.vehicle.vin,
         teslaToken.token,
@@ -355,8 +337,6 @@ export default class OrderService {
   };
 
   public lockVehicleService = async (orderId: string, userId: string) => {
-    const tokens = await prisma.teslaToken.findFirst();
-    console.log('tokens:', tokens);
     const order = await this.validateOrderAndRental(orderId, userId);
     const teslaToken = await this.getTeslaToken();
 
@@ -462,12 +442,6 @@ export default class OrderService {
     };
 
     const response = await fetch(url, requestOptions);
-
-    if (!response.ok && response.status !== 401) {
-      throw new Error(
-        `HTTP error! status: ${response.status}, body: ${await response.text()}`
-      );
-    }
 
     return response;
   };
