@@ -6,7 +6,6 @@ import {
   UserRole,
 } from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
-// eslint-disable-next-line
 import fetch, { Headers, Response } from 'node-fetch';
 import { HttpStatusCode } from 'axios';
 import * as XLSX from 'xlsx';
@@ -277,6 +276,10 @@ export default class OrderService {
       throw new Error('Order not found.');
     }
 
+    if (order.status !== 'CONFIRMED') {
+      throw new Error('Order is not confirmed.');
+    }
+
     if (order.user.id !== userId) {
       throw new Error('User not authorized for this order.');
     }
@@ -306,7 +309,6 @@ export default class OrderService {
     });
 
     if (!teslaToken?.refreshToken) {
-      Sentry.captureException(new Error('Tesla API refresh token not found.'));
       throw new Error('Tesla API token or refresh token not found.');
     }
 
