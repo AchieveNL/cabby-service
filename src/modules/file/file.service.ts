@@ -20,8 +20,7 @@ export class FileService {
   ): Promise<string> {
     const folder = this.getFolderByFileType(fileType);
 
-    const newFileName = `${randomUUID()}.${fileName.split('.').pop()}`;
-
+    const newFileName = `${randomUUID()}.${fileName.split('.').pop()!}`;
     const filePath = `${folder}/${newFileName}`;
 
     const file = this.bucket.file(filePath);
