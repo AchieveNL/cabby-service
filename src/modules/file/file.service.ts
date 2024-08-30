@@ -1,7 +1,6 @@
 import { Readable } from 'stream';
 import fs from 'fs';
 import path from 'path';
-import { randomUUID } from 'crypto';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { bucketName, gStorage } from '@/utils/storage';
 import prisma from '@/lib/prisma';
@@ -20,9 +19,9 @@ export class FileService {
     fileType: 'IMAGE' | 'PDF' | 'VIDEO'
   ): Promise<string> {
     const folder = this.getFolderByFileType(fileType);
-      
+
     const newFileName = `${randomUUID()}.${fileName.split('.').pop()}`;
-      
+
     const filePath = `${folder}/${newFileName}`;
 
     const file = this.bucket.file(filePath);
