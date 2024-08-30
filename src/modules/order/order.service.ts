@@ -47,26 +47,26 @@ import { dateTimeFormat, formatDuration } from '@/utils/date';
 //   }
 // };
 
-const httpCallVehicleCommand = async (
-  url: string,
-  token: string
-): Promise<Response> => {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
+// const httpCallVehicleCommand = async (
+//   url: string,
+//   token: string
+// ): Promise<Response> => {
+//   const response = await fetch(url, {
+//     method: 'POST',
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//       'Content-Type': 'application/json',
+//     },
+//   });
 
-  if (!response.ok && response.status !== 401) {
-    throw new Error(
-      `HTTP error! status: ${response.status}, body: ${await response.text()}`
-    );
-  }
+//   if (!response.ok && response.status !== 401) {
+//     throw new Error(
+//       `HTTP error! status: ${response.status}, body: ${await response.text()}`
+//     );
+//   }
 
-  return response;
-};
+//   return response;
+// };
 
 export default class OrderService {
   private readonly paymentService = new PaymentService();
@@ -462,6 +462,13 @@ export default class OrderService {
     };
 
     const response = await fetch(url, requestOptions);
+
+    if (!response.ok && response.status !== 401) {
+      throw new Error(
+        `HTTP error! status: ${response.status}, body: ${await response.text()}`
+      );
+    }
+
     return response;
   };
 
@@ -478,7 +485,7 @@ export default class OrderService {
 
       for (let attempts = 0; attempts < 2; attempts++) {
         try {
-          const response = await httpCallVehicleCommand(url, currentToken);
+          const response = await this.httpCallVehicleCommand(url, currentToken);
           const responseData = await response.json();
           console.log(
             'Unlocking Tesla vehicle response:',
@@ -528,7 +535,7 @@ export default class OrderService {
 
       for (let attempts = 0; attempts < 2; attempts++) {
         try {
-          const response = await httpCallVehicleCommand(url, currentToken);
+          const response = await this.httpCallVehicleCommand(url, currentToken);
           const responseData = await response.json();
 
           console.log(
