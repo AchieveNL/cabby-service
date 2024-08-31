@@ -253,7 +253,6 @@ export default class OrderService {
     if (!order.vehicle.vin) {
       throw new Error('Vehicle VIN not found.');
     }
-    console.log('vehicle vin:', order.vehicle.vin);
 
     return order;
   }
@@ -281,26 +280,31 @@ export default class OrderService {
   }
 
   private async wakeUpVehicle(vehicleId: string, token: string) {
-    const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleId}/wake_up`;
+    const wakeUpUrl = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleId}/wake_up`;
 
-    const response = await fetch(url, {
+    const myHeaders = new Headers();
+    myHeaders.append('Content-Type', 'application/json');
+    myHeaders.append('Authorization', `Bearer ${token}`);
+
+    const wakeUpResponse = await fetch(wakeUpUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
     });
 
-    if (!response.ok) {
+    if (wakeUpResponse.status !== 200) {
       throw new Error('Error waking up Tesla vehicle.');
     }
 
-    const responseData = await response.json();
+    const wakeUpData = await wakeUpResponse.json();
 
-    if (!responseData?.response?.state) {
-      throw new Error('Error waking up Tesla vehicle.');
+    if (wakeUpData?.response?.state !== 'online') {
+      throw new Error('Vehicle is not online.');
     }
 
-    return responseData;
+    return wakeUpData;
   }
 
   public unlockVehicleService = async (orderId: string, userId: string) => {
@@ -315,6 +319,7 @@ export default class OrderService {
         throw new Error('Refresh token not found.');
       }
 
+      // await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
       const result = await this.unlockTeslaVehicle(
         order.vehicle.vin,
         teslaToken.token,
@@ -347,6 +352,8 @@ export default class OrderService {
       if (!teslaToken.refreshToken) {
         throw new Error('Refresh token not found.');
       }
+
+      // await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
       const result = await this.lockTeslaVehicle(
         order.vehicle.vin,
         teslaToken.token,
