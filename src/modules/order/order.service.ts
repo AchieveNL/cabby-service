@@ -6,8 +6,7 @@ import {
   UserRole,
 } from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
-// eslint-disable-next-line
-import fetch, { Headers, Response } from 'node-fetch';
+import fetch, { Headers } from 'node-fetch';
 import { HttpStatusCode } from 'axios';
 import * as XLSX from 'xlsx';
 import * as Sentry from '@sentry/node';
@@ -25,49 +24,6 @@ import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
 import { ApiError } from '@/lib/errors';
 import { dateTimeFormat, formatDuration } from '@/utils/date';
-
-// const wakeTheVehicleUp = async (vehicleTag: string, token: string) => {
-//   const myHeaders = new Headers();
-//   myHeaders.append('Content-Type', 'application/json');
-//   myHeaders.append('Authorization', `Bearer ${token}`);
-
-//   const requestOptions = {
-//     method: 'POST',
-//     headers: myHeaders,
-//   };
-
-//   try {
-//     await fetch(
-//       `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleTag}/wake_up`,
-//       requestOptions
-//     );
-//     console.log('Vehicle woken up successfully.');
-//   } catch (error) {
-//     console.log('Error waking up vehicle:', error);
-//     throw new Error('Error waking up vehicle' + JSON.stringify(error));
-//   }
-// };
-
-const httpCallVehicleCommand = async (
-  url: string,
-  token: string
-): Promise<Response> => {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok && response.status !== 401) {
-    throw new Error(
-      `HTTP error! status: ${response.status}, body: ${await response.text()}`
-    );
-  }
-
-  return response;
-};
 
 export default class OrderService {
   private readonly paymentService = new PaymentService();
@@ -267,21 +223,31 @@ export default class OrderService {
     };
   };
 
-  private async validateOrderAndRental(orderId: string) {
+  private async validateOrderAndRental(orderId: string, userId: string) {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { vehicle: true },
+      include: { vehicle: true, user: true },
     });
 
     if (!order) {
       throw new Error('Order not found.');
     }
 
+    if (order.status !== 'CONFIRMED') {
+      throw new Error('Order is not confirmed.');
+    }
+
+    if (order.user.id !== userId) {
+      throw new Error('User not authorized for this order.');
+    }
+
+    const rentalEndDate = new Date(order.rentalEndDate);
+
     const currentDate = new Date();
     const rentalStartDate = new Date(order.rentalStartDate);
 
-    if (currentDate.getTime() < rentalStartDate.getTime()) {
-      throw new Error('Rental period has not started yet.');
+    if (currentDate < rentalStartDate || currentDate > rentalEndDate) {
+      throw new Error('Action not allowed outside rental period.');
     }
 
     if (!order.vehicle.vin) {
@@ -300,7 +266,6 @@ export default class OrderService {
     });
 
     if (!teslaToken?.refreshToken) {
-      Sentry.captureException(new Error('Tesla API refresh token not found.'));
       throw new Error('Tesla API token or refresh token not found.');
     }
 
@@ -314,8 +279,36 @@ export default class OrderService {
     });
   }
 
+  private async wakeUpVehicle(vehicleId: string, token: string) {
+    const wakeUpUrl = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vehicleId}/wake_up`;
+
+    const myHeaders = new Headers();
+    myHeaders.append('Content-Type', 'application/json');
+    myHeaders.append('Authorization', `Bearer ${token}`);
+
+    const wakeUpResponse = await fetch(wakeUpUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (wakeUpResponse.status !== 200) {
+      throw new Error('Error waking up Tesla vehicle.');
+    }
+
+    const wakeUpData = await wakeUpResponse.json();
+
+    if (wakeUpData?.response?.state !== 'online') {
+      throw new Error('Vehicle is not online.');
+    }
+
+    return wakeUpData;
+  }
+
   public unlockVehicleService = async (orderId: string, userId: string) => {
-    const order = await this.validateOrderAndRental(orderId);
+    const order = await this.validateOrderAndRental(orderId, userId);
     const teslaToken = await this.getTeslaToken();
 
     if (process.env.NODE_ENV === 'production') {
@@ -325,6 +318,8 @@ export default class OrderService {
       if (!teslaToken.refreshToken) {
         throw new Error('Refresh token not found.');
       }
+
+      // await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
       const result = await this.unlockTeslaVehicle(
         order.vehicle.vin,
         teslaToken.token,
@@ -347,9 +342,7 @@ export default class OrderService {
   };
 
   public lockVehicleService = async (orderId: string, userId: string) => {
-    const tokens = await prisma.teslaToken.findFirst();
-    console.log('tokens:', tokens);
-    const order = await this.validateOrderAndRental(orderId);
+    const order = await this.validateOrderAndRental(orderId, userId);
     const teslaToken = await this.getTeslaToken();
 
     if (process.env.NODE_ENV === 'production') {
@@ -359,6 +352,8 @@ export default class OrderService {
       if (!teslaToken.refreshToken) {
         throw new Error('Refresh token not found.');
       }
+
+      // await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
       const result = await this.lockTeslaVehicle(
         order.vehicle.vin,
         teslaToken.token,
@@ -454,6 +449,7 @@ export default class OrderService {
     };
 
     const response = await fetch(url, requestOptions);
+
     return response;
   };
 
@@ -470,7 +466,7 @@ export default class OrderService {
 
       for (let attempts = 0; attempts < 2; attempts++) {
         try {
-          const response = await httpCallVehicleCommand(url, currentToken);
+          const response = await this.httpCallVehicleCommand(url, currentToken);
           const responseData = await response.json();
           console.log(
             'Unlocking Tesla vehicle response:',
@@ -520,7 +516,7 @@ export default class OrderService {
 
       for (let attempts = 0; attempts < 2; attempts++) {
         try {
-          const response = await httpCallVehicleCommand(url, currentToken);
+          const response = await this.httpCallVehicleCommand(url, currentToken);
           const responseData = await response.json();
 
           console.log(
