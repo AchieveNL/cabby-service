@@ -33,7 +33,7 @@ jobs:
         run: npm run format:check
 
   build-and-deploy-staging:
-    if: github.event_name == 'push' || github.ref != 'refs/heads/main'
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     environment:
       name: staging
     name: Build and Deploy to Cloud Run (Staging)
@@ -62,7 +62,7 @@ jobs:
         env:
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          
+
         run: |
           echo "$GCP_CREDENTIALS" | docker login -u _json_key --password-stdin https://gcr.io
           docker build -t ${{ env.IMAGE_URL }}:staging-${{ github.sha }} --build-arg SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN .

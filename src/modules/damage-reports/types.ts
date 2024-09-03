@@ -1,4 +1,4 @@
 export enum ReportStatus {
-  UNDERPAID = 'UNDERPAID',
+  DAMAGED = 'DAMAGED',
   REPAIRED = 'REPAIRED',
 }
