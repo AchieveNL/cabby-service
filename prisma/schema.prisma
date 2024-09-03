@@ -210,10 +210,14 @@ enum PaymentProduct {
 }
 
 enum PaymentStatus {
+  OPEN
+  CANCELED
+  PENDING
+  AUTHORIZED
+  EXPIRED
+  FAILED
   PAID
   REFUNDED
-  PENDING
-  FAILED
 }
 
 model payment {
@@ -366,10 +370,10 @@ model userTokens {
 }
 
 model TeslaToken {
-  id                Int      @id @default(autoincrement())
-  token             String
-  refreshToken      String
-  createdAt         DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  token        String
+  refreshToken String
+  createdAt    DateTime @default(now())
 }
 
 model Refunds {
