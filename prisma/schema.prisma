@@ -210,10 +210,14 @@ enum PaymentProduct {
 }
 
 enum PaymentStatus {
+  OPEN
+  CANCELED
+  PENDING
+  AUTHORIZED
+  EXPIRED
+  FAILED
   PAID
   REFUNDED
-  PENDING
-  FAILED
 }
 
 model payment {
@@ -237,10 +241,14 @@ model payment {
 }
 
 enum RegistrationOrderStatus {
+  OPEN
+  CANCELED
+  PENDING
+  AUTHORIZED
+  EXPIRED
+  FAILED
   PAID
   REFUNDED
-  PENDING
-  FAILED
 }
 
 model registrationOrder {

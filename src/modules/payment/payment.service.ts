@@ -114,7 +114,6 @@ export default class PaymentService {
   public async updateOrderPaymentStatus(paymentId: string) {
     try {
       const payment = await this.mollie.payments.get(paymentId);
-      console.log({ payment });
 
       const updatedPayment = await prisma.payment.update({
         where: { orderId: payment.metadata.orderId },
