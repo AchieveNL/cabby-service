@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
-import { type UserStatus, type user } from '@prisma/client';
+import { Prisma, type UserStatus, type user } from '@prisma/client';
 import { HttpStatusCode } from 'axios';
 import UserMailService from '../notifications/user-mails.service';
 import { type ChangeUserStatusDto } from './user.dto';
@@ -20,15 +20,32 @@ export default class UserService {
     return !!user;
   }
 
-  public async createUser(data: any) {
+  public async createUser(data: Prisma.userCreateInput) {
     try {
       const user = await prisma.user.create({
         data,
+        select: {
+          id: true,
+          email: true,
+          status: true,
+          createdAt: true,
+        },
       });
       return user;
     } catch (error) {
-      console.log(error);
-      throw new ApiError(400, 'Error creating user');
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ApiError(
+            HttpStatusCode.Conflict,
+            'User with this email already exists'
+          );
+        }
+      }
+      console.error('Error creating user:', error);
+      throw new ApiError(
+        HttpStatusCode.InternalServerError,
+        'Error creating user'
+      );
     }
   }
 

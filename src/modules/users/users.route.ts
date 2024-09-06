@@ -11,16 +11,18 @@ import {
   changeEmail,
   sendEmailOtp,
 } from '@/modules/users/user.dto';
+import * as schemas from '@/modules/users/user.dto';
 import RequestValidator from '@/middlewares/request-validator';
 import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
 import { mailSender } from '@/config/mailer.config';
+import { validateRequest } from '@/middlewares/zod-validator';
 
 const users: Router = Router();
 const controller = new Controller();
 
 users.post(
   '/signup',
-  RequestValidator.validate(CreateUserDto),
+  validateRequest(schemas.createUserSchema),
   controller.signup
 );
 
