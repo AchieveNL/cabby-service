@@ -319,7 +319,7 @@ export default class OrderService {
         throw new Error('Refresh token not found.');
       }
 
-      // await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
+      await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
       const result = await this.unlockTeslaVehicle(
         order.vehicle.vin,
         teslaToken.token,
@@ -353,7 +353,7 @@ export default class OrderService {
         throw new Error('Refresh token not found.');
       }
 
-      // await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
+      await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
       const result = await this.lockTeslaVehicle(
         order.vehicle.vin,
         teslaToken.token,
