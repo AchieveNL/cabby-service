@@ -1,4 +1,4 @@
-import { UserRole, type user } from '@prisma/client';
+import { Prisma, UserRole, type user } from '@prisma/client';
 import { HttpStatusCode } from 'axios';
 import bcrypt from 'bcrypt';
 import { type Response, type NextFunction, type Request } from 'express';
@@ -6,14 +6,14 @@ import { z } from 'zod';
 import ProfileService from '../profile/profile.service';
 import {
   type LoginDto,
-  type CreateUserDto,
   type sendEmailOtp,
   type changeEmail,
   type RequestPasswordResetDto,
   type ResetPasswordDto,
+  createUserSchema,
 } from './user.dto';
 import UserService from './users.service';
-import { UserStatus } from './types';
+import { type UserStatus } from './types';
 import { type CustomResponse } from '@/types/common.type';
 import Api from '@/lib/api';
 import {
@@ -22,6 +22,7 @@ import {
 } from '@/middlewares/token-manager';
 import { setAuthCookies } from '@/middlewares/cookies';
 import { emailSchema } from '@/schemas';
+import { ApiError } from '@/lib/errors';
 
 export default class UserController extends Api {
   private readonly userService = new UserService();
@@ -71,27 +72,47 @@ export default class UserController extends Api {
     next: NextFunction
   ) => {
     try {
-      const userData: CreateUserDto = req.body;
+      const userData = createUserSchema.parse(req.body);
 
-      const hashedPassword: string = await bcrypt.hash(userData.password, 10);
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
 
-      const email = userData.email.toLowerCase();
       const user = await this.userService.createUser({
-        ...userData,
-        email,
+        email: userData.email.toLowerCase(),
         password: hashedPassword,
-        status: UserStatus.PENDING,
       });
 
       const token = generateToken(user);
       const refreshToken = generateRefreshToken(user);
 
       setAuthCookies(res, token, refreshToken);
-
-      this.send(res, { user, token }, HttpStatusCode.Created, 'signup');
-    } catch (e) {
-      console.log(e);
-      next(e);
+      this.send(
+        res,
+        { user, token },
+        HttpStatusCode.Created,
+        'User signed up successfully'
+      );
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        next(
+          new ApiError(
+            HttpStatusCode.BadRequest,
+            'Invalid input',
+            error.errors.map((issue) => issue.message)
+          )
+        );
+      } else if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        next(
+          new ApiError(
+            HttpStatusCode.Conflict,
+            'User with this email already exists'
+          )
+        );
+      } else {
+        next(error);
+      }
     }
   };
 

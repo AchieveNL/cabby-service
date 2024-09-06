@@ -2,7 +2,6 @@ import { Router } from 'express';
 import Controller from './users.controller';
 import {
   ChangeUserStatusDto,
-  CreateUserDto,
   FetchUsersByStatusDto,
   LoginDto,
   RequestPasswordResetDto,
@@ -14,13 +13,15 @@ import {
 import RequestValidator from '@/middlewares/request-validator';
 import { requireAdmin, requireAuth, verifyAuthToken } from '@/middlewares/auth';
 import { mailSender } from '@/config/mailer.config';
+import { validateRequest } from '@/middlewares/zod-validator';
+import * as schemas from '@/modules/users/user.dto';
 
 const users: Router = Router();
 const controller = new Controller();
 
 users.post(
   '/signup',
-  RequestValidator.validate(CreateUserDto),
+  validateRequest(schemas.createUserSchema),
   controller.signup
 );
 

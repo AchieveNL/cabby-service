@@ -28,7 +28,7 @@ model user {
   email               String               @unique
   password            String
   revokeTokensBefore  DateTime             @default(now())
-  status              UserStatus?
+  status              UserStatus           @default(PENDING)
   role                UserRole             @default(USER)
   createdAt           DateTime             @default(now())
   profile             userProfile?
