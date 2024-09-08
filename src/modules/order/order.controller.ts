@@ -27,7 +27,12 @@ export default class OrderController extends Api {
         case 'Rental period has not started yet.':
           return this.send(res, null, HttpStatusCode.BadRequest, error.message);
         case 'Vehicle VIN not found.':
-          return this.send(res, null, HttpStatusCode.BadRequest, error.message);
+          return this.send(
+            res,
+            null,
+            HttpStatusCode.BadRequest,
+            'The vehicle may not support remote control.'
+          );
         case 'Tesla API token or refresh token not found.':
           return this.send(
             res,
@@ -35,12 +40,28 @@ export default class OrderController extends Api {
             HttpStatusCode.BadRequest,
             'Please contact the system administrator for Tesla API configuration.'
           );
+        case 'Vehicle failed to come online after maximum attempts.':
+          return this.send(
+            res,
+            null,
+            HttpStatusCode.BadRequest,
+            'The vehicle may not be connected to the internet or may be offline.'
+          );
         case 'Error unlocking Tesla vehicle.':
+        case 'Error locking Tesla vehicle.':
           return this.send(
             res,
             null,
             HttpStatusCode.InternalServerError,
             error.message
+          );
+
+        default:
+          return this.send(
+            res,
+            null,
+            HttpStatusCode.InternalServerError,
+            'Internal Server Error'
           );
       }
     }
