@@ -248,7 +248,7 @@ export default class OrderService {
 
     if (currentDate < rentalStartDate || currentDate > rentalEndDate) {
       throw new Error(
-        `Action not allowed outside rental period. Current date: ${currentDate}, Rental start date: ${rentalStartDate}, Rental end date: ${rentalEndDate}`
+        `Action not allowed outside rental period. Current date: ${currentDate.toISOString()}, Rental start date: ${rentalStartDate.toISOString()}, Rental end date: ${rentalEndDate.toISOString()}`
       );
     }
 
