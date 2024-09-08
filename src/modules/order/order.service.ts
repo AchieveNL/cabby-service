@@ -247,7 +247,9 @@ export default class OrderService {
     const rentalStartDate = new Date(order.rentalStartDate);
 
     if (currentDate < rentalStartDate || currentDate > rentalEndDate) {
-      throw new Error('Action not allowed outside rental period.');
+      throw new Error(
+        `Action not allowed outside rental period. Current date: ${currentDate}, Rental start date: ${rentalStartDate}, Rental end date: ${rentalEndDate}`
+      );
     }
 
     if (!order.vehicle.vin) {
