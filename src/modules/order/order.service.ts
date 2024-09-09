@@ -646,10 +646,10 @@ export default class OrderService {
     //   order.vehicle.model ?? ''
     // );
 
-    // await this.userMailService.rentCompletedMailSender(
-    //   user?.email!,
-    //   user?.profile?.fullName!
-    // );
+    await this.userMailService.rentCompletedMailSender(
+      user?.email!,
+      user?.profile?.fullName!
+    );
 
     return completedOrder;
   }
