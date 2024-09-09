@@ -619,8 +619,6 @@ export default class OrderService {
       throw new Error('Not authorized to complete this order.');
     }
 
-    console.log('Completing order:', orderId);
-
     const now = new Date();
     const status =
       order.rentalEndDate < now ? undefined : OrderStatus.COMPLETED;

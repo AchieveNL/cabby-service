@@ -13,6 +13,7 @@ import {
 } from './order.dto';
 import { OrderStatus } from './types';
 import Api from '@/lib/api';
+import prisma from '@/lib/prisma';
 
 export default class OrderController extends Api {
   readonly orderService = new OrderService();
@@ -206,7 +207,14 @@ export default class OrderController extends Api {
     const orderId = req.params.orderId;
     const userId = req.user?.id;
     try {
-      await this.orderService.lockVehicleService(orderId, userId);
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: { vehicle: true },
+      });
+
+      if (process.env.NODE_ENV === 'production' && order?.isVehicleUnlocked) {
+        await this.orderService.lockVehicleService(orderId, userId);
+      }
       const details = await this.orderService.completeOrder(orderId, userId);
 
       return this.send(
