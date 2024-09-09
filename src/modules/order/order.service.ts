@@ -65,15 +65,13 @@ export default class OrderService {
       rentalEndDate,
       timeframes
     );
-
+    console.log(amount);
     const totalAmount = amount * 1.21;
+    console.log('totalAmount:', totalAmount);
 
     const order = await prisma.order.create({
       data: {
-        vehicle: { connect: { id: dto.vehicleId } },
-        user: { connect: { id: dto.userId } },
-        rentalStartDate,
-        rentalEndDate,
+        ...dto,
         totalAmount,
         status: OrderStatus.UNPAID,
       },
@@ -306,12 +304,16 @@ export default class OrderService {
       });
 
       if (wakeUpResponse.status !== 200) {
-        console.log(
-          'Error waking up vehicle.',
-          wakeUpResponse.status,
-          await wakeUpResponse.text()
+        // console.log(
+        //   'Error waking up vehicle.',
+        //   wakeUpResponse.status,
+        //   await wakeUpResponse.text()
+        // );
+        throw new Error(
+          `Error waking up vehicle: ${
+            wakeUpResponse.status
+          } ${await wakeUpResponse.text()}`
         );
-        throw new Error('Error waking up vehicle.');
       }
 
       const wakeUpData = await wakeUpResponse.json();
