@@ -303,12 +303,11 @@ export default class OrderService {
         headers: headers,
       });
 
+      if (wakeUpResponse.status === 429) {
+        throw new Error('Too many requests. Please try again later.');
+      }
+
       if (wakeUpResponse.status !== 200) {
-        // console.log(
-        //   'Error waking up vehicle.',
-        //   wakeUpResponse.status,
-        //   await wakeUpResponse.text()
-        // );
         throw new Error(
           `Error waking up vehicle: ${
             wakeUpResponse.status
@@ -619,18 +618,12 @@ export default class OrderService {
       throw new Error('Not authorized to complete this order.');
     }
 
-    const now = new Date();
-    const status =
-      order.rentalEndDate < now ? undefined : OrderStatus.COMPLETED;
-
-    const updateData: Prisma.orderUpdateInput = {
-      stopRentDate: now,
-      status,
-    };
-
     const completedOrder = await prisma.order.update({
       where: { id: orderId },
-      data: updateData,
+      data: {
+        status: 'COMPLETED',
+        stopRentDate: new Date(),
+      },
     });
 
     console.log("Order completed. Updating vehicle's status to AVAILABLE.");
@@ -653,10 +646,10 @@ export default class OrderService {
     //   order.vehicle.model ?? ''
     // );
 
-    await this.userMailService.rentCompletedMailSender(
-      user?.email!,
-      user?.profile?.fullName!
-    );
+    // await this.userMailService.rentCompletedMailSender(
+    //   user?.email!,
+    //   user?.profile?.fullName!
+    // );
 
     return completedOrder;
   }
