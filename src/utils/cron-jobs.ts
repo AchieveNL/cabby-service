@@ -233,8 +233,8 @@ function cronJobs() {
         }
       }
     });
+    void scheduleNextTeslaTokenRefresh();
   }
-  void scheduleNextTeslaTokenRefresh();
 }
 
 export default cronJobs;
