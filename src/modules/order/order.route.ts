@@ -71,13 +71,6 @@ router.post(
   orderController.lockVehicle
 );
 
-router.post(
-  '/order/:orderId/startVehicle',
-  verifyAuthToken,
-  requireAuth,
-  orderController.startVehicle
-);
-
 router.get(
   '/user-orders',
   verifyAuthToken,

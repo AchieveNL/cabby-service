@@ -1,5 +1,6 @@
 import { Prisma, type order } from '@prisma/client';
 import cron from 'node-cron';
+import { refreshTeslaApiToken } from '../tesla-auth';
 import { mailService } from './mail';
 import { fromEmail, isDevelopment, toEmail } from './constants';
 import dayjsExtended from './date';
@@ -12,7 +13,6 @@ import {
   orderWillEndQuery,
   orderWillStartQuery,
 } from '@/modules/notifications/notifications.queries';
-import { refreshTeslaApiToken } from '../tesla-auth';
 
 const query = Prisma.sql`SELECT
     o.id,
@@ -193,9 +193,14 @@ async function scheduleNextTeslaTokenRefresh() {
     }
 
     teslaTokenRefreshTimeout = setTimeout(async () => {
-      console.log('Refreshing Tesla token...');
-      await refreshTeslaApiToken(latestToken.refreshToken);
-      scheduleNextTeslaTokenRefresh(); // Schedule next refresh after this one
+      try {
+        await refreshTeslaApiToken(latestToken.refreshToken);
+        console.log('Tesla token refreshed');
+      } catch (error) {
+        console.error('Error refreshing Tesla token:', error);
+      } finally {
+        void scheduleNextTeslaTokenRefresh();
+      }
     }, timeUntilRefresh);
 
     console.log(
@@ -222,15 +227,14 @@ function cronJobs() {
       for (const fn of functions) {
         try {
           await fn();
-          console.log(`Running task ${fn.name} at ${new Date()}`);
+          console.log(`Running task ${fn.name} at ${new Date().toISOString()}`);
         } catch (error) {
           console.error(`Error in ${fn.name}:`, error);
         }
       }
     });
-
-    scheduleNextTeslaTokenRefresh();
   }
+  void scheduleNextTeslaTokenRefresh();
 }
 
 export default cronJobs;

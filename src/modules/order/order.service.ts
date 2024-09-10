@@ -400,65 +400,6 @@ export default class OrderService {
     return await this.updateOrderLockStatus(orderId, false);
   };
 
-  public startVehicle = async (orderId: string, userId: string) => {
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: { vehicle: true },
-    });
-
-    if (!order) {
-      throw new ApiError(HttpStatusCode.BadRequest, 'Order not found.');
-    }
-
-    const currentDate = new Date();
-    if (currentDate < order.rentalStartDate) {
-      throw new Error('Rental period has not started yet.');
-    }
-    console.log('currentDate:', currentDate);
-    console.log('order.rentalStartDate:', order.rentalStartDate);
-    console.log('start date :', new Date(order.rentalStartDate));
-
-    const teslaToken = await prisma.teslaToken.findFirst();
-
-    if (!teslaToken) {
-      console.log('Tesla API token not found.');
-      throw new Error('Tesla API token not found.');
-    }
-    if (!teslaToken.refreshToken) {
-      console.log('Tesla API refresh token not found.');
-      throw new Error('Tesla API refresh token not found.');
-    }
-
-    if (!order.vehicle.vin) {
-      throw new Error('Vehicle VIN not found.');
-    }
-
-    // const teslaApiToken = await getTeslaApiToken(orderId);
-
-    const result = await this.startTeslaVehicle(
-      order.vehicle.vin,
-      teslaToken?.token,
-      teslaToken?.refreshToken
-    );
-
-    if (result?.response?.result) {
-      // await this.notificationService.sendNotificationToUser(
-      //   userId,
-      //   'Heel goed!',
-      //   'Je Tesla is nu vergrendeld. 🔐',
-      //   JSON.stringify({ type: 'event' })
-      // );
-    }
-
-    // Update the database indicating the vehicle is locked
-    const data = await prisma.order.update({
-      where: { id: orderId },
-      data: { isVehicleUnlocked: true },
-    });
-
-    return data;
-  };
-
   private readonly httpCallVehicleCommand = async (
     url: string,
     teslaApiToken: string
@@ -502,6 +443,10 @@ export default class OrderService {
           if (response.status === 200) {
             console.log('Tesla vehicle unlocked successfully.');
             return responseData;
+          }
+
+          if (response.status === 429) {
+            throw new Error('Too many requests. Please try again later.');
           }
 
           if (response.status === 401 && attempts === 0) {
@@ -550,6 +495,10 @@ export default class OrderService {
           if (response.status === 200) {
             console.log('Tesla vehicle locked successfully.');
             return responseData;
+          }
+
+          if (response.status === 429) {
+            throw new Error('Too many requests. Please try again later.');
           }
 
           if (response.status === 401 && attempts === 0) {

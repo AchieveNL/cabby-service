@@ -56,8 +56,16 @@ export default class OrderController extends Api {
             HttpStatusCode.InternalServerError,
             error.message
           );
+        case 'Too many requests. Please try again later.':
+          return this.send(
+            res,
+            null,
+            HttpStatusCode.TooManyRequests,
+            error.message
+          );
 
         default:
+          console.log(error);
           return this.send(
             res,
             null,
@@ -176,29 +184,6 @@ export default class OrderController extends Api {
     }
   };
 
-  public startVehicle = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const { orderId } = req.params;
-      const unlockResult = await this.orderService.startVehicle(
-        orderId,
-        req.user?.id
-      );
-      return this.send(
-        res,
-        unlockResult,
-        HttpStatusCode.Ok,
-        'Vehicle started successfully'
-      );
-    } catch (error) {
-      console.log(error);
-      next(error);
-    }
-  };
-
   public completeOrder = async (
     req: Request,
     res: Response,
@@ -233,7 +218,7 @@ export default class OrderController extends Api {
       } else {
         res.status(500).json({ error: 'Internal Server Error.' });
       }
-      next(error);
+      // return this.handleControllerError(error, res);
     }
   };
 
