@@ -12,9 +12,7 @@ const audience = 'https://fleet-api.prd.eu.vn.cloud.tesla.com';
 
 const teslaAuth: Router = Router();
 
-export const refreshTeslaApiToken = async (
-  teslaApiRefreshToken: string
-): Promise<string> => {
+export const refreshTeslaApiToken = async (teslaApiRefreshToken: string) => {
   try {
     const refreshResponse = await axios.post(
       'https://auth.tesla.com/oauth2/v3/token',
@@ -35,8 +33,6 @@ export const refreshTeslaApiToken = async (
         refreshToken: newRefreshToken,
       },
     });
-
-    console.log('Tesla API token refreshed successfully.');
 
     return newAccessToken;
   } catch (refreshError) {

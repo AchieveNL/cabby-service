@@ -12,6 +12,7 @@ import {
   orderWillEndQuery,
   orderWillStartQuery,
 } from '@/modules/notifications/notifications.queries';
+import { refreshTeslaApiToken } from '../tesla-auth';
 
 const query = Prisma.sql`SELECT
     o.id,
@@ -166,9 +167,49 @@ async function holidays() {
   console.log('holidays');
 }
 
+let teslaTokenRefreshTimeout: NodeJS.Timeout | null = null;
+
+async function scheduleNextTeslaTokenRefresh() {
+  try {
+    const latestToken = await prisma.teslaToken.findFirst({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!latestToken) {
+      console.log('No Tesla token found in the database');
+      return;
+    }
+
+    const now = Date.now();
+    const tokenCreationTime = latestToken.createdAt.getTime();
+    const tokenAge = now - tokenCreationTime;
+    const timeUntilExpiration = 8 * 60 * 60 * 1000 - tokenAge;
+
+    // Schedule refresh 30 minutes before expiration
+    const timeUntilRefresh = Math.max(0, timeUntilExpiration - 30 * 60 * 1000);
+
+    if (teslaTokenRefreshTimeout) {
+      clearTimeout(teslaTokenRefreshTimeout);
+    }
+
+    teslaTokenRefreshTimeout = setTimeout(async () => {
+      console.log('Refreshing Tesla token...');
+      await refreshTeslaApiToken(latestToken.refreshToken);
+      scheduleNextTeslaTokenRefresh(); // Schedule next refresh after this one
+    }, timeUntilRefresh);
+
+    console.log(
+      `Next Tesla token refresh scheduled in ${
+        timeUntilRefresh / 60000
+      } minutes`
+    );
+  } catch (error) {
+    console.error('Error in scheduleNextTeslaTokenRefresh:', error);
+  }
+}
 function cronJobs() {
   if (!isDevelopment) {
-    return cron.schedule('* * * * *', async () => {
+    cron.schedule('* * * * *', async () => {
       const functions = [
         updateOverdueOrders,
         confirmOrderAutomatically,
@@ -178,15 +219,17 @@ function cronJobs() {
         holidays,
       ];
 
-      functions.forEach(async (fn) => {
+      for (const fn of functions) {
         try {
           await fn();
-          console.log('running a task every minute ', new Date());
+          console.log(`Running task ${fn.name} at ${new Date()}`);
         } catch (error) {
-          console.log(error);
+          console.error(`Error in ${fn.name}:`, error);
         }
-      });
+      }
     });
+
+    scheduleNextTeslaTokenRefresh();
   }
 }
 
