@@ -304,7 +304,7 @@ export default class OrderService {
       });
 
       if (wakeUpResponse.status === 429) {
-        const retryAfter = wakeUpResponse.headers.get('Retry-After');
+        const retryAfter = wakeUpResponse.headers.get('Retry-After')!;
         throw new Error(
           `Too many requests. Please try again later.|${retryAfter}`
         );

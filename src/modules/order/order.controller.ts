@@ -1,5 +1,4 @@
 import { type Request, type Response, type NextFunction } from 'express';
-import * as Sentry from '@sentry/node';
 import { HttpStatusCode } from 'axios';
 import { type user } from '@prisma/client';
 import OrderService from './order.service';
