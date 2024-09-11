@@ -244,7 +244,7 @@ async function scheduleNextTeslaTokenRefresh() {
 }
 
 function cronJobs() {
-  if (isDevelopment) {
+  if (!isDevelopment) {
     cron.schedule('* * * * *', async () => {
       const functions = [
         updateOverdueOrders,
