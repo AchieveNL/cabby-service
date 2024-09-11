@@ -1083,6 +1083,7 @@ export default class OrderService {
       select: { id: true, rentalEndDate: true, rentalStartDate: true },
       where: {
         vehicleId,
+        status: OrderStatus.CONFIRMED,
       },
     });
 
