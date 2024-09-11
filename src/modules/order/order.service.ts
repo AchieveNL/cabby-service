@@ -248,9 +248,7 @@ export default class OrderService {
     const rentalStartDate = new Date(order.rentalStartDate);
 
     if (currentDate < rentalStartDate || currentDate > rentalEndDate) {
-      throw new Error(
-        `Action not allowed outside rental period. Current date: ${currentDate.toISOString()}, Rental start date: ${rentalStartDate.toISOString()}, Rental end date: ${rentalEndDate.toISOString()}`
-      );
+      throw new Error('Vehicle can only be unlocked during the rental period.');
     }
 
     if (!order.vehicle.vin) {

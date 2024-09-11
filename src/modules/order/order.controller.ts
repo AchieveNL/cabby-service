@@ -13,11 +13,13 @@ import {
 import { OrderStatus } from './types';
 import Api from '@/lib/api';
 import prisma from '@/lib/prisma';
+import * as Sentry from '@sentry/node';
 
 export default class OrderController extends Api {
   readonly orderService = new OrderService();
 
   private readonly handleControllerError = (error: Error, res: Response) => {
+    Sentry.captureException(error);
     const [errorMessage, retryAfter] = error.message.split('|');
 
     switch (errorMessage) {
@@ -64,6 +66,8 @@ export default class OrderController extends Api {
           HttpStatusCode.TooManyRequests,
           errorMessage
         );
+      case 'Vehicle can only be unlocked during the rental period.':
+        return this.send(res, null, HttpStatusCode.BadRequest, error.message);
 
       default:
         console.log(error);
