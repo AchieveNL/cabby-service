@@ -247,6 +247,8 @@ async function scheduleNextTeslaTokenRefresh() {
 
 function cronJobs() {
   if (!isDevelopment) {
+    void scheduleNextTeslaTokenRefresh();
+
     cron.schedule('* * * * *', async () => {
       const functions = [
         updateOverdueOrders,
@@ -266,7 +268,6 @@ function cronJobs() {
         }
       }
     });
-    void scheduleNextTeslaTokenRefresh();
   }
 }
 
