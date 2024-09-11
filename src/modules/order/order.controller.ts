@@ -1,6 +1,7 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import { HttpStatusCode } from 'axios';
 import { type user } from '@prisma/client';
+import * as Sentry from '@sentry/node';
 import OrderService from './order.service';
 import {
   type RejectOrderDto,
@@ -13,7 +14,6 @@ import {
 import { OrderStatus } from './types';
 import Api from '@/lib/api';
 import prisma from '@/lib/prisma';
-import * as Sentry from '@sentry/node';
 
 export default class OrderController extends Api {
   readonly orderService = new OrderService();
