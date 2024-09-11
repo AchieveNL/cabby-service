@@ -218,7 +218,6 @@ async function scheduleNextTeslaTokenRefresh() {
         await refreshTeslaApiToken(latestToken.refreshToken);
         console.log('Tesla token refreshed');
         await sendToDiscordWebhook({
-          message: 'Tesla token refreshed',
           scheduledTime: new Date().toISOString(),
         });
       } catch (error) {
@@ -231,12 +230,15 @@ async function scheduleNextTeslaTokenRefresh() {
     console.log(
       `Next Tesla token refresh scheduled in ${
         timeUntilRefresh / 60000
-      } minutes`
+      } minutes for ${latestToken.id}`
     );
 
     await sendToDiscordWebhook({
-      message: 'Next Tesla token refresh scheduled',
-      scheduledTime: new Date(Date.now() + timeUntilRefresh).toLocaleString(),
+      message: `Next Tesla token refresh scheduled for ${latestToken.id}`,
+      scheduledTime: new Date(Date.now() + timeUntilRefresh).toLocaleString(
+        'en-US',
+        { timeZone: 'Europe/London' }
+      ),
     });
   } catch (error) {
     console.error('Error in scheduleNextTeslaTokenRefresh:', error);
