@@ -1,5 +1,6 @@
 import { Prisma, type order } from '@prisma/client';
 import cron from 'node-cron';
+import fetch from 'node-fetch';
 import { refreshTeslaApiToken } from '../tesla-auth';
 import { mailService } from './mail';
 import { fromEmail, isDevelopment, toEmail } from './constants';
@@ -169,6 +170,27 @@ async function holidays() {
 
 let teslaTokenRefreshTimeout: NodeJS.Timeout | null = null;
 
+async function sendToDiscordWebhook(data: any) {
+  try {
+    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+    if (!webhookUrl) {
+      console.error('DISCORD_WEBHOOK_URL is not set');
+      return;
+    }
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content: JSON.stringify(data),
+      }),
+    });
+  } catch (error) {
+    console.error('Error sending to Discord webhook:', error);
+  }
+}
+
 async function scheduleNextTeslaTokenRefresh() {
   try {
     const latestToken = await prisma.teslaToken.findFirst({
@@ -185,7 +207,6 @@ async function scheduleNextTeslaTokenRefresh() {
     const tokenAge = now - tokenCreationTime;
     const timeUntilExpiration = 8 * 60 * 60 * 1000 - tokenAge;
 
-    // Schedule refresh 30 minutes before expiration
     const timeUntilRefresh = Math.max(0, timeUntilExpiration - 30 * 60 * 1000);
 
     if (teslaTokenRefreshTimeout) {
@@ -196,6 +217,10 @@ async function scheduleNextTeslaTokenRefresh() {
       try {
         await refreshTeslaApiToken(latestToken.refreshToken);
         console.log('Tesla token refreshed');
+        await sendToDiscordWebhook({
+          message: 'Tesla token refreshed',
+          scheduledTime: new Date().toISOString(),
+        });
       } catch (error) {
         console.error('Error refreshing Tesla token:', error);
       } finally {
@@ -208,12 +233,18 @@ async function scheduleNextTeslaTokenRefresh() {
         timeUntilRefresh / 60000
       } minutes`
     );
+
+    await sendToDiscordWebhook({
+      message: 'Next Tesla token refresh scheduled',
+      scheduledTime: new Date(Date.now() + timeUntilRefresh).toLocaleString(),
+    });
   } catch (error) {
     console.error('Error in scheduleNextTeslaTokenRefresh:', error);
   }
 }
+
 function cronJobs() {
-  if (!isDevelopment) {
+  if (isDevelopment) {
     cron.schedule('* * * * *', async () => {
       const functions = [
         updateOverdueOrders,

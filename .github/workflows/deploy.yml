@@ -90,6 +90,7 @@ jobs:
             TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
             TESLA_CLIENT_SECRET=${{ secrets.TESLA_CLIENT_SECRET }}
             SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+            DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}
 
   build-and-deploy-production:
     environment:
@@ -149,3 +150,4 @@ jobs:
             TESLA_CLIENT_SECRET=${{ secrets.TESLA_CLIENT_SECRET }}
             SENTRY_DSN=${{ secrets.SENTRY_DSN }}
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+            DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}
