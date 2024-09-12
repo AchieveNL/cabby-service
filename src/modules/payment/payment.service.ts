@@ -291,19 +291,20 @@ export default class PaymentService {
         const userProfile = await prisma.userProfile.update({
           where: { userId },
           data: { status: UserStatus.PENDING },
-        include: { user: { select: { email: true } } },
-      });
-      const email = userProfile.user.email;
-      const fullName = userProfile.fullName;
-      await this.adminMailService.newRegistrationMailSender(email, fullName);
-      await this.userMailService.newRegistrationMailSender(
-        email,
-        fullName,
-        invoiceUrl as string
-      );
-    }
+          include: { user: { select: { email: true } } },
+        });
+        const email = userProfile.user.email;
+        const fullName = userProfile.fullName;
+        await this.adminMailService.newRegistrationMailSender(email, fullName);
+        await this.userMailService.newRegistrationMailSender(
+          email,
+          fullName,
+          invoiceUrl as string
+        );
+      }
 
-    return true;
+      return true;
+    }
   };
 
   private readonly generateOrderPaymentParameters = (
