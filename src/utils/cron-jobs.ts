@@ -253,7 +253,7 @@ async function scheduleNextTeslaTokenRefresh() {
 }
 
 function cronJobs() {
-  if (isDevelopment) {
+  if (!isDevelopment) {
     void scheduleNextTeslaTokenRefresh();
 
     cron.schedule('* * * * *', async () => {
