@@ -169,6 +169,7 @@ async function holidays() {
 }
 
 let teslaTokenRefreshTimeout: NodeJS.Timeout | null = null;
+let lastScheduledRefreshTime: number | null = null;
 
 async function sendToDiscordWebhook(data: any) {
   try {
@@ -209,44 +210,50 @@ async function scheduleNextTeslaTokenRefresh() {
 
     const timeUntilRefresh = Math.max(0, timeUntilExpiration - 30 * 60 * 1000);
 
-    if (teslaTokenRefreshTimeout) {
-      clearTimeout(teslaTokenRefreshTimeout);
-    }
-
-    teslaTokenRefreshTimeout = setTimeout(async () => {
-      try {
-        await refreshTeslaApiToken(latestToken.refreshToken);
-        console.log('Tesla token refreshed');
-        await sendToDiscordWebhook({
-          scheduledTime: new Date().toISOString(),
-        });
-      } catch (error) {
-        console.error('Error refreshing Tesla token:', error);
-      } finally {
-        void scheduleNextTeslaTokenRefresh();
+    if (lastScheduledRefreshTime === null || Math.abs(timeUntilRefresh - lastScheduledRefreshTime) > 5 * 60 * 1000) {
+      if (teslaTokenRefreshTimeout) {
+        clearTimeout(teslaTokenRefreshTimeout);
       }
-    }, timeUntilRefresh);
 
-    console.log(
-      `Next Tesla token refresh scheduled in ${
-        timeUntilRefresh / 60000
-      } minutes for ${latestToken.id}`
-    );
+      teslaTokenRefreshTimeout = setTimeout(async () => {
+        try {
+          await refreshTeslaApiToken(latestToken.refreshToken);
+          console.log('Tesla token refreshed');
+          await sendToDiscordWebhook({
+            message: 'Tesla token refreshed',
+            scheduledTime: new Date().toISOString(),
+          });
+        } catch (error) {
+          console.error('Error refreshing Tesla token:', error);
+        } finally {
+          lastScheduledRefreshTime = null; // Reset to allow rescheduling
+          void scheduleNextTeslaTokenRefresh();
+        }
+      }, timeUntilRefresh);
 
-    await sendToDiscordWebhook({
-      message: `Next Tesla token refresh scheduled for ${latestToken.id}`,
-      scheduledTime: new Date(Date.now() + timeUntilRefresh).toLocaleString(
-        'en-US',
-        { timeZone: 'Europe/London' }
-      ),
-    });
+      lastScheduledRefreshTime = timeUntilRefresh;
+
+      console.log(
+        `Next Tesla token refresh scheduled in ${
+          timeUntilRefresh / 60000
+        } minutes for ${latestToken.id}`
+      );
+
+      await sendToDiscordWebhook({
+        message: `Next Tesla token refresh scheduled for ${latestToken.id}`,
+        scheduledTime: new Date(Date.now() + timeUntilRefresh).toLocaleString(
+          'en-US',
+          { timeZone: 'Europe/London' }
+        ),
+      });
+    }
   } catch (error) {
     console.error('Error in scheduleNextTeslaTokenRefresh:', error);
   }
 }
 
 function cronJobs() {
-  if (!isDevelopment) {
+  if (isDevelopment) {
     void scheduleNextTeslaTokenRefresh();
 
     cron.schedule('* * * * *', async () => {
