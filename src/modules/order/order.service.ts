@@ -242,13 +242,13 @@ export default class OrderService {
       throw new Error('User not authorized for this order.');
     }
 
-    const rentalEndDate = new Date(order.rentalEndDate);
+    // const rentalEndDate = new Date(order.rentalEndDate);
 
     const currentDate = new Date();
     const rentalStartDate = new Date(order.rentalStartDate);
 
-    if (currentDate < rentalStartDate || currentDate > rentalEndDate) {
-      throw new Error('Vehicle can only be unlocked during the rental period.');
+    if (currentDate < rentalStartDate) {
+      throw new Error('Rental has not started yet.');
     }
 
     if (!order.vehicle.vin) {
@@ -371,32 +371,32 @@ export default class OrderService {
     const order = await this.validateOrderAndRental(orderId, userId);
     const teslaToken = await this.getTeslaToken();
 
-    if (process.env.NODE_ENV === 'production') {
-      if (!order.vehicle.vin) {
-        throw new Error('Vehicle VIN not found.');
-      }
-      if (!teslaToken.refreshToken) {
-        throw new Error('Refresh token not found.');
-      }
-
-      await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
-      const result = await this.lockTeslaVehicle(
-        order.vehicle.vin,
-        teslaToken.token,
-        teslaToken.refreshToken
-      );
-
-      if (!result?.response?.result) {
-        throw new Error('Error locking Tesla vehicle.');
-      }
-
-      // await this.notificationService.sendNotificationToUser(
-      //   userId,
-      //   'Heel goed!',
-      //   'Je Tesla is nu vergrendeld. 🔐',
-      //   JSON.stringify({ type: 'event' })
-      // );
+    // if (process.env.NODE_ENV === 'production') {
+    if (!order.vehicle.vin) {
+      throw new Error('Vehicle VIN not found.');
     }
+    if (!teslaToken.refreshToken) {
+      throw new Error('Refresh token not found.');
+    }
+
+    await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
+    const result = await this.lockTeslaVehicle(
+      order.vehicle.vin,
+      teslaToken.token,
+      teslaToken.refreshToken
+    );
+
+    if (!result?.response?.result) {
+      throw new Error('Error locking Tesla vehicle.');
+    }
+
+    // await this.notificationService.sendNotificationToUser(
+    //   userId,
+    //   'Heel goed!',
+    //   'Je Tesla is nu vergrendeld. 🔐',
+    //   JSON.stringify({ type: 'event' })
+    // );
+    // }
 
     return await this.updateOrderLockStatus(orderId, false);
   };
