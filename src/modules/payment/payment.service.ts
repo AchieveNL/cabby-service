@@ -258,10 +258,23 @@ export default class PaymentService {
   public updateRegistrationPaymentStatus = async (paymentId: string) => {
     const payment = await this.mollie.payments.get(paymentId);
 
-    const updatedPayment = await prisma.payment.update({
+    const updatedPayment = await prisma.payment.findFirst({
       where: { registrationOrderId: payment.metadata.registrationOrderId },
-      data: { status: payment.status.toUpperCase() as PaymentStatus },
     });
+
+    if (updatedPayment) {
+      await prisma.payment.update({
+        where: { id: updatedPayment.id },
+        data: { status: payment.status.toUpperCase() as PaymentStatus },
+      });
+    } else {
+      console.error(
+        `Payment not found for registrationOrderId: ${payment.metadata.registrationOrderId}`
+      );
+      throw new Error(
+        `Payment not found for registrationOrderId: ${payment.metadata.registrationOrderId}`
+      );
+    }
 
     const { invoiceUrl } = await prisma.registrationOrder.update({
       where: {
@@ -272,11 +285,12 @@ export default class PaymentService {
       },
     });
 
-    if (updatedPayment.status === PaymentStatus.PAID) {
+    if (updatedPayment?.status === PaymentStatus.PAID) {
       const userId = updatedPayment.userId;
-      const userProfile = await prisma.userProfile.update({
-        where: { userId },
-        data: { status: UserStatus.PENDING },
+      if (userId) {
+        const userProfile = await prisma.userProfile.update({
+          where: { userId },
+          data: { status: UserStatus.PENDING },
         include: { user: { select: { email: true } } },
       });
       const email = userProfile.user.email;
