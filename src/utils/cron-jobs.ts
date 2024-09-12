@@ -210,7 +210,10 @@ async function scheduleNextTeslaTokenRefresh() {
 
     const timeUntilRefresh = Math.max(0, timeUntilExpiration - 30 * 60 * 1000);
 
-    if (lastScheduledRefreshTime === null || Math.abs(timeUntilRefresh - lastScheduledRefreshTime) > 5 * 60 * 1000) {
+    if (
+      lastScheduledRefreshTime === null ||
+      Math.abs(timeUntilRefresh - lastScheduledRefreshTime) > 5 * 60 * 1000
+    ) {
       if (teslaTokenRefreshTimeout) {
         clearTimeout(teslaTokenRefreshTimeout);
       }
