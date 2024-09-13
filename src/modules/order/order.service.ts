@@ -301,6 +301,20 @@ export default class OrderService {
         headers: headers,
       });
 
+      if (wakeUpResponse.status === 401) {
+        console.log('Tesla API token expired. Refreshing token...');
+        const teslaToken = await this.getTeslaToken();
+        const refreshedToken = await refreshTeslaApiToken(
+          teslaToken.refreshToken
+        );
+        if (refreshedToken) {
+          headers.Authorization = `Bearer ${refreshedToken}`;
+          continue; // Retry the request with the new token
+        } else {
+          throw new Error('Failed to refresh Tesla API token.');
+        }
+      }
+
       if (wakeUpResponse.status === 429) {
         const retryAfter = wakeUpResponse.headers.get('Retry-After')!;
         throw new Error(
