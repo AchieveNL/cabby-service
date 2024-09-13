@@ -258,8 +258,10 @@ export default class PaymentService {
   public updateRegistrationPaymentStatus = async (paymentId: string) => {
     const payment = await this.mollie.payments.get(paymentId);
 
+    const registrationOrderId = payment.metadata?.registrationOrderId as string;
+
     const updatedPayment = await prisma.payment.findFirst({
-      where: { registrationOrderId: payment.metadata.registrationOrderId },
+      where: { registrationOrderId },
     });
 
     if (updatedPayment) {
@@ -269,16 +271,16 @@ export default class PaymentService {
       });
     } else {
       console.error(
-        `Payment not found for registrationOrderId: ${payment.metadata.registrationOrderId}`
+        `Payment not found for registrationOrderId: ${registrationOrderId}`
       );
       throw new Error(
-        `Payment not found for registrationOrderId: ${payment.metadata.registrationOrderId}`
+        `Payment not found for registrationOrderId: ${registrationOrderId}`
       );
     }
 
     const { invoiceUrl } = await prisma.registrationOrder.update({
       where: {
-        id: payment.metadata.registrationOrderId,
+        id: registrationOrderId,
       },
       data: {
         status: payment.status.toUpperCase() as PaymentStatus,
