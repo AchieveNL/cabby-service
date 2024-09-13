@@ -1,6 +1,6 @@
+import { ReportStatus } from '@prisma/client';
 import AdminMailService from '../notifications/admin-mails.service';
 import UserMailService from '../notifications/user-mails.service';
-import { ReportStatus } from './types';
 import prisma from '@/lib/prisma';
 
 export default class DamageReportsService {
