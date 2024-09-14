@@ -223,7 +223,7 @@ async function scheduleNextTeslaTokenRefresh() {
           await refreshTeslaApiToken(latestToken.refreshToken);
           console.log('Tesla token refreshed');
           await sendToDiscordWebhook({
-            message: 'Tesla token refreshed',
+            message: `Tesla token refreshed - ${process.pid}`,
             scheduledTime: new Date().toISOString(),
           });
         } catch (error) {
@@ -243,7 +243,7 @@ async function scheduleNextTeslaTokenRefresh() {
       );
 
       await sendToDiscordWebhook({
-        message: `Next Tesla token refresh scheduled for ${latestToken.id}`,
+        message: `Next Tesla token refresh scheduled for ${latestToken.id} - ${process.pid}`,
         scheduledTime: new Date(Date.now() + timeUntilRefresh).toLocaleString(
           'en-US',
           { timeZone: 'Europe/London' }
@@ -281,7 +281,7 @@ function cronJobs() {
 
     cron.schedule('*/30 * * * *', async () => {
       await sendToDiscordWebhook({
-        message: 'Scheduled environment check',
+        message: `Scheduled environment check - ${process.pid}`,
         environment: process.env.NODE_ENV || 'development',
       });
     });
