@@ -278,6 +278,13 @@ function cronJobs() {
         }
       }
     });
+
+    cron.schedule('*/30 * * * *', async () => {
+      await sendToDiscordWebhook({
+        message: 'Scheduled environment check',
+        environment: process.env.NODE_ENV || 'development',
+      });
+    });
   }
 }
 
