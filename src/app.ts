@@ -36,11 +36,15 @@ class App {
 
   constructor() {
     this.express = express();
-    this.initializeSentry();
+    if (process.env.NODE_ENV !== 'development') {
+      this.initializeSentry();
+    }
     this.setMiddlewares();
     this.disableSettings();
     this.setRoutes();
-    this.setSentryErrorHandler();
+    if (process.env.NODE_ENV !== 'development') {
+      this.setSentryErrorHandler();
+    }
     this.setErrorHandler();
     this.initializeDocs();
   }

