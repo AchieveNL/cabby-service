@@ -12,11 +12,19 @@ const audience = 'https://fleet-api.prd.eu.vn.cloud.tesla.com';
 
 const teslaAuth: Router = Router();
 
+interface TeslaTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  state: string;
+  token_type: string;
+}
+
 export const refreshTeslaApiToken = async (
   teslaApiRefreshToken: string
 ): Promise<string> => {
   try {
-    const refreshResponse = await axios.post(
+    const refreshResponse = await axios.post<TeslaTokenResponse>(
       'https://auth.tesla.com/oauth2/v3/token',
       {
         grant_type: 'refresh_token',
@@ -27,15 +35,18 @@ export const refreshTeslaApiToken = async (
       }
     );
 
-    const newAccessToken: string = refreshResponse.data.access_token;
-    const newRefreshToken: string = refreshResponse.data.refresh_token;
-    const expiresAt: number = refreshResponse.data.expires_at;
+    const {
+      access_token: newAccessToken,
+      refresh_token: newRefreshToken,
+      expires_in: expiresIn,
+    } = refreshResponse.data;
 
+    const expiresAt = new Date(Date.now() + expiresIn * 1000);
     await prisma.teslaToken.create({
       data: {
         token: newAccessToken,
         refreshToken: newRefreshToken,
-        expiresAt: new Date(expiresAt * 1000),
+        expiresAt,
       },
     });
 
@@ -49,7 +60,7 @@ export const refreshTeslaApiToken = async (
 
 teslaAuth.get('/partner/token', async (req, res) => {
   try {
-    const tokenResponse = await axios.post(
+    const tokenResponse = await axios.post<TeslaTokenResponse>(
       'https://auth.tesla.com/oauth2/v3/token',
       {
         grant_type: 'client_credentials',
@@ -111,7 +122,7 @@ teslaAuth.get('/auth/callback', async (req, res) => {
   }
 
   try {
-    const tokenResponse = await axios.post(
+    const tokenResponse = await axios.post<TeslaTokenResponse>(
       'https://auth.tesla.com/oauth2/v3/token',
       {
         grant_type: 'authorization_code',
@@ -126,14 +137,16 @@ teslaAuth.get('/auth/callback', async (req, res) => {
     const {
       access_token: teslaApiToken,
       refresh_token: teslaRefreshToken,
-      expires_at: expiresAt,
+      expires_in: expiresIn,
     } = tokenResponse.data;
+
+    const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
     await prisma.teslaToken.create({
       data: {
         token: teslaApiToken,
         refreshToken: teslaRefreshToken,
-        expiresAt: new Date(expiresAt * 1000),
+        expiresAt,
       },
     });
 
