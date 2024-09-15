@@ -336,7 +336,9 @@ export default class OrderService {
         return wakeUpData;
       }
 
-      console.log(`Vehicle state: ${wakeUpData?.response?.state ?? 'unknown'}`);
+      console.log(
+        `Vehicle state: ${String(wakeUpData?.response?.state) ?? 'unknown'}`
+      );
 
       if (attempt < maxAttempts) {
         console.log(
