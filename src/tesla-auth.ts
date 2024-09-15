@@ -119,7 +119,7 @@ teslaAuth.get('/auth/callback', async (req, res) => {
         client_secret: TESLA_CLIENT_SECRET,
         code: authorizationCode,
         redirect_uri: REDIRECT_URI,
-        audience: 'https://fleet-api.prd.eu.vn.cloud.tesla.com',
+        audience,
       }
     );
 
