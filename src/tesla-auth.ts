@@ -20,7 +20,7 @@ async function sendToDiscordWebhook(data: any) {
       console.error('DISCORD_WEBHOOK_URL is not set');
       return;
     }
-    await fetch(webhookUrl, {
+    const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,8 +29,13 @@ async function sendToDiscordWebhook(data: any) {
         content: JSON.stringify(data),
       }),
     });
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status code ${response.status}`);
+    }
   } catch (error) {
     console.error('Error sending to Discord webhook:', error);
+    throw error;
   }
 }
 
