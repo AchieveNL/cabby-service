@@ -13,32 +13,6 @@ const audience = 'https://fleet-api.prd.eu.vn.cloud.tesla.com';
 
 const teslaAuth: Router = Router();
 
-async function sendToDiscordWebhook(data: any) {
-  try {
-    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-    if (!webhookUrl) {
-      console.error('DISCORD_WEBHOOK_URL is not set');
-      return;
-    }
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        content: JSON.stringify(data),
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Request failed with status code ${response.status}`);
-    }
-  } catch (error) {
-    console.error('Error sending to Discord webhook:', error);
-    throw error;
-  }
-}
-
 export const refreshTeslaApiToken = async (
   teslaApiRefreshToken: string
 ): Promise<string> => {
@@ -50,6 +24,7 @@ export const refreshTeslaApiToken = async (
         client_id: TESLA_CLIENT_ID,
         client_secret: TESLA_CLIENT_SECRET,
         refresh_token: teslaApiRefreshToken,
+        scope: 'openid vehicle_cmds offline_access vehicle_device_data',
       }
     );
 
@@ -150,8 +125,6 @@ teslaAuth.get('/auth/callback', async (req, res) => {
       }
     );
 
-    await sendToDiscordWebhook(tokenResponse.data);
-
     const {
       access_token: teslaApiToken,
       refresh_token: teslaRefreshToken,
@@ -166,7 +139,10 @@ teslaAuth.get('/auth/callback', async (req, res) => {
       },
     });
 
-    res.send('Tesla API token obtained and stored successfully.');
+    res.json({
+      message: 'Tesla API token obtained and stored successfully.',
+      tokenData: tokenResponse.data,
+    });
   } catch (error) {
     console.error('Error during Tesla token exchange:', error);
     Sentry.captureException(error);
