@@ -12,39 +12,47 @@ const audience = 'https://fleet-api.prd.eu.vn.cloud.tesla.com';
 
 const teslaAuth: Router = Router();
 
+interface TeslaTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  state: string;
+  token_type: string;
+}
+
 export const refreshTeslaApiToken = async (
   teslaApiRefreshToken: string
 ): Promise<string> => {
   try {
-    const refreshResponse = await axios.post(
+    const refreshResponse = await axios.post<TeslaTokenResponse>(
       'https://auth.tesla.com/oauth2/v3/token',
       {
         grant_type: 'refresh_token',
         client_id: TESLA_CLIENT_ID,
         client_secret: TESLA_CLIENT_SECRET,
         refresh_token: teslaApiRefreshToken,
+        scope: 'openid vehicle_cmds offline_access vehicle_device_data',
       }
     );
 
-    const newAccessToken: string = refreshResponse.data.access_token;
-    const newRefreshToken: string = refreshResponse.data.refresh_token;
+    const {
+      access_token: newAccessToken,
+      refresh_token: newRefreshToken,
+      expires_in: expiresIn,
+    } = refreshResponse.data;
 
+    const expiresAt = new Date(Date.now() + expiresIn * 1000);
     await prisma.teslaToken.create({
       data: {
         token: newAccessToken,
         refreshToken: newRefreshToken,
+        expiresAt,
       },
     });
 
     return newAccessToken;
   } catch (refreshError) {
-    if (refreshError.response?.status === 401) {
-      throw new Error('Tesla API token refresh failed: invalid refresh token');
-    }
-    console.error(
-      'Error refreshing Tesla API token:',
-      refreshError.response?.data || refreshError
-    );
+    console.error('Error refreshing Tesla API token:', refreshError);
     Sentry.captureException(refreshError);
     throw new Error('Failed to refresh Tesla API token');
   }
@@ -52,7 +60,7 @@ export const refreshTeslaApiToken = async (
 
 teslaAuth.get('/partner/token', async (req, res) => {
   try {
-    const tokenResponse = await axios.post(
+    const tokenResponse = await axios.post<TeslaTokenResponse>(
       'https://auth.tesla.com/oauth2/v3/token',
       {
         grant_type: 'client_credentials',
@@ -114,7 +122,7 @@ teslaAuth.get('/auth/callback', async (req, res) => {
   }
 
   try {
-    const tokenResponse = await axios.post(
+    const tokenResponse = await axios.post<TeslaTokenResponse>(
       'https://auth.tesla.com/oauth2/v3/token',
       {
         grant_type: 'authorization_code',
@@ -122,24 +130,29 @@ teslaAuth.get('/auth/callback', async (req, res) => {
         client_secret: TESLA_CLIENT_SECRET,
         code: authorizationCode,
         redirect_uri: REDIRECT_URI,
-        scope: 'openid vehicle_cmds offline_access vehicle_device_data',
-        audience: 'https://fleet-api.prd.eu.vn.cloud.tesla.com',
+        audience,
       }
     );
 
-    const { access_token: teslaApiToken, refresh_token: teslaRefreshToken } =
-      tokenResponse.data;
+    const {
+      access_token: teslaApiToken,
+      refresh_token: teslaRefreshToken,
+      expires_in: expiresIn,
+    } = tokenResponse.data;
 
-    console.log('tokenResponse.data', tokenResponse.data);
+    const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
     await prisma.teslaToken.create({
       data: {
         token: teslaApiToken,
         refreshToken: teslaRefreshToken,
+        expiresAt,
       },
     });
 
-    res.send('Tesla API token obtained and stored successfully.');
+    res.send({
+      message: 'Tesla API token obtained and stored successfully.',
+    });
   } catch (error) {
     console.error('Error during Tesla token exchange:', error);
     Sentry.captureException(error);

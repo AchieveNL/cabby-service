@@ -374,10 +374,11 @@ model userTokens {
 }
 
 model TeslaToken {
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   token        String
   refreshToken String
-  createdAt    DateTime @default(now())
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
 }
 
 model Refunds {

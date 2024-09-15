@@ -9,7 +9,7 @@ import { type Decimal } from '@prisma/client/runtime/library';
 import fetch, { Headers } from 'node-fetch';
 import { HttpStatusCode } from 'axios';
 import * as XLSX from 'xlsx';
-import * as Sentry from '@sentry/node';
+// import * as Sentry from '@sentry/node';
 import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
@@ -258,7 +258,6 @@ export default class OrderService {
     return order;
   }
 
-  // Get the Tesla API tokens from the database (token and refresh token)
   private async getTeslaToken() {
     const teslaToken = await prisma.teslaToken.findFirst({
       orderBy: {
@@ -283,7 +282,7 @@ export default class OrderService {
   private async wakeUpVehicle(
     vin: string,
     token: string,
-    maxAttempts = 5,
+    maxAttempts = 15,
     delayMs = 2000
   ) {
     const wakeUpUrl = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vin}/wake_up`;
@@ -309,7 +308,7 @@ export default class OrderService {
         );
         if (refreshedToken) {
           headers.Authorization = `Bearer ${refreshedToken}`;
-          continue; // Retry the request with the new token
+          continue;
         } else {
           throw new Error('Failed to refresh Tesla API token.');
         }
@@ -333,8 +332,13 @@ export default class OrderService {
       const wakeUpData = await wakeUpResponse.json();
 
       if (wakeUpData?.response?.state === 'online') {
+        console.log('Vehicle is now online');
         return wakeUpData;
       }
+
+      console.log(
+        `Vehicle state: ${String(wakeUpData?.response?.state) ?? 'unknown'}`
+      );
 
       if (attempt < maxAttempts) {
         console.log(
@@ -361,9 +365,9 @@ export default class OrderService {
 
       await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
       const result = await this.unlockTeslaVehicle(
-        order.vehicle.vin,
-        teslaToken.token,
-        teslaToken.refreshToken
+        order.vehicle.vin
+        // teslaToken.token,
+        // teslaToken.refreshToken
       );
 
       if (!result?.response?.result) {
@@ -395,9 +399,9 @@ export default class OrderService {
 
     await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
     const result = await this.lockTeslaVehicle(
-      order.vehicle.vin,
-      teslaToken.token,
-      teslaToken.refreshToken
+      order.vehicle.vin
+      // teslaToken.token,
+      // teslaToken.refreshToken
     );
 
     if (!result?.response?.result) {
@@ -434,105 +438,67 @@ export default class OrderService {
     return response;
   };
 
-  private readonly unlockTeslaVehicle = async (
-    vin: string,
-    teslaApiToken: string,
-    teslaApiRefreshToken: string
-  ): Promise<any> => {
+  private async getValidTeslaToken(): Promise<string> {
+    const latestToken = await prisma.teslaToken.findFirst({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!latestToken) {
+      throw new Error('No Tesla token found in the database');
+    }
+
+    const now = new Date();
+    if (latestToken.expiresAt! > now) {
+      return latestToken.token;
+    }
+
+    const newToken = await refreshTeslaApiToken(latestToken.refreshToken);
+    return newToken;
+  }
+
+  private readonly unlockTeslaVehicle = async (vin: string): Promise<any> => {
     console.log('Unlocking Tesla vehicle:', vin);
     const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vin}/command/door_unlock`;
 
     try {
-      let currentToken = teslaApiToken;
+      const token = await this.getValidTeslaToken();
+      const response = await this.httpCallVehicleCommand(url, token);
+      const responseData = await response.json();
 
-      for (let attempts = 0; attempts < 2; attempts++) {
-        try {
-          const response = await this.httpCallVehicleCommand(url, currentToken);
-          const responseData = await response.json();
-          console.log(
-            'Unlocking Tesla vehicle response:',
-            response.status,
-            responseData
-          );
-
-          if (response.status === 200) {
-            console.log('Tesla vehicle unlocked successfully.');
-            return responseData;
-          }
-
-          if (response.status === 429) {
-            throw new Error('Too many requests. Please try again later.');
-          }
-
-          if (response.status === 401 && attempts === 0) {
-            console.log('Tesla API token expired. Refreshing token...');
-            const newAccessToken =
-              await refreshTeslaApiToken(teslaApiRefreshToken);
-            currentToken = newAccessToken;
-            continue;
-          }
-
-          throw new Error(`Unexpected response status: ${response.status}`);
-        } catch (error) {
-          if (attempts === 1) throw error;
-          console.error('Error in unlock attempt, will retry:', error);
-        }
+      if (response.status === 200) {
+        console.log('Tesla vehicle unlocked successfully.');
+        return responseData;
       }
-      throw new Error('Failed to unlock Tesla vehicle after retries');
+
+      if (response.status === 429) {
+        throw new Error('Too many requests. Please try again later.');
+      }
+
+      throw new Error(`Unexpected response status: ${response.status}`);
     } catch (error) {
       console.error('Error unlocking Tesla vehicle:', error);
       throw new Error('Failed to unlock Tesla vehicle.');
     }
   };
 
-  // Function to lock a Tesla vehicle
-  private readonly lockTeslaVehicle = async (
-    vin: string,
-    teslaApiToken: string,
-    teslaApiRefreshToken: string
-  ): Promise<any> => {
+  private readonly lockTeslaVehicle = async (vin: string): Promise<any> => {
     const url = `https://fleet-api.prd.eu.vn.cloud.tesla.com/api/1/vehicles/${vin}/command/door_lock`;
 
     try {
-      let currentToken = teslaApiToken;
+      const token = await this.getValidTeslaToken();
+      const response = await this.httpCallVehicleCommand(url, token);
+      const responseData = await response.json();
 
-      for (let attempts = 0; attempts < 2; attempts++) {
-        try {
-          const response = await this.httpCallVehicleCommand(url, currentToken);
-          const responseData = await response.json();
-
-          console.log(
-            'Locking Tesla vehicle response: (httpCallVehicleCommand)',
-            response.status,
-            responseData
-          );
-
-          if (response.status === 200) {
-            console.log('Tesla vehicle locked successfully.');
-            return responseData;
-          }
-
-          if (response.status === 429) {
-            throw new Error('Too many requests. Please try again later.');
-          }
-
-          if (response.status === 401 && attempts === 0) {
-            console.log('Tesla API token expired. Refreshing token...');
-            const newAccessToken =
-              await refreshTeslaApiToken(teslaApiRefreshToken);
-            currentToken = newAccessToken;
-            continue;
-          }
-
-          throw new Error(`Unexpected response status: ${response.status}`);
-        } catch (error) {
-          if (attempts === 1) throw error;
-          Sentry.captureException(error);
-          console.error('Error in lock attempt, will retry:', error);
-        }
+      if (response.status === 200) {
+        console.log('Tesla vehicle locked successfully.');
+        return responseData;
       }
 
-      throw new Error('Failed to lock Tesla vehicle after retries');
+      if (response.status === 429) {
+        throw new Error('Too many requests. Please try again later.');
+      }
+
+      throw new Error(`Unexpected response status: ${response.status}`);
     } catch (error) {
       console.error('Error locking Tesla vehicle:', error);
       throw new Error('Failed to lock Tesla vehicle.');
