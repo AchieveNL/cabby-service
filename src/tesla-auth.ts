@@ -150,9 +150,8 @@ teslaAuth.get('/auth/callback', async (req, res) => {
       },
     });
 
-    res.json({
+    res.send({
       message: 'Tesla API token obtained and stored successfully.',
-      tokenData: tokenResponse.data,
     });
   } catch (error) {
     console.error('Error during Tesla token exchange:', error);
