@@ -9,7 +9,7 @@ import { type Decimal } from '@prisma/client/runtime/library';
 import fetch, { Headers } from 'node-fetch';
 import { HttpStatusCode } from 'axios';
 import * as XLSX from 'xlsx';
-import * as Sentry from '@sentry/node';
+// import * as Sentry from '@sentry/node';
 import PaymentService from '../payment/payment.service';
 import { VehicleStatus } from '../vehicle/types';
 import AdminMailService from '../notifications/admin-mails.service';
@@ -336,7 +336,7 @@ export default class OrderService {
         return wakeUpData;
       }
 
-      console.log(`Vehicle state: ${wakeUpData?.response?.state}`);
+      console.log(`Vehicle state: ${wakeUpData?.response?.state ?? 'unknown'}`);
 
       if (attempt < maxAttempts) {
         console.log(

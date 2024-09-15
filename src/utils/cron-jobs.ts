@@ -169,7 +169,6 @@ async function holidays() {
 }
 
 let teslaTokenRefreshTimeout: NodeJS.Timeout | null = null;
-let lastScheduledRefreshTime: number | null = null;
 
 async function sendToDiscordWebhook(data: any) {
   try {
@@ -218,7 +217,7 @@ async function scheduleNextTeslaTokenRefresh() {
         await refreshTeslaApiToken(latestToken.refreshToken);
         console.log('Tesla token refreshed');
         await sendToDiscordWebhook({
-          message: 'Tesla token refreshed',
+          message: `Tesla token refreshed - ${process.env.NODE_ENV}`,
           scheduledTime: new Date(Date.now() + timeUntilRefresh).toLocaleString(
             'en-US',
             { timeZone: 'Europe/London' }
@@ -238,7 +237,7 @@ async function scheduleNextTeslaTokenRefresh() {
     );
 
     await sendToDiscordWebhook({
-      message: `Next Tesla token refresh scheduled for ${latestToken.id}`,
+      message: `Next Tesla token refresh scheduled for ${latestToken.id} - ${process.env.NODE_ENV}`,
       scheduledTime: new Date(Date.now() + timeUntilRefresh).toLocaleString(
         'en-US',
         { timeZone: 'Europe/London' }
@@ -251,7 +250,9 @@ async function scheduleNextTeslaTokenRefresh() {
 
 function cronJobs() {
   if (!isDevelopment) {
-    void scheduleNextTeslaTokenRefresh();
+    if (process.env.NODE_ENV === 'production') {
+      void scheduleNextTeslaTokenRefresh();
+    }
 
     cron.schedule('* * * * *', async () => {
       const functions = [
