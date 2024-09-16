@@ -169,6 +169,7 @@ async function holidays() {
 }
 
 let teslaTokenRefreshTimeout: NodeJS.Timeout | null = null;
+let isTeslaTokenScheduling = false;
 
 async function sendToDiscordWebhook(data: any) {
   try {
@@ -192,6 +193,12 @@ async function sendToDiscordWebhook(data: any) {
 }
 
 async function scheduleNextTeslaTokenRefresh() {
+  if (isTeslaTokenScheduling) {
+    console.log('Tesla token refresh is already scheduled.');
+    return;
+  }
+  isTeslaTokenScheduling = true;
+
   try {
     const latestToken = await prisma.teslaToken.findFirst({
       orderBy: { createdAt: 'desc' },
@@ -199,6 +206,7 @@ async function scheduleNextTeslaTokenRefresh() {
 
     if (!latestToken) {
       console.log('No Tesla token found in the database');
+      isTeslaTokenScheduling = false;
       return;
     }
 
@@ -227,6 +235,7 @@ async function scheduleNextTeslaTokenRefresh() {
         console.error('Error refreshing Tesla token:', error);
       } finally {
         void scheduleNextTeslaTokenRefresh();
+        isTeslaTokenScheduling = false;
       }
     }, timeUntilRefresh);
 
@@ -245,6 +254,7 @@ async function scheduleNextTeslaTokenRefresh() {
     });
   } catch (error) {
     console.error('Error in scheduleNextTeslaTokenRefresh:', error);
+    isTeslaTokenScheduling = false;
   }
 }
 
