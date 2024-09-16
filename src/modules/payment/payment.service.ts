@@ -12,6 +12,7 @@ import UserMailService from '../notifications/user-mails.service';
 import prisma from '@/lib/prisma';
 import { REGISTRATION_FEE } from '@/utils/constants';
 import { HttpBadRequestError } from '@/lib/errors';
+import * as Sentry from '@sentry/node';
 
 export default class PaymentService {
   readonly fileService = new FileService();
@@ -257,6 +258,7 @@ export default class PaymentService {
 
   public updateRegistrationPaymentStatus = async (paymentId: string) => {
     const payment = await this.mollie.payments.get(paymentId);
+    Sentry.captureMessage('payment: ' + payment, 'info');
 
     const updatedPayment = await prisma.payment.update({
       where: { registrationOrderId: payment.metadata.registrationOrderId },
