@@ -60,8 +60,12 @@ router.put(
   controller.updateVehicle
 );
 
-router.get('/available-models', controller.getAvailableVehicleModels);
-router.get('/available-vehicles', controller.getAvailableVehicles);
+router.get(
+  '/available-models',
+  requireAuth,
+  controller.getAvailableVehicleModels
+);
+router.get('/available-vehicles', requireAuth, controller.getAvailableVehicles);
 
 router.get('/', verifyAuthToken, requireAuth, controller.getAllVehicles);
 
