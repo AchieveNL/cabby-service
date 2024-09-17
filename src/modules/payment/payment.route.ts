@@ -7,7 +7,7 @@ import RequestValidator from '@/middlewares/request-validator';
 const router: Router = Router();
 const controller = new PaymentController();
 
-router.get('/', requireAuth, controller.getAllPayments);
+router.get('/', verifyAuthToken, requireAuth, controller.getAllPayments);
 
 router.post(
   '/registration',
