@@ -2,5 +2,6 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "yaml.schemas": {
     "https://json.schemastore.org/github-workflow.json": "file:///Users/macc/Desktop/work/cabby-service/.github/workflows/deploy.yml"
-  }
+  },
+  "makefile.configureOnOpen": false
 }

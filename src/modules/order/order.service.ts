@@ -297,7 +297,7 @@ export default class OrderService {
 
       const wakeUpResponse = await fetch(wakeUpUrl, {
         method: 'POST',
-        headers: headers,
+        headers,
       });
 
       if (wakeUpResponse.status === 401) {

@@ -62,6 +62,7 @@ router.put(
 
 router.get(
   '/available-models',
+  verifyAuthToken,
   requireAuth,
   controller.getAvailableVehicleModels
 );
