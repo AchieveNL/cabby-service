@@ -65,7 +65,12 @@ router.get(
   requireAuth,
   controller.getAvailableVehicleModels
 );
-router.get('/available-vehicles', requireAuth, controller.getAvailableVehicles);
+router.get(
+  '/available-vehicles',
+  verifyAuthToken,
+  requireAuth,
+  controller.getAvailableVehicles
+);
 
 router.get('/', verifyAuthToken, requireAuth, controller.getAllVehicles);
 
