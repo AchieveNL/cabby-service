@@ -14,6 +14,7 @@ import {
   orderWillEndQuery,
   orderWillStartQuery,
 } from '@/modules/notifications/notifications.queries';
+import { Mutex } from 'async-mutex';
 
 const query = Prisma.sql`SELECT
     o.id,
@@ -171,6 +172,8 @@ async function holidays() {
 let teslaTokenRefreshTimeout: NodeJS.Timeout | null = null;
 let isTeslaTokenScheduling = false;
 
+const teslaTokenRefreshMutex = new Mutex();
+
 async function sendToDiscordWebhook(data: any) {
   try {
     const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
@@ -200,58 +203,65 @@ async function scheduleNextTeslaTokenRefresh() {
   isTeslaTokenScheduling = true;
 
   try {
-    const latestToken = await prisma.teslaToken.findFirst({
-      orderBy: { createdAt: 'desc' },
-    });
+    const release = await teslaTokenRefreshMutex.acquire();
+    try {
+      const latestToken = await prisma.teslaToken.findFirst({
+        orderBy: { createdAt: 'desc' },
+      });
 
-    if (!latestToken) {
-      console.log('No Tesla token found in the database');
-      isTeslaTokenScheduling = false;
-      return;
-    }
-
-    const now = Date.now();
-    const tokenExpirationTime = latestToken.expiresAt!.getTime();
-    const timeUntilExpiration = tokenExpirationTime - now;
-
-    const timeUntilRefresh = Math.max(0, timeUntilExpiration - 30 * 60 * 1000);
-
-    if (teslaTokenRefreshTimeout) {
-      clearTimeout(teslaTokenRefreshTimeout);
-    }
-
-    teslaTokenRefreshTimeout = setTimeout(async () => {
-      try {
-        await refreshTeslaApiToken(latestToken.refreshToken);
-        console.log('Tesla token refreshed');
-        await sendToDiscordWebhook({
-          message: `Tesla token refreshed - ${process.env.NODE_ENV}`,
-          scheduledTime: new Date(Date.now() + timeUntilRefresh).toLocaleString(
-            'en-US',
-            { timeZone: 'Europe/London' }
-          ),
-        });
-      } catch (error) {
-        console.error('Error refreshing Tesla token:', error);
-      } finally {
-        void scheduleNextTeslaTokenRefresh();
+      if (!latestToken) {
+        console.log('No Tesla token found in the database');
         isTeslaTokenScheduling = false;
+        return;
       }
-    }, timeUntilRefresh);
 
-    console.log(
-      `Next Tesla token refresh scheduled in ${
-        timeUntilRefresh / 60000
-      } minutes for ${latestToken.id}`
-    );
+      const now = Date.now();
+      const tokenExpirationTime = latestToken.expiresAt!.getTime();
+      const timeUntilExpiration = tokenExpirationTime - now;
 
-    await sendToDiscordWebhook({
-      message: `Next Tesla token refresh scheduled for ${latestToken.id} - ${process.env.NODE_ENV}`,
-      scheduledTime: new Date(Date.now() + timeUntilRefresh).toLocaleString(
-        'en-US',
-        { timeZone: 'Europe/London' }
-      ),
-    });
+      const timeUntilRefresh = Math.max(
+        0,
+        timeUntilExpiration - 30 * 60 * 1000
+      ); // 30 minutes before expiration
+
+      if (teslaTokenRefreshTimeout) {
+        clearTimeout(teslaTokenRefreshTimeout);
+      }
+
+      teslaTokenRefreshTimeout = setTimeout(async () => {
+        try {
+          await refreshTeslaApiToken(latestToken.refreshToken);
+          console.log('Tesla token refreshed');
+          await sendToDiscordWebhook({
+            message: `Tesla token refreshed - ${process.env.NODE_ENV}`,
+            scheduledTime: new Date(
+              Date.now() + timeUntilRefresh
+            ).toLocaleString('en-US', { timeZone: 'Europe/London' }),
+          });
+        } catch (error) {
+          console.error('Error refreshing Tesla token:', error);
+        } finally {
+          isTeslaTokenScheduling = false;
+          void scheduleNextTeslaTokenRefresh();
+        }
+      }, timeUntilRefresh);
+
+      console.log(
+        `Next Tesla token refresh scheduled in ${
+          timeUntilRefresh / 60000
+        } minutes for ${latestToken.id} - ${process.env.NODE_ENV}`
+      );
+
+      await sendToDiscordWebhook({
+        message: `Next Tesla token refresh scheduled for ${latestToken.id} - ${process.env.NODE_ENV}`,
+        scheduledTime: new Date(Date.now() + timeUntilRefresh).toLocaleString(
+          'en-US',
+          { timeZone: 'Europe/London' }
+        ),
+      });
+    } finally {
+      release();
+    }
   } catch (error) {
     console.error('Error in scheduleNextTeslaTokenRefresh:', error);
     isTeslaTokenScheduling = false;
