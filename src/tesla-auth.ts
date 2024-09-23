@@ -35,6 +35,16 @@ export const refreshTeslaApiToken = async (
       }
     );
 
+    if (refreshResponse.status !== 200) {
+      console.error('Failed to refresh Tesla API token:', refreshResponse.data);
+      Sentry.captureException(refreshResponse.data);
+      throw new Error(
+        `Failed to refresh Tesla API token: ${JSON.stringify(
+          refreshResponse.data
+        )}`
+      );
+    }
+
     const {
       access_token: newAccessToken,
       refresh_token: newRefreshToken,
@@ -52,12 +62,13 @@ export const refreshTeslaApiToken = async (
 
     return newAccessToken;
   } catch (refreshError) {
-    console.error('Error refreshing Tesla API token:', refreshError);
-    Sentry.captureException(refreshError);
-    throw new Error('Failed to refresh Tesla API token');
+    console.error(
+      'Error refreshing Tesla API token:',
+      refreshError.response?.data || refreshError.message || refreshError
+    );
+    throw new Error(`Failed to refresh Tesla API token: ${refreshError}`);
   }
 };
-
 teslaAuth.get('/partner/token', async (req, res) => {
   try {
     const tokenResponse = await axios.post<TeslaTokenResponse>(
