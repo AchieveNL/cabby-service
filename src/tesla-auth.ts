@@ -66,9 +66,14 @@ export const refreshTeslaApiToken = async (
       'Error refreshing Tesla API token:',
       refreshError.response?.data || refreshError.message || refreshError
     );
-    throw new Error(`Failed to refresh Tesla API token: ${refreshError}`);
+    const errorMessage =
+      refreshError instanceof Error
+        ? refreshError.message
+        : String(refreshError);
+    throw new Error(`Failed to refresh Tesla API token: ${errorMessage}`);
   }
 };
+
 teslaAuth.get('/partner/token', async (req, res) => {
   try {
     const tokenResponse = await axios.post<TeslaTokenResponse>(
