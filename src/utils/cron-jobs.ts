@@ -240,7 +240,9 @@ async function scheduleNextTeslaTokenRefresh() {
           });
         } catch (error) {
           await sendToDiscordWebhook({
-            message: `Error refreshing Tesla token: ${error} - ${process.env.NODE_ENV}`,
+            message: `Error refreshing Tesla token: ${String(error)} - ${
+              process.env.NODE_ENV
+            }`,
           });
           console.error('Error refreshing Tesla token:', error);
         } finally {
