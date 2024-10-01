@@ -24,6 +24,7 @@ import prisma from '@/lib/prisma';
 import { refreshTeslaApiToken } from '@/tesla-auth';
 import { ApiError } from '@/lib/errors';
 import { dateTimeFormat, formatDuration } from '@/utils/date';
+import { sendToDiscordWebhook } from '@/utils/helper';
 
 export default class OrderService {
   private readonly paymentService = new PaymentService();
@@ -364,6 +365,13 @@ export default class OrderService {
       }
 
       await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
+      await sendToDiscordWebhook({
+        message: `Vehicle is now online - ${new Date().toLocaleString('en-US', {
+          timeZone: 'Europe/London',
+        })}`,
+        user: userId,
+        orderId: orderId,
+      });
       const result = await this.unlockTeslaVehicle(
         order.vehicle.vin
         // teslaToken.token,
@@ -374,6 +382,13 @@ export default class OrderService {
         throw new Error('Error unlocking Tesla vehicle.');
       }
 
+      await sendToDiscordWebhook({
+        message: `Vehicle unlocked - ${new Date().toLocaleString('en-US', {
+          timeZone: 'Europe/London',
+        })}`,
+        user: userId,
+        orderId: orderId,
+      });
       // await this.notificationService.sendNotificationToUser(
       //   userId,
       //   'Je Tesla is ontgrendeld.',
@@ -398,6 +413,13 @@ export default class OrderService {
     }
 
     await this.wakeUpVehicle(order.vehicle.vin, teslaToken.token);
+    await sendToDiscordWebhook({
+      message: `Vehicle is now online - ${new Date().toLocaleString('en-US', {
+        timeZone: 'Europe/London',
+      })}`,
+      user: userId,
+      orderId: orderId,
+    });
     const result = await this.lockTeslaVehicle(
       order.vehicle.vin
       // teslaToken.token,
@@ -407,6 +429,14 @@ export default class OrderService {
     if (!result?.response?.result) {
       throw new Error('Error locking Tesla vehicle.');
     }
+
+    await sendToDiscordWebhook({
+      message: `Vehicle locked - ${new Date().toLocaleString('en-US', {
+        timeZone: 'Europe/London',
+      })}`,
+      user: userId,
+      orderId: orderId,
+    });
 
     // await this.notificationService.sendNotificationToUser(
     //   userId,
