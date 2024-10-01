@@ -239,7 +239,7 @@ async function scheduleNextTeslaTokenRefresh() {
             ).toLocaleString('en-US', { timeZone: 'Europe/London' }),
           });
         } catch (error) {
-          sendToDiscordWebhook({
+          await sendToDiscordWebhook({
             message: `Error refreshing Tesla token: ${error} - ${process.env.NODE_ENV}`,
           });
           console.error('Error refreshing Tesla token:', error);
