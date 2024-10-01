@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { EnvironmentFile } from '../enums/environment.enum';
 import { type CommonEnvKeys } from '@/types/environment.type';
+import fetch from 'node-fetch';
 
 export type ChalkColor = typeof chalk.Color;
 
@@ -36,3 +37,24 @@ export const envFileNotFoundError = (key: CommonEnvKeys): string => {
     \r${divider}
   `;
 };
+
+export async function sendToDiscordWebhook(data: any) {
+  try {
+    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+    if (!webhookUrl) {
+      console.error('DISCORD_WEBHOOK_URL is not set');
+      return;
+    }
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content: JSON.stringify(data),
+      }),
+    });
+  } catch (error) {
+    console.error('Error sending to Discord webhook:', error);
+  }
+}
