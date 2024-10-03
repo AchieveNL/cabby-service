@@ -1,28 +1,53 @@
 import { type NextFunction, type Request, type Response } from 'express';
 import prisma from '@/lib/prisma';
 
-export const logsMiddleware = (
+export const logsMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   const userId = req.user?.id || null;
-  const { headers, body, query, params, method, url, hostname, ip } = req;
-  if (method === 'GET') {
-    next();
-    return;
-  }
-  const ipAddress = (req.headers['x-forwarded-for'] ??
-    req.socket.remoteAddress) as string;
+  const { method, url } = req;
 
-  const data = { hostname, ip, ipAddress, headers };
-  prisma.logs
-    .create({
-      data: { userId, data, method, url, body, params, query, ip: ipAddress },
-    })
-    .catch((err) => {
-      console.log('Error saving log', err);
+  if (method === 'GET') {
+    return next();
+  }
+
+  const ipAddress =
+    (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() ||
+    req.socket.remoteAddress ||
+    null;
+
+  const sanitizedBody = { ...req.body };
+  delete sanitizedBody.password;
+
+  const logData = {
+    userId,
+    method,
+    url,
+    ipAddress,
+    body: sanitizedBody,
+    params: req.params,
+    query: req.query,
+  };
+
+  try {
+    await prisma.logs.create({
+      data: {
+        method: logData.method,
+        url: logData.url,
+        ip: logData.ipAddress,
+        body: logData.body,
+        params: logData.params,
+        query: logData.query,
+        data: logData,
+        userId: logData.userId,
+      },
     });
+  } catch (err) {
+    console.log(err);
+    next();
+  }
 
   next();
 };
