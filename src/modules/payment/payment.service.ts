@@ -12,6 +12,7 @@ import UserMailService from '../notifications/user-mails.service';
 import prisma from '@/lib/prisma';
 import { REGISTRATION_FEE } from '@/utils/constants';
 import { HttpBadRequestError } from '@/lib/errors';
+import { sendToDiscordWebhook } from '@/utils/helper';
 
 export default class PaymentService {
   readonly fileService = new FileService();
@@ -257,7 +258,10 @@ export default class PaymentService {
 
   public updateRegistrationPaymentStatus = async (paymentId: string) => {
     const payment = await this.mollie.payments.get(paymentId);
-
+    await sendToDiscordWebhook({
+      message: 'Mollie payment status',
+      payment,
+    });
     const updatedPayment = await prisma.payment.update({
       where: { registrationOrderId: payment.metadata.registrationOrderId },
       data: { status: payment.status.toUpperCase() as PaymentStatus },
