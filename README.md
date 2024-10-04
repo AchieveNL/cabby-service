@@ -55,7 +55,7 @@ This repo is created as a template repo so that [creating new repo from this tem
 
 | Tool       |  Version         |
 |------------|------------------|
-| NodeJS     | 18               |
+| NodeJS     | 20               |
 | Typescript | 5                |
 
 ## Clone
