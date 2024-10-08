@@ -168,15 +168,6 @@ export default class UserController extends Api {
         password
       );
 
-      if (user?.status === 'DEACTIVATED') {
-        return this.send(
-          res,
-          null,
-          HttpStatusCode.BadRequest,
-          'Ongeldig e-mailadres of wachtwoord'
-        );
-      }
-
       if (!user) {
         return this.send(
           res,
@@ -186,7 +177,7 @@ export default class UserController extends Api {
         );
       }
 
-      if (user.role !== UserRole.USER) {
+      if (user.status === 'DEACTIVATED') {
         return this.send(
           res,
           null,
@@ -194,6 +185,15 @@ export default class UserController extends Api {
           'Ongeldig e-mailadres of wachtwoord'
         );
       }
+
+      // if (user.role !== UserRole.USER) {
+      //   return this.send(
+      //     res,
+      //     null,
+      //     HttpStatusCode.BadRequest,
+      //     'Ongeldig e-mailadres of wachtwoord'
+      //   );
+      // }
 
       const status = await this.userProfileService.getUserProfileStatusByUserId(
         user.id

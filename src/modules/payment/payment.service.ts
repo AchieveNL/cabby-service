@@ -13,6 +13,7 @@ import prisma from '@/lib/prisma';
 import { REGISTRATION_FEE } from '@/utils/constants';
 import { HttpBadRequestError } from '@/lib/errors';
 import { sendToDiscordWebhook } from '@/utils/helper';
+import { UserProfileStatus } from '../profile/types';
 
 export default class PaymentService {
   readonly fileService = new FileService();
@@ -189,8 +190,6 @@ export default class PaymentService {
       where: { key: 'deposit' },
     });
 
-    console.log('deposit: ', deposit);
-
     const fees = deposit?.value
       ? Number(deposit?.value).toFixed(2)
       : REGISTRATION_FEE;
@@ -251,17 +250,11 @@ export default class PaymentService {
       },
     });
 
-    console.log('id: ', id);
-
     return { payment: id, checkoutUrl: payment.getCheckoutUrl() };
   };
 
   public updateRegistrationPaymentStatus = async (paymentId: string) => {
     const payment = await this.mollie.payments.get(paymentId);
-    await sendToDiscordWebhook({
-      message: 'Mollie payment status',
-      payment,
-    });
     const updatedPayment = await prisma.payment.update({
       where: { registrationOrderId: payment.metadata.registrationOrderId },
       data: { status: payment.status.toUpperCase() as PaymentStatus },
@@ -280,7 +273,7 @@ export default class PaymentService {
       const userId = updatedPayment.userId;
       const userProfile = await prisma.userProfile.update({
         where: { userId },
-        data: { status: UserStatus.PENDING },
+        data: { status: UserProfileStatus.ACTIVE },
         include: { user: { select: { email: true } } },
       });
       const email = userProfile.user.email;
