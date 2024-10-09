@@ -15,6 +15,7 @@ import {
   orderWillStartQuery,
 } from '@/modules/notifications/notifications.queries';
 import { Mutex } from 'async-mutex';
+import { sendToDiscordWebhook } from './helper';
 
 const query = Prisma.sql`SELECT
     o.id,
@@ -174,30 +175,12 @@ let isTeslaTokenScheduling = false;
 
 const teslaTokenRefreshMutex = new Mutex();
 
-async function sendToDiscordWebhook(data: any) {
-  try {
-    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-    if (!webhookUrl) {
-      console.error('DISCORD_WEBHOOK_URL is not set');
-      return;
-    }
-    await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        content: JSON.stringify(data),
-      }),
-    });
-  } catch (error) {
-    console.error('Error sending to Discord webhook:', error);
-  }
-}
-
 async function scheduleNextTeslaTokenRefresh() {
   if (isTeslaTokenScheduling) {
     console.log('Tesla token refresh is already scheduled.');
+    await sendToDiscordWebhook({
+      message: 'Tesla token refresh is already scheduled.',
+    });
     return;
   }
   isTeslaTokenScheduling = true;
