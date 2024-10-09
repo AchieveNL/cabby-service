@@ -1,6 +1,5 @@
 import { Prisma, type order } from '@prisma/client';
 import cron from 'node-cron';
-import fetch from 'node-fetch';
 import { refreshTeslaApiToken } from '../tesla-auth';
 import { mailService } from './mail';
 import { fromEmail, isDevelopment, toEmail } from './constants';
