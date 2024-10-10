@@ -175,6 +175,10 @@ let isTeslaTokenScheduling = false;
 const teslaTokenRefreshMutex = new Mutex();
 
 async function scheduleNextTeslaTokenRefresh() {
+  await sendToDiscordWebhook({
+    message: 'Scheduling next Tesla token refresh',
+  });
+
   if (isTeslaTokenScheduling) {
     console.log('Tesla token refresh is already scheduled.');
     await sendToDiscordWebhook({
