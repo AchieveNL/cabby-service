@@ -259,9 +259,15 @@ async function scheduleNextTeslaTokenRefresh() {
   }
 }
 
-function cronJobs() {
+async function cronJobs() {
+  await sendToDiscordWebhook({
+    message: `Starting cron jobs - ${process.env.NODE_ENV}`,
+  });
   if (!isDevelopment) {
     if (process.env.NODE_ENV === 'production') {
+      await sendToDiscordWebhook({
+        message: `Scheduling next Tesla token refresh - ${process.env.NODE_ENV}`,
+      });
       void scheduleNextTeslaTokenRefresh();
     }
 
