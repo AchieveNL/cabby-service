@@ -7,19 +7,24 @@ import prismaClient from '@/lib/prisma';
 import environment from '@/lib/environment';
 
 configDotenv();
-cronJobs().then(() => {
-  console.log(`Current Process ID: ${process.pid}`);
+cronJobs()
+  .then(() => {
+    console.log(`Current Process ID: ${process.pid}`);
 
-  server.listen(process.env.PORT || 8080, () => {
-    const { port, env, appUrl: _appUrl } = environment;
-    const {
-      api: { basePath, version },
-    } = appConfig;
-    const appUrl = `${_appUrl}:${port}`;
-    const apiUrl = `${appUrl}/${basePath}/${version}/${env}`;
-    printAppInfo(port, env, appUrl, apiUrl);
+    server.listen(process.env.PORT || 8080, () => {
+      const { port, env, appUrl: _appUrl } = environment;
+      const {
+        api: { basePath, version },
+      } = appConfig;
+      const appUrl = `${_appUrl}:${port}`;
+      const apiUrl = `${appUrl}/${basePath}/${version}/${env}`;
+      printAppInfo(port, env, appUrl, apiUrl);
+    });
+  })
+  .catch((error) => {
+    console.error('Error initializing cron jobs:', error);
+    process.exit(1);
   });
-});
 
 process.on('SIGINT', () => {
   // eslint-disable-next-line @typescript-eslint/no-floating-promises
