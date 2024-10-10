@@ -7,16 +7,18 @@ import prismaClient from '@/lib/prisma';
 import environment from '@/lib/environment';
 
 configDotenv();
-cronJobs();
+cronJobs().then(() => {
+  console.log(`Current Process ID: ${process.pid}`);
 
-server.listen(process.env.PORT || 8080, () => {
-  const { port, env, appUrl: _appUrl } = environment;
-  const {
-    api: { basePath, version },
-  } = appConfig;
-  const appUrl = `${_appUrl}:${port}`;
-  const apiUrl = `${appUrl}/${basePath}/${version}/${env}`;
-  printAppInfo(port, env, appUrl, apiUrl);
+  server.listen(process.env.PORT || 8080, () => {
+    const { port, env, appUrl: _appUrl } = environment;
+    const {
+      api: { basePath, version },
+    } = appConfig;
+    const appUrl = `${_appUrl}:${port}`;
+    const apiUrl = `${appUrl}/${basePath}/${version}/${env}`;
+    printAppInfo(port, env, appUrl, apiUrl);
+  });
 });
 
 process.on('SIGINT', () => {
