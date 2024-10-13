@@ -11,7 +11,7 @@ import UserMailService from '../notifications/user-mails.service';
 import prisma from '@/lib/prisma';
 import { REGISTRATION_FEE } from '@/utils/constants';
 import { HttpBadRequestError } from '@/lib/errors';
-import { UserProfileStatus } from '../profile/types';
+import { UserStatus } from '../users/types';
 
 export default class PaymentService {
   readonly fileService = new FileService();
@@ -271,7 +271,7 @@ export default class PaymentService {
       const userId = updatedPayment.userId;
       const userProfile = await prisma.userProfile.update({
         where: { userId },
-        data: { status: UserProfileStatus.ACTIVE },
+        data: { status: UserStatus.PENDING },
         include: { user: { select: { email: true } } },
       });
       const email = userProfile.user.email;
