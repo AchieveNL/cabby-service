@@ -17,6 +17,8 @@ import { logsMiddleware } from './middlewares/logs';
 import errorHandler from '@/middlewares/error-handler';
 import routes from '@/modules/index.route';
 import prismaClient from '@/lib/prisma';
+// import axios from 'axios';
+// import OrderService from './modules/order/order.service';
 
 export const determineCorsOrigin = () => {
   switch (process.env.NODE_ENV) {
@@ -110,6 +112,22 @@ class App {
 
   public async connectPrisma(): Promise<void> {
     await prismaClient.$connect();
+    // const orderService = new OrderService();
+    // const tokenRes = await orderService.getTeslaToken();
+    // console.log(tokenRes);
+    // const BASE_URL = 'https://fleet-api.prd.eu.vn.cloud.tesla.com';
+    // const vin = 'LRW3E7FS2PC758945';
+    // const token =
+    //   'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InE0dHg3Q1UyYzI2V1BiemwxZjZjanM3QnhzayJ9.eyJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMiLCJzdWIiOiJiOGEyNzQzMi03YmMyLTRmZWYtODc0Ni0yMjg3NjgxMTFiYjIiLCJpc3MiOiJodHRwczovL2F1dGgudGVzbGEuY29tL29hdXRoMi92My9udHMiLCJhenAiOiJkM2JhZWFkZDU5OGYtNGIzNC05NzlmLTkyNTJhNjU0N2JkNSIsImF1ZCI6WyJodHRwczovL2F1dGgudGVzbGEuY29tL29hdXRoMi92My9jbGllbnRpbmZvIiwiaHR0cHM6Ly9mbGVldC1hcGkucHJkLmV1LnZuLmNsb3VkLnRlc2xhLmNvbSJdLCJleHAiOjE3MjkwMzg4NzYsImlhdCI6MTcyOTAxMDA3NiwiYWNjb3VudF90eXBlIjoiYnVzaW5lc3MiLCJvcGVuX3NvdXJjZSI6bnVsbCwic2NwIjpbInZlaGljbGVfY21kcyIsInZlaGljbGVfZGV2aWNlX2RhdGEiLCJvcGVuaWQiLCJvZmZsaW5lX2FjY2VzcyJdfQ.qw3d_23bMyF4kGYFuAp0lrBM7_wykRqiOHgQsdLErn0MmYpc25nUp8gXwk1PEZmWgfajHVvMyll5IjzldDAtRwsVbi3waVLWTt6H40o822qWsc_5rU9ak-T5ZHt4H-sYuIW9WHO1pTrMvZ73EAJlFlJ5u8qssBMd7b__MKFEf2OIzDKfSD87m31QuG0m7ZtOuN28nwSWv74I2yQGTAN2O2QVwf2utOe-vo0YbgTPvBjW6ujRVSZeLZFYBGKO9bVarFVE7Q416XqU57TMb3foi-Js9PmXY41Azl9kGcPbmVAiA31hFxk7Iw0Lw76Ck2mas9HY05Dkut-Z_bNUtOVrqQ';
+
+    // try {
+    //   const res = await axios.get(`${BASE_URL}/api/1/vehicles`, {
+    //     headers: { Authorization: `Bearer ${token}` },
+    //   });
+    //   console.log(res.data);
+    // } catch (error) {
+    //   console.log(error.response);
+    // }
   }
 }
 

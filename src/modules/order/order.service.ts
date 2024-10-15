@@ -259,7 +259,7 @@ export default class OrderService {
     return order;
   }
 
-  private async getTeslaToken() {
+  public async getTeslaToken() {
     const teslaToken = await prisma.teslaToken.findFirst({
       orderBy: {
         createdAt: 'desc',
@@ -370,7 +370,7 @@ export default class OrderService {
           timeZone: 'Europe/London',
         })}`,
         user: userId,
-        orderId: orderId,
+        orderId,
       });
       const result = await this.unlockTeslaVehicle(
         order.vehicle.vin
@@ -387,7 +387,7 @@ export default class OrderService {
           timeZone: 'Europe/London',
         })}`,
         user: userId,
-        orderId: orderId,
+        orderId,
       });
       // await this.notificationService.sendNotificationToUser(
       //   userId,
@@ -418,7 +418,7 @@ export default class OrderService {
         timeZone: 'Europe/London',
       })}`,
       user: userId,
-      orderId: orderId,
+      orderId,
     });
     const result = await this.lockTeslaVehicle(
       order.vehicle.vin
@@ -435,7 +435,7 @@ export default class OrderService {
         timeZone: 'Europe/London',
       })}`,
       user: userId,
-      orderId: orderId,
+      orderId,
     });
 
     // await this.notificationService.sendNotificationToUser(

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Router } from 'express';
 import * as Sentry from '@sentry/node';
 import prisma from './lib/prisma';
@@ -82,17 +82,18 @@ teslaAuth.get('/partner/token', async (req, res) => {
         grant_type: 'client_credentials',
         client_id: TESLA_CLIENT_ID,
         client_secret: TESLA_CLIENT_SECRET,
+        scope: 'openid vehicle_cmds offline_access vehicle_device_data',
         audience,
       }
     );
 
-    console.log('Tesla partner API token response:', tokenResponse);
+    console.log('Tesla partner API token response:', tokenResponse.data);
 
     const partnerApiToken: string = tokenResponse.data.access_token;
 
     const registerResponse = await axios.post(
       `${audience}/api/1/partner_accounts`,
-      {},
+      { domain: 'api.cabbyrentals.com' },
       {
         headers: {
           Authorization: `Bearer ${partnerApiToken}`,
@@ -100,7 +101,7 @@ teslaAuth.get('/partner/token', async (req, res) => {
       }
     );
 
-    console.log('Tesla app registration response:', registerResponse);
+    console.log('Tesla app registration response:', registerResponse.data);
 
     if (registerResponse.status !== 200) {
       throw new Error('Registration failed');
@@ -112,7 +113,11 @@ teslaAuth.get('/partner/token', async (req, res) => {
       data: registerResponse.data,
     });
   } catch (error) {
-    console.error('Error during Tesla partner token generation:', error);
+    if (error instanceof AxiosError) {
+      console.log(error.response?.data);
+    } else {
+      console.error('Error during Tesla partner token generation:', error);
+    }
     res
       .status(500)
       .send(
