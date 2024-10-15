@@ -1,7 +1,7 @@
 import chalk from 'chalk';
+import fetch from 'node-fetch';
 import { EnvironmentFile } from '../enums/environment.enum';
 import { type CommonEnvKeys } from '@/types/environment.type';
-import fetch from 'node-fetch';
 
 export type ChalkColor = typeof chalk.Color;
 

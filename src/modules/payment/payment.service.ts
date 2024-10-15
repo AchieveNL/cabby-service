@@ -8,10 +8,10 @@ import { OrderStatus } from '../order/types';
 import FileService from '../file/file.service';
 import AdminMailService from '../notifications/admin-mails.service';
 import UserMailService from '../notifications/user-mails.service';
+import { UserStatus } from '../users/types';
 import prisma from '@/lib/prisma';
 import { REGISTRATION_FEE } from '@/utils/constants';
 import { HttpBadRequestError } from '@/lib/errors';
-import { UserStatus } from '../users/types';
 
 export default class PaymentService {
   readonly fileService = new FileService();

@@ -1,9 +1,11 @@
 import { Prisma, type order } from '@prisma/client';
 import cron from 'node-cron';
+import { Mutex } from 'async-mutex';
 import { refreshTeslaApiToken } from '../tesla-auth';
 import { mailService } from './mail';
 import { fromEmail, isDevelopment, toEmail } from './constants';
 import dayjsExtended from './date';
+import { sendToDiscordWebhook } from './helper';
 import prisma from '@/lib/prisma';
 import OrderMailService from '@/modules/order/order-mails.service';
 import { orderConfirmedNotification } from '@/modules/notifications/notifications.functions';
@@ -13,8 +15,6 @@ import {
   orderWillEndQuery,
   orderWillStartQuery,
 } from '@/modules/notifications/notifications.queries';
-import { Mutex } from 'async-mutex';
-import { sendToDiscordWebhook } from './helper';
 
 const query = Prisma.sql`SELECT
     o.id,
