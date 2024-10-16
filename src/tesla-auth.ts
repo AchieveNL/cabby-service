@@ -90,6 +90,7 @@ teslaAuth.get('/partner/token', async (req, res) => {
     console.log('Tesla partner API token response:', tokenResponse.data);
 
     const partnerApiToken: string = tokenResponse.data.access_token;
+    console.log(partnerApiToken);
 
     const registerResponse = await axios.post(
       `${audience}/api/1/partner_accounts`,
@@ -131,7 +132,8 @@ teslaAuth.get('/auth', (req, res) => {
     TESLA_CLIENT_ID as string
   }&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
-  )}&response_type=code&scope=openid vehicle_cmds offline_access vehicle_device_data`;
+  )}&response_type=code&scope=openid vehicle_cmds vehicle_device_data offline_access`;
+  console.log({ teslaAuthUrl });
   res.redirect(teslaAuthUrl);
 });
 
@@ -152,8 +154,10 @@ teslaAuth.get('/auth/callback', async (req, res) => {
         code: authorizationCode,
         redirect_uri: REDIRECT_URI,
         audience,
+        scope: 'openid vehicle_cmds offline_access vehicle_device_data',
       }
     );
+    console.log(tokenResponse.data);
 
     const {
       access_token: teslaApiToken,
@@ -163,13 +167,15 @@ teslaAuth.get('/auth/callback', async (req, res) => {
 
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
-    await prisma.teslaToken.create({
+    const write = await prisma.teslaToken.create({
       data: {
         token: teslaApiToken,
         refreshToken: teslaRefreshToken,
         expiresAt,
       },
     });
+
+    console.log({ write });
 
     res.send({
       message: 'Tesla API token obtained and stored successfully.',
